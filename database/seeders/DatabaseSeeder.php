@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             BugSeeder::class,
             RepoHistorySeeder::class,
             AppEvaluationSeeder::class,
+            ActionItemSeeder::class,
         ]);
     }
 }
