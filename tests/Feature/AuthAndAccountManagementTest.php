@@ -272,9 +272,48 @@ class AuthAndAccountManagementTest extends TestCase
             ])
             ->assertForbidden();
 
+        $this->actingAs($developerUser)
+            ->delete("/admin/accounts/{$admin->id}")
+            ->assertForbidden();
+
         $this->assertDatabaseMissing('users', ['email' => 'ilegal@bugtracker.test']);
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
         $this->assertTrue($admin->fresh()->is_active);
         $this->assertSame('admin', $admin->fresh()->role);
+    }
+
+    public function test_admin_can_delete_other_accounts_safely_and_cannot_delete_self(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        // Admin cannot delete own account
+        $this->actingAs($admin)
+            ->delete("/admin/accounts/{$admin->id}")
+            ->assertSessionHasErrors('account');
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+
+        // Deleting developer without created task/bug history removes both User and Developer
+        $unusedUser = User::factory()->create(['role' => 'developer']);
+        $unusedDev = Developer::factory()->create(['user_id' => $unusedUser->id]);
+
+        $this->actingAs($admin)
+            ->delete("/admin/accounts/{$unusedUser->id}")
+            ->assertRedirect(route('admin.accounts.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $unusedUser->id]);
+        $this->assertDatabaseMissing('developers', ['id' => $unusedDev->id]);
+
+        // Deleting developer with created Task preserves Developer history with user_id = null
+        $historyUser = User::factory()->create(['role' => 'developer']);
+        $historyDev = Developer::factory()->create(['user_id' => $historyUser->id, 'is_active' => true]);
+        \App\Models\Task::factory()->create(['created_by' => $historyDev->id]);
+
+        $this->actingAs($admin)
+            ->delete("/admin/accounts/{$historyUser->id}")
+            ->assertRedirect(route('admin.accounts.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $historyUser->id]);
+        $this->assertDatabaseHas('developers', ['id' => $historyDev->id, 'user_id' => null, 'is_active' => false]);
     }
 
     public function test_full_end_to_end_lifecycle_admin_creates_developer_who_logs_in_then_gets_deactivated(): void

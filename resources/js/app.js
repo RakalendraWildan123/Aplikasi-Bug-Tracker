@@ -136,3 +136,17 @@ if (loginEl) {
         },
     }).mount(loginEl);
 }
+
+const accountPasswordEl = document.getElementById('account-password-app');
+
+if (accountPasswordEl) {
+    createApp({
+        setup() {
+            const showPasswords = ref(false);
+
+            return {
+                showPasswords,
+            };
+        },
+    }).mount(accountPasswordEl);
+}

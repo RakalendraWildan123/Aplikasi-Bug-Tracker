@@ -15,16 +15,16 @@ class StackFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_homepage_renders_vue_standalone_and_native_dnd_board(): void
+    public function test_homepage_renders_clean_dashboard_layout_for_authenticated_user(): void
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->withoutVite()->get('/');
 
         $response->assertOk();
-        $response->assertSee('id="kanban-board-app"', false);
-        $response->assertSee('draggable="true"', false);
-        $response->assertSee('Native HTML5 DnD');
+        $response->assertSee('id="app-sidebar"', false);
+        $response->assertSee('Dashboard');
+        $response->assertSee('Akun Saya');
     }
 
     public function test_database_and_redis_export_cache_defaults_are_configured(): void

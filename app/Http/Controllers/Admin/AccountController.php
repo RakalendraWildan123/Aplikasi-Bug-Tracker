@@ -194,6 +194,39 @@ class AccountController extends Controller
             ->with('status', "Password akun {$user->name} berhasil direset.");
     }
 
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->is($user)) {
+            return back()->withErrors(['account' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
+        }
+
+        $name = $user->name;
+
+        DB::transaction(function () use ($user) {
+            $developer = $user->developer;
+
+            if ($developer) {
+                $hasCreatedHistory = $developer->createdTasks()->exists()
+                    || $developer->createdBugs()->exists();
+
+                if ($hasCreatedHistory) {
+                    $developer->update([
+                        'user_id' => null,
+                        'is_active' => false,
+                    ]);
+                } else {
+                    $developer->delete();
+                }
+            }
+
+            $user->delete();
+        });
+
+        return redirect()
+            ->route('admin.accounts.index')
+            ->with('status', "Akun {$name} berhasil dihapus.");
+    }
+
     private function resolveAvatar(?string $avatar, string $name): string
     {
         $trimmed = trim((string) $avatar);
