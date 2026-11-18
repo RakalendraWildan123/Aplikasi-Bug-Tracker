@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             TaskSeeder::class,
             BugSeeder::class,
             RepoHistorySeeder::class,
+            AppEvaluationSeeder::class,
         ]);
     }
 }
