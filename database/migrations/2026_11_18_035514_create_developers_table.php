@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\DeveloperRole;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,9 +13,14 @@ return new class extends Migration
     {
         Schema::create('developers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')
+                ->nullable()
+                ->unique()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->string('name', 150);
             $table->string('email', 150)->unique();
-            $table->enum('role_title', DeveloperRole::values());
+            $table->enum('role_title', ['Fullstack Lead', 'Backend', 'Frontend', 'Mobile']);
             $table->string('avatar', 10);
             $table->string('avatar_bg', 50);
             $table->boolean('is_active')->default(true);

@@ -2,8 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
@@ -37,8 +35,8 @@ class TaskFactory extends Factory
             'assigned_to' => Developer::factory(),
             'title' => Str::substr(fake()->sentence(5), 0, 255),
             'description' => fake()->paragraph(),
-            'task_type' => fake()->randomElement(TaskType::cases()),
-            'status' => TaskStatus::Todo,
+            'task_type' => fake()->randomElement(Task::TYPES),
+            'status' => 'todo',
             'start_date' => $startDate,
             'target_date' => $targetDate,
             'completed_at' => null,
@@ -50,7 +48,7 @@ class TaskFactory extends Factory
     public function inProgress(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => TaskStatus::InProgress,
+            'status' => 'in_progress',
             'completed_at' => null,
         ]);
     }
@@ -58,7 +56,7 @@ class TaskFactory extends Factory
     public function inReview(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => TaskStatus::Review,
+            'status' => 'review',
             'completed_at' => null,
         ]);
     }
@@ -66,7 +64,7 @@ class TaskFactory extends Factory
     public function done(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => TaskStatus::Done,
+            'status' => 'done',
             'completed_at' => now(),
         ]);
     }

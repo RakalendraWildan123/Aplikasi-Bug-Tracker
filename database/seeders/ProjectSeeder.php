@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Database\Seeder;
 
@@ -19,7 +18,7 @@ class ProjectSeeder extends Seeder
                 'code' => 'INTRA',
                 'description' => 'Portal internal untuk kolaborasi karyawan, pengumuman, dan dokumen operasional.',
                 'repo_url' => 'https://github.com/internal-it/portal-intranet',
-                'status' => ProjectStatus::Active,
+                'status' => 'active',
                 'color' => '#4F46E5',
             ],
             [
@@ -27,7 +26,7 @@ class ProjectSeeder extends Seeder
                 'code' => 'KEU',
                 'description' => 'Aplikasi pengelolaan anggaran, pencatatan transaksi, dan pelaporan keuangan.',
                 'repo_url' => 'https://github.com/internal-it/sistem-keuangan',
-                'status' => ProjectStatus::Maintenance,
+                'status' => 'maintenance',
                 'color' => '#F59E0B',
             ],
             [
@@ -35,7 +34,7 @@ class ProjectSeeder extends Seeder
                 'code' => 'HRIS',
                 'description' => 'Sistem manajemen data karyawan, absensi, cuti, dan penggajian.',
                 'repo_url' => 'https://github.com/internal-it/hris-legacy',
-                'status' => ProjectStatus::Archived,
+                'status' => 'archived',
                 'color' => '#64748B',
             ],
         ];

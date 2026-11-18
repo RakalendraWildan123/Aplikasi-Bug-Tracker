@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ActionItemStatus;
 use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
@@ -13,8 +12,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Tests\TestCase;
-use ValueError;
 
 class ActionItemTableTest extends TestCase
 {
@@ -48,7 +47,7 @@ class ActionItemTableTest extends TestCase
         $fresh = $item->fresh();
 
         $this->assertNotNull($fresh);
-        $this->assertSame(ActionItemStatus::Planned, $fresh->status);
+        $this->assertSame('planned', $fresh->status);
         $this->assertNull($fresh->assigned_to);
         $this->assertNull($fresh->target_date);
         $this->assertNull($fresh->converted_task_id);
@@ -115,7 +114,7 @@ class ActionItemTableTest extends TestCase
         $this->assertDatabaseMissing('action_items', ['id' => $item->id]);
     }
 
-    public function test_invalid_status_enum_values_are_rejected(): void
+    public function test_invalid_status_enum_values_are_rejected_at_database_level(): void
     {
         $evaluation = AppEvaluation::factory()->create();
 
@@ -123,19 +122,11 @@ class ActionItemTableTest extends TestCase
             DB::table('action_items')->insert([
                 'evaluation_id' => $evaluation->id,
                 'action_plan' => 'Invalid Status DB',
-                'status' => 'cancelled_invalid',
+                'status' => 'converted_to_ask',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }, QueryException::class);
-
-        $this->assertThrows(function () use ($evaluation) {
-            ActionItem::create([
-                'evaluation_id' => $evaluation->id,
-                'action_plan' => 'Invalid Status Cast',
-                'status' => 'converted_to_ask',
-            ]);
-        }, ValueError::class);
     }
 
     public function test_casting_relationships_and_scopes_work(): void
@@ -158,7 +149,7 @@ class ActionItemTableTest extends TestCase
 
         $this->assertInstanceOf(CarbonInterface::class, $freshConverted->target_date);
         $this->assertSame('2026-12-01', $freshConverted->target_date->toDateString());
-        $this->assertSame(ActionItemStatus::ConvertedToTask, $freshConverted->status);
+        $this->assertSame('converted_to_task', $freshConverted->status);
         $this->assertSame($evaluation->id, $freshConverted->evaluation->id);
         $this->assertSame($assignee->id, $freshConverted->assignee->id);
         $this->assertSame($task->id, $freshConverted->convertedTask->id);
@@ -167,12 +158,12 @@ class ActionItemTableTest extends TestCase
         $this->assertCount(1, $assignee->assignedActionItems);
         $this->assertSame($convertedItem->id, $task->sourceActionItem->id);
 
-        $this->assertSame([$convertedItem->id], ActionItem::status(ActionItemStatus::ConvertedToTask)->pluck('id')->all());
+        $this->assertSame([$convertedItem->id], ActionItem::status('converted_to_task')->pluck('id')->all());
         $this->assertSame([$completedItem->id], ActionItem::status('completed')->pluck('id')->all());
         $this->assertSame([$convertedItem->id], ActionItem::forEvaluation($evaluation->id)->assignedTo($assignee->id)->pluck('id')->all());
 
         // Scope fails fast on typo
-        $this->assertThrows(fn () => ActionItem::status('typo_status')->get(), ValueError::class);
+        $this->assertThrows(fn () => ActionItem::status('typo_status')->get(), InvalidArgumentException::class);
     }
 
     public function test_action_item_seeder_is_idempotent_and_covers_all_statuses(): void
@@ -184,13 +175,12 @@ class ActionItemTableTest extends TestCase
 
         $statuses = ActionItem::query()
             ->pluck('status')
-            ->map(fn (ActionItemStatus $status) => $status->value)
             ->unique()
             ->sort()
             ->values()
             ->all();
 
-        $this->assertSame(collect(ActionItemStatus::values())->sort()->values()->all(), $statuses);
+        $this->assertSame(collect(ActionItem::STATUSES)->sort()->values()->all(), $statuses);
         $this->assertTrue(ActionItem::query()->whereNotNull('converted_task_id')->exists());
     }
 }

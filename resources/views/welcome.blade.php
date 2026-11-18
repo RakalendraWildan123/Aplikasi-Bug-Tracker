@@ -16,7 +16,33 @@
                     Vue 3 Standalone &middot; Tailwind CSS &middot; HTML5 Drag &amp; Drop API &middot; MySQL &middot; Redis &middot; Snappy PDF
                 </p>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                @auth
+                    @if (auth()->user()->isAdmin())
+                        <a
+                            href="{{ route('admin.accounts.index') }}"
+                            class="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 shadow-xs transition hover:bg-indigo-100"
+                        >
+                            Manajemen Akun
+                        </a>
+                    @endif
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-xs transition hover:bg-slate-100"
+                        >
+                            Keluar ({{ auth()->user()->name }})
+                        </button>
+                    </form>
+                @else
+                    <a
+                        href="{{ route('login') }}"
+                        class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition hover:bg-slate-100"
+                    >
+                        Masuk
+                    </a>
+                @endauth
                 <a
                     href="{{ route('exports.sample-pdf') }}"
                     target="_blank"

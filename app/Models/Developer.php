@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\DeveloperRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Developer extends Model
@@ -13,10 +13,18 @@ class Developer extends Model
     /** @use HasFactory<\Database\Factories\DeveloperFactory> */
     use HasFactory;
 
+    public const ROLES = [
+        'Fullstack Lead',
+        'Backend',
+        'Frontend',
+        'Mobile',
+    ];
+
     /**
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'name',
         'email',
         'role_title',
@@ -31,9 +39,18 @@ class Developer extends Model
     protected function casts(): array
     {
         return [
-            'role_title' => DeveloperRole::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the user account associated with this developer.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

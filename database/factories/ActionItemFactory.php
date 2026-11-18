@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\ActionItemStatus;
 use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
@@ -28,7 +27,7 @@ class ActionItemFactory extends Factory
             'action_plan' => fake()->sentence(10),
             'assigned_to' => Developer::factory(),
             'target_date' => now()->addDays(fake()->numberBetween(3, 30))->toDateString(),
-            'status' => ActionItemStatus::Planned,
+            'status' => 'planned',
             'converted_task_id' => null,
         ];
     }
@@ -39,7 +38,7 @@ class ActionItemFactory extends Factory
     public function convertedToTask(?Task $task = null): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ActionItemStatus::ConvertedToTask,
+            'status' => 'converted_to_task',
             'converted_task_id' => $task?->id ?? Task::factory(),
         ]);
     }
@@ -50,7 +49,7 @@ class ActionItemFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ActionItemStatus::Completed,
+            'status' => 'completed',
         ]);
     }
 

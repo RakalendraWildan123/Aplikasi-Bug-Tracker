@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\BugSeverity;
-use App\Enums\BugStatus;
 use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
@@ -14,8 +12,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Tests\TestCase;
-use ValueError;
 
 class BugTableTest extends TestCase
 {
@@ -59,8 +57,8 @@ class BugTableTest extends TestCase
         $fresh = $bug->fresh();
 
         $this->assertNotNull($fresh);
-        $this->assertSame(BugSeverity::Medium, $fresh->severity);
-        $this->assertSame(BugStatus::Open, $fresh->status);
+        $this->assertSame('medium', $fresh->severity);
+        $this->assertSame('open', $fresh->status);
         $this->assertNull($fresh->module_id);
         $this->assertNull($fresh->assigned_to);
         $this->assertNull($fresh->description);
@@ -154,7 +152,7 @@ class BugTableTest extends TestCase
         $this->assertDatabaseMissing('bugs', ['id' => $bug->id]);
     }
 
-    public function test_invalid_enum_values_are_rejected_at_database_and_model_levels(): void
+    public function test_invalid_enum_values_are_rejected_at_database_level(): void
     {
         $project = Project::factory()->create();
         $creator = Developer::factory()->create();
@@ -180,24 +178,6 @@ class BugTableTest extends TestCase
                 'updated_at' => now(),
             ]);
         }, QueryException::class);
-
-        $this->assertThrows(function () use ($project, $creator) {
-            Bug::create([
-                'project_id' => $project->id,
-                'created_by' => $creator->id,
-                'title' => 'Invalid Severity Cast',
-                'severity' => 'extreme',
-            ]);
-        }, ValueError::class);
-
-        $this->assertThrows(function () use ($project, $creator) {
-            Bug::create([
-                'project_id' => $project->id,
-                'created_by' => $creator->id,
-                'title' => 'Invalid Status Cast',
-                'status' => 'wontfix',
-            ]);
-        }, ValueError::class);
     }
 
     public function test_casts_json_handover_logs_and_dates_properly(): void
@@ -242,7 +222,7 @@ class BugTableTest extends TestCase
             'project_id' => $project->id,
             'module_id' => $module->id,
             'created_by' => $creator->id,
-            'severity' => BugSeverity::Low,
+            'severity' => 'low',
         ]);
 
         $this->assertSame($project->id, $criticalOpenBug->project->id);
@@ -256,14 +236,13 @@ class BugTableTest extends TestCase
         $this->assertCount(1, $assignee->assignedBugs);
 
         $this->assertSame([$criticalOpenBug->id], Bug::open()->pluck('id')->all());
-        $this->assertSame([$resolvedBug->id], Bug::status(BugStatus::Resolved)->pluck('id')->all());
         $this->assertSame([$resolvedBug->id], Bug::status('resolved')->pluck('id')->all());
-        $this->assertSame([$criticalOpenBug->id], Bug::severity(BugSeverity::Critical)->pluck('id')->all());
+        $this->assertSame([$criticalOpenBug->id], Bug::severity('critical')->pluck('id')->all());
         $this->assertSame([$criticalOpenBug->id], Bug::forProject($project->id)->assignedTo($assignee->id)->pluck('id')->all());
 
         // Scopes fail fast on typo
-        $this->assertThrows(fn () => Bug::status('typo_status')->get(), ValueError::class);
-        $this->assertThrows(fn () => Bug::severity('typo_severity')->get(), ValueError::class);
+        $this->assertThrows(fn () => Bug::status('typo_status')->get(), InvalidArgumentException::class);
+        $this->assertThrows(fn () => Bug::severity('typo_severity')->get(), InvalidArgumentException::class);
     }
 
     public function test_bug_seeder_is_idempotent_and_covers_all_enums(): void
@@ -273,23 +252,11 @@ class BugTableTest extends TestCase
 
         $this->assertDatabaseCount('bugs', 4);
 
-        $severities = Bug::query()
-            ->pluck('severity')
-            ->map(fn (BugSeverity $severity) => $severity->value)
-            ->sort()
-            ->values()
-            ->all();
+        $severities = Bug::query()->pluck('severity')->sort()->values()->all();
+        $statuses = Bug::query()->pluck('status')->unique()->sort()->values()->all();
 
-        $statuses = Bug::query()
-            ->pluck('status')
-            ->map(fn (BugStatus $status) => $status->value)
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
-
-        $this->assertSame(collect(BugSeverity::values())->sort()->values()->all(), $severities);
-        $this->assertSame(collect(BugStatus::values())->sort()->values()->all(), $statuses);
+        $this->assertSame(collect(Bug::SEVERITIES)->sort()->values()->all(), $severities);
+        $this->assertSame(collect(Bug::STATUSES)->sort()->values()->all(), $statuses);
         $this->assertTrue(Bug::query()->whereNotNull('root_cause')->whereNotNull('solution_notes')->whereNotNull('resolved_at')->exists());
         $this->assertTrue(Bug::query()->get()->contains(fn (Bug $b) => ! empty($b->handover_logs)));
     }

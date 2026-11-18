@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
@@ -14,8 +12,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Tests\TestCase;
-use ValueError;
 
 class TaskTableTest extends TestCase
 {
@@ -58,8 +56,8 @@ class TaskTableTest extends TestCase
         $fresh = $task->fresh();
 
         $this->assertNotNull($fresh);
-        $this->assertSame(TaskType::Feature, $fresh->task_type);
-        $this->assertSame(TaskStatus::Todo, $fresh->status);
+        $this->assertSame('feature', $fresh->task_type);
+        $this->assertSame('todo', $fresh->status);
         $this->assertNull($fresh->module_id);
         $this->assertNull($fresh->assigned_to);
         $this->assertNull($fresh->description);
@@ -152,7 +150,7 @@ class TaskTableTest extends TestCase
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
     }
 
-    public function test_invalid_enum_values_are_rejected_at_database_and_model_levels(): void
+    public function test_invalid_enum_values_are_rejected_at_database_level(): void
     {
         $project = Project::factory()->create();
         $creator = Developer::factory()->create();
@@ -178,24 +176,6 @@ class TaskTableTest extends TestCase
                 'updated_at' => now(),
             ]);
         }, QueryException::class);
-
-        $this->assertThrows(function () use ($project, $creator) {
-            Task::create([
-                'project_id' => $project->id,
-                'created_by' => $creator->id,
-                'title' => 'Invalid Cast',
-                'task_type' => 'non_existent_type',
-            ]);
-        }, ValueError::class);
-
-        $this->assertThrows(function () use ($project, $creator) {
-            Task::create([
-                'project_id' => $project->id,
-                'created_by' => $creator->id,
-                'title' => 'Invalid Status Cast',
-                'status' => 'non_existent_status',
-            ]);
-        }, ValueError::class);
     }
 
     public function test_casts_json_handover_logs_and_dates_properly(): void
@@ -237,14 +217,14 @@ class TaskTableTest extends TestCase
             'module_id' => $module->id,
             'created_by' => $creator->id,
             'assigned_to' => $assignee->id,
-            'task_type' => TaskType::Feature,
+            'task_type' => 'feature',
         ]);
 
         $refactorTask = Task::factory()->inReview()->unassigned()->create([
             'project_id' => $project->id,
             'module_id' => $module->id,
             'created_by' => $creator->id,
-            'task_type' => TaskType::Refactor,
+            'task_type' => 'refactor',
         ]);
 
         $this->assertSame($project->id, $featureTask->project->id);
@@ -257,14 +237,14 @@ class TaskTableTest extends TestCase
         $this->assertCount(2, $creator->createdTasks);
         $this->assertCount(1, $assignee->assignedTasks);
 
-        $this->assertSame([$featureTask->id], Task::status(TaskStatus::InProgress)->pluck('id')->all());
+        $this->assertSame([$featureTask->id], Task::status('in_progress')->pluck('id')->all());
         $this->assertSame([$refactorTask->id], Task::status('review')->pluck('id')->all());
-        $this->assertSame([$refactorTask->id], Task::type(TaskType::Refactor)->pluck('id')->all());
+        $this->assertSame([$refactorTask->id], Task::type('refactor')->pluck('id')->all());
         $this->assertSame([$featureTask->id], Task::forProject($project->id)->assignedTo($assignee->id)->pluck('id')->all());
 
         // Scopes fail fast on typo
-        $this->assertThrows(fn () => Task::status('typo_status')->get(), ValueError::class);
-        $this->assertThrows(fn () => Task::type('typo_type')->get(), ValueError::class);
+        $this->assertThrows(fn () => Task::status('typo_status')->get(), InvalidArgumentException::class);
+        $this->assertThrows(fn () => Task::type('typo_type')->get(), InvalidArgumentException::class);
     }
 
     public function test_task_seeder_is_idempotent_and_covers_all_enums(): void
@@ -274,22 +254,11 @@ class TaskTableTest extends TestCase
 
         $this->assertDatabaseCount('tasks', 4);
 
-        $types = Task::query()
-            ->pluck('task_type')
-            ->map(fn (TaskType $type) => $type->value)
-            ->sort()
-            ->values()
-            ->all();
+        $types = Task::query()->pluck('task_type')->sort()->values()->all();
+        $statuses = Task::query()->pluck('status')->sort()->values()->all();
 
-        $statuses = Task::query()
-            ->pluck('status')
-            ->map(fn (TaskStatus $status) => $status->value)
-            ->sort()
-            ->values()
-            ->all();
-
-        $this->assertSame(collect(TaskType::values())->sort()->values()->all(), $types);
-        $this->assertSame(collect(TaskStatus::values())->sort()->values()->all(), $statuses);
+        $this->assertSame(collect(Task::TYPES)->sort()->values()->all(), $types);
+        $this->assertSame(collect(Task::STATUSES)->sort()->values()->all(), $statuses);
         $this->assertTrue(Task::query()->whereNotNull('blocker_notes')->exists());
         $this->assertTrue(Task::query()->get()->contains(fn (Task $t) => ! empty($t->handover_logs)));
     }

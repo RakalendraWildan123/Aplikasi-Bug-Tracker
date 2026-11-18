@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BugSeverity;
-use App\Enums\BugStatus;
 use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
@@ -55,8 +53,8 @@ class BugSeeder extends Seeder
                 'description' => 'Ekspor laporan keuangan periode 12 bulan mengalami timeout ketika data melebihi 10.000 baris.',
                 'reported_by' => 'Divisi Finance - Hendra',
                 'reported_date' => '2026-11-12',
-                'severity' => BugSeverity::Critical,
-                'status' => BugStatus::InProgress,
+                'severity' => 'critical',
+                'status' => 'in_progress',
                 'root_cause' => 'Query agregasi berjalan tanpa index komposit dan belum memanfaatkan cache ekspor Redis.',
                 'solution_notes' => null,
                 'resolved_at' => null,
@@ -78,8 +76,8 @@ class BugSeeder extends Seeder
                 'description' => 'Pengguna yang logout di satu tab masih dapat mengakses API dari tab lain hingga token expired.',
                 'reported_by' => 'QA - Sari',
                 'reported_date' => '2026-11-08',
-                'severity' => BugSeverity::High,
-                'status' => BugStatus::Resolved,
+                'severity' => 'high',
+                'status' => 'resolved',
                 'root_cause' => 'Endpoint logout hanya menghapus cookie lokal tanpa merevoke session token di server.',
                 'solution_notes' => 'Menambahkan invalidasi sesi server-side dan regenerasi CSRF token saat logout.',
                 'resolved_at' => '2026-11-10 15:20:00',
@@ -94,8 +92,8 @@ class BugSeeder extends Seeder
                 'description' => 'Pada beberapa perangkat Android, check-in pertama setelah memberi izin lokasi mengirim koordinat kosong.',
                 'reported_by' => 'HR Operations - Nia',
                 'reported_date' => '2026-11-15',
-                'severity' => BugSeverity::Medium,
-                'status' => BugStatus::Open,
+                'severity' => 'medium',
+                'status' => 'open',
                 'root_cause' => null,
                 'solution_notes' => null,
                 'resolved_at' => null,
@@ -110,8 +108,8 @@ class BugSeeder extends Seeder
                 'description' => 'Teks badge kategori panjang keluar dari kontainer kartu pada viewport smartphone kecil.',
                 'reported_by' => 'QA - Dimas',
                 'reported_date' => '2026-11-16',
-                'severity' => BugSeverity::Low,
-                'status' => BugStatus::Open,
+                'severity' => 'low',
+                'status' => 'open',
                 'root_cause' => null,
                 'solution_notes' => null,
                 'resolved_at' => null,

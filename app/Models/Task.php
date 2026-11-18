@@ -2,18 +2,31 @@
 
 namespace App\Models;
 
-use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use InvalidArgumentException;
 
 class Task extends Model
 {
     /** @use HasFactory<\Database\Factories\TaskFactory> */
     use HasFactory;
+
+    public const TYPES = [
+        'feature',
+        'enhancement',
+        'refactor',
+        'maintenance',
+    ];
+
+    public const STATUSES = [
+        'todo',
+        'in_progress',
+        'review',
+        'done',
+    ];
 
     /**
      * @var list<string>
@@ -40,8 +53,6 @@ class Task extends Model
     protected function casts(): array
     {
         return [
-            'task_type' => TaskType::class,
-            'status' => TaskStatus::class,
             'start_date' => 'date',
             'target_date' => 'date',
             'completed_at' => 'datetime',
@@ -84,21 +95,25 @@ class Task extends Model
     /**
      * Scope a query to filter tasks by status.
      */
-    public function scopeStatus(Builder $query, TaskStatus|string $status): Builder
+    public function scopeStatus(Builder $query, string $status): Builder
     {
-        $enum = $status instanceof TaskStatus ? $status : TaskStatus::from($status);
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new InvalidArgumentException("Invalid task status: {$status}");
+        }
 
-        return $query->where('status', $enum->value);
+        return $query->where('status', $status);
     }
 
     /**
      * Scope a query to filter tasks by type.
      */
-    public function scopeType(Builder $query, TaskType|string $type): Builder
+    public function scopeType(Builder $query, string $type): Builder
     {
-        $enum = $type instanceof TaskType ? $type : TaskType::from($type);
+        if (! in_array($type, self::TYPES, true)) {
+            throw new InvalidArgumentException("Invalid task type: {$type}");
+        }
 
-        return $query->where('task_type', $enum->value);
+        return $query->where('task_type', $type);
     }
 
     /**

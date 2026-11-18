@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -29,7 +28,7 @@ class ProjectFactory extends Factory
             'code' => Str::upper(fake()->unique()->lexify('PRJ-????')),
             'description' => fake()->paragraph(),
             'repo_url' => 'https://github.com/internal-it/'.($slug !== '' ? $slug : 'project'),
-            'status' => ProjectStatus::Active,
+            'status' => 'active',
             'color' => fake()->randomElement([
                 '#4F46E5',
                 '#10B981',
@@ -46,7 +45,7 @@ class ProjectFactory extends Factory
     public function maintenance(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ProjectStatus::Maintenance,
+            'status' => 'maintenance',
         ]);
     }
 
@@ -56,7 +55,7 @@ class ProjectFactory extends Factory
     public function archived(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => ProjectStatus::Archived,
+            'status' => 'archived',
         ]);
     }
 }

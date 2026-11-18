@@ -2,17 +2,29 @@
 
 namespace App\Models;
 
-use App\Enums\BugSeverity;
-use App\Enums\BugStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use InvalidArgumentException;
 
 class Bug extends Model
 {
     /** @use HasFactory<\Database\Factories\BugFactory> */
     use HasFactory;
+
+    public const SEVERITIES = [
+        'critical',
+        'high',
+        'medium',
+        'low',
+    ];
+
+    public const STATUSES = [
+        'open',
+        'in_progress',
+        'resolved',
+    ];
 
     /**
      * @var list<string>
@@ -40,8 +52,6 @@ class Bug extends Model
     protected function casts(): array
     {
         return [
-            'severity' => BugSeverity::class,
-            'status' => BugStatus::class,
             'reported_date' => 'date',
             'resolved_at' => 'datetime',
             'handover_logs' => 'array',
@@ -83,21 +93,25 @@ class Bug extends Model
     /**
      * Scope a query to filter bugs by status.
      */
-    public function scopeStatus(Builder $query, BugStatus|string $status): Builder
+    public function scopeStatus(Builder $query, string $status): Builder
     {
-        $enum = $status instanceof BugStatus ? $status : BugStatus::from($status);
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new InvalidArgumentException("Invalid bug status: {$status}");
+        }
 
-        return $query->where('status', $enum->value);
+        return $query->where('status', $status);
     }
 
     /**
      * Scope a query to filter bugs by severity.
      */
-    public function scopeSeverity(Builder $query, BugSeverity|string $severity): Builder
+    public function scopeSeverity(Builder $query, string $severity): Builder
     {
-        $enum = $severity instanceof BugSeverity ? $severity : BugSeverity::from($severity);
+        if (! in_array($severity, self::SEVERITIES, true)) {
+            throw new InvalidArgumentException("Invalid bug severity: {$severity}");
+        }
 
-        return $query->where('severity', $enum->value);
+        return $query->where('severity', $severity);
     }
 
     /**
@@ -105,7 +119,7 @@ class Bug extends Model
      */
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->where('status', BugStatus::Open->value);
+        return $query->where('status', 'open');
     }
 
     /**

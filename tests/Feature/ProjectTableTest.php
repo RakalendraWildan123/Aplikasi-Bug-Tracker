@@ -2,15 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ProjectStatus;
 use App\Models\Project;
 use Database\Seeders\ProjectSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Tests\TestCase;
-use ValueError;
 
 class ProjectTableTest extends TestCase
 {
@@ -43,7 +42,7 @@ class ProjectTableTest extends TestCase
         $fresh = $project->fresh();
 
         $this->assertNotNull($fresh);
-        $this->assertSame(ProjectStatus::Active, $fresh->status);
+        $this->assertSame('active', $fresh->status);
         $this->assertNull($fresh->description);
         $this->assertNull($fresh->repo_url);
     }
@@ -75,37 +74,26 @@ class ProjectTableTest extends TestCase
         ]);
     }
 
-    public function test_model_rejects_invalid_status_value_via_enum_cast(): void
-    {
-        $this->expectException(ValueError::class);
-
-        Project::create([
-            'name' => 'Invalid Cast Project',
-            'code' => 'INV-02',
-            'status' => 'unknown_status',
-            'color' => '#000000',
-        ]);
-    }
-
-    public function test_model_casts_status_and_supports_scopes(): void
+    public function test_model_supports_status_and_scopes(): void
     {
         $activeProject = Project::factory()->create(['code' => 'ACT-01']);
         $maintenanceProject = Project::factory()->maintenance()->create(['code' => 'MNT-01']);
         $archivedProject = Project::factory()->archived()->create(['code' => 'ARC-01']);
 
-        $this->assertInstanceOf(ProjectStatus::class, $activeProject->status);
-        $this->assertSame('active', $activeProject->status->value);
-        $this->assertSame(ProjectStatus::Maintenance, $maintenanceProject->status);
-        $this->assertSame(ProjectStatus::Archived, $archivedProject->status);
+        $this->assertSame('active', $activeProject->status);
+        $this->assertSame('maintenance', $maintenanceProject->status);
+        $this->assertSame('archived', $archivedProject->status);
 
         $activeIds = Project::active()->pluck('id')->all();
         $this->assertSame([$activeProject->id], $activeIds);
 
-        $maintenanceIds = Project::status(ProjectStatus::Maintenance)->pluck('id')->all();
+        $maintenanceIds = Project::status('maintenance')->pluck('id')->all();
         $this->assertSame([$maintenanceProject->id], $maintenanceIds);
 
         $archivedIds = Project::status('archived')->pluck('id')->all();
         $this->assertSame([$archivedProject->id], $archivedIds);
+
+        $this->assertThrows(fn () => Project::status('unknown_status')->get(), InvalidArgumentException::class);
     }
 
     public function test_project_seeder_is_idempotent_and_seeds_all_statuses(): void
@@ -120,12 +108,11 @@ class ProjectTableTest extends TestCase
 
         $statuses = Project::query()
             ->pluck('status')
-            ->map(fn (ProjectStatus $status) => $status->value)
             ->sort()
             ->values()
             ->all();
 
-        $expected = collect(ProjectStatus::values())->sort()->values()->all();
+        $expected = collect(Project::STATUSES)->sort()->values()->all();
         $this->assertSame($expected, $statuses);
     }
 }

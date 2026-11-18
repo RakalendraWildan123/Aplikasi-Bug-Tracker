@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
@@ -53,8 +51,8 @@ class TaskSeeder extends Seeder
                 'assigned_to' => $backend->id,
                 'title' => 'Implementasi OAuth2 SSO untuk Portal Intranet',
                 'description' => 'Menambahkan login SSO terpusat menggunakan OAuth2 dan token refresh.',
-                'task_type' => TaskType::Feature,
-                'status' => TaskStatus::InProgress,
+                'task_type' => 'feature',
+                'status' => 'in_progress',
                 'start_date' => '2026-11-10',
                 'target_date' => '2026-11-24',
                 'completed_at' => null,
@@ -75,8 +73,8 @@ class TaskSeeder extends Seeder
                 'assigned_to' => $frontend->id,
                 'title' => 'Optimasi Tampilan Feed Pengumuman di Layar Mobile',
                 'description' => 'Meningkatkan responsivitas kartu berita dan lazy-loading gambar.',
-                'task_type' => TaskType::Enhancement,
-                'status' => TaskStatus::Review,
+                'task_type' => 'enhancement',
+                'status' => 'review',
                 'start_date' => '2026-11-12',
                 'target_date' => '2026-11-20',
                 'completed_at' => null,
@@ -90,8 +88,8 @@ class TaskSeeder extends Seeder
                 'assigned_to' => $backend->id,
                 'title' => 'Refactor Query Rekapitulasi Transaksi Bulanan',
                 'description' => 'Mengurangi N+1 query dan menambahkan caching Redis untuk ekspor PDF laporan.',
-                'task_type' => TaskType::Refactor,
-                'status' => TaskStatus::Done,
+                'task_type' => 'refactor',
+                'status' => 'done',
                 'start_date' => '2026-11-01',
                 'target_date' => '2026-11-14',
                 'completed_at' => '2026-11-13 16:45:00',
@@ -105,8 +103,8 @@ class TaskSeeder extends Seeder
                 'assigned_to' => $mobile->id,
                 'title' => 'Maintenance Sinkronisasi Lokasi Absensi Android',
                 'description' => 'Pembaruan library GPS untuk menjaga akurasi absensi di perangkat Android terbaru.',
-                'task_type' => TaskType::Maintenance,
-                'status' => TaskStatus::Todo,
+                'task_type' => 'maintenance',
+                'status' => 'todo',
                 'start_date' => '2026-11-19',
                 'target_date' => '2026-11-28',
                 'completed_at' => null,

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ActionItemStatus;
 use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
@@ -34,7 +33,6 @@ class ActionItemSeeder extends Seeder
 
         $lead = $developers->get('raka.pratama@bugtracker.test') ?? Developer::query()->firstOrFail();
         $backend = $developers->get('dina.kusuma@bugtracker.test') ?? $lead;
-        $frontend = $developers->get('budi.santoso@bugtracker.test') ?? $lead;
         $mobile = $developers->get('siti.rahma@bugtracker.test') ?? $lead;
 
         $intraQ3 = $projects->get('INTRA')?->appEvaluations->firstWhere('period_review', 'Q3 2026');
@@ -60,7 +58,7 @@ class ActionItemSeeder extends Seeder
                 'action_plan' => 'Implementasi autentikasi terpusat OAuth2 SSO untuk mempercepat login jam sibuk.',
                 'assigned_to' => $backend->id,
                 'target_date' => '2026-11-24',
-                'status' => ActionItemStatus::ConvertedToTask,
+                'status' => 'converted_to_task',
                 'converted_task_id' => $ssoTask?->id,
             ],
             [
@@ -68,7 +66,7 @@ class ActionItemSeeder extends Seeder
                 'action_plan' => 'Optimasi query agregasi dan tambahkan Redis caching untuk ekspor PDF laporan keuangan.',
                 'assigned_to' => $backend->id,
                 'target_date' => '2026-11-14',
-                'status' => ActionItemStatus::Completed,
+                'status' => 'completed',
                 'converted_task_id' => $refactorTask?->id,
             ],
             [
@@ -76,7 +74,7 @@ class ActionItemSeeder extends Seeder
                 'action_plan' => 'Siapkan alert monitoring penggunaan memori Redis menjelang periode tutup buku bulanan.',
                 'assigned_to' => $lead->id,
                 'target_date' => '2026-12-05',
-                'status' => ActionItemStatus::Planned,
+                'status' => 'planned',
                 'converted_task_id' => null,
             ],
             [
@@ -84,7 +82,7 @@ class ActionItemSeeder extends Seeder
                 'action_plan' => 'Perbarui mekanisme izin GPS dan tambah indikator notifikasi approval cuti di aplikasi.',
                 'assigned_to' => $mobile->id,
                 'target_date' => '2026-11-30',
-                'status' => ActionItemStatus::Planned,
+                'status' => 'planned',
                 'converted_task_id' => null,
             ],
         ];

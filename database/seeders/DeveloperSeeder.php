@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\DeveloperRole;
 use App\Models\Developer;
 use Illuminate\Database\Seeder;
 
@@ -17,33 +16,33 @@ class DeveloperSeeder extends Seeder
             [
                 'name' => 'Raka Pratama',
                 'email' => 'raka.pratama@bugtracker.test',
-                'role_title' => DeveloperRole::FullstackLead,
+                'role_title' => 'Fullstack Lead',
                 'avatar' => 'RP',
-                'avatar_bg' => 'bg-indigo-600',
+                'avatar_bg' => '#4F46E5',
                 'is_active' => true,
             ],
             [
                 'name' => 'Dina Kusuma',
                 'email' => 'dina.kusuma@bugtracker.test',
-                'role_title' => DeveloperRole::Backend,
+                'role_title' => 'Backend',
                 'avatar' => 'DK',
-                'avatar_bg' => 'bg-emerald-600',
+                'avatar_bg' => '#10B981',
                 'is_active' => true,
             ],
             [
                 'name' => 'Budi Santoso',
                 'email' => 'budi.santoso@bugtracker.test',
-                'role_title' => DeveloperRole::Frontend,
+                'role_title' => 'Frontend',
                 'avatar' => 'BS',
-                'avatar_bg' => 'bg-amber-600',
+                'avatar_bg' => '#F59E0B',
                 'is_active' => true,
             ],
             [
                 'name' => 'Siti Rahma',
                 'email' => 'siti.rahma@bugtracker.test',
-                'role_title' => DeveloperRole::Mobile,
+                'role_title' => 'Mobile',
                 'avatar' => 'SR',
-                'avatar_bg' => 'bg-rose-600',
+                'avatar_bg' => '#EF4444',
                 'is_active' => true,
             ],
         ];

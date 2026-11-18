@@ -2,8 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\BugSeverity;
-use App\Enums\BugStatus;
 use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
@@ -36,8 +34,8 @@ class BugFactory extends Factory
             'description' => fake()->paragraph(),
             'reported_by' => Str::substr('QA - '.fake()->name(), 0, 150),
             'reported_date' => now()->subDays(fake()->numberBetween(0, 10))->toDateString(),
-            'severity' => fake()->randomElement(BugSeverity::cases()),
-            'status' => BugStatus::Open,
+            'severity' => fake()->randomElement(Bug::SEVERITIES),
+            'status' => 'open',
             'root_cause' => null,
             'solution_notes' => null,
             'resolved_at' => null,
@@ -48,14 +46,14 @@ class BugFactory extends Factory
     public function critical(): static
     {
         return $this->state(fn (array $attributes) => [
-            'severity' => BugSeverity::Critical,
+            'severity' => 'critical',
         ]);
     }
 
     public function inProgress(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => BugStatus::InProgress,
+            'status' => 'in_progress',
             'resolved_at' => null,
         ]);
     }
@@ -63,7 +61,7 @@ class BugFactory extends Factory
     public function resolved(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => BugStatus::Resolved,
+            'status' => 'resolved',
             'root_cause' => 'Validasi input belum menangani nilai null pada payload.',
             'solution_notes' => 'Menambahkan guard clause dan regression test.',
             'resolved_at' => now(),

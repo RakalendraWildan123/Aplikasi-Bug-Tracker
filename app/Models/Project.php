@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
-use App\Enums\ProjectStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 
 class Project extends Model
 {
     /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
+
+    public const STATUSES = [
+        'active',
+        'maintenance',
+        'archived',
+    ];
 
     /**
      * @var list<string>
@@ -26,31 +32,23 @@ class Project extends Model
     ];
 
     /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'status' => ProjectStatus::class,
-        ];
-    }
-
-    /**
      * Scope a query to only include active projects.
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', ProjectStatus::Active->value);
+        return $query->where('status', 'active');
     }
 
     /**
      * Scope a query to filter projects by status.
      */
-    public function scopeStatus(Builder $query, ProjectStatus|string $status): Builder
+    public function scopeStatus(Builder $query, string $status): Builder
     {
-        $value = $status instanceof ProjectStatus ? $status->value : $status;
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new InvalidArgumentException("Invalid project status: {$status}");
+        }
 
-        return $query->where('status', $value);
+        return $query->where('status', $status);
     }
 
     /**

@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
-use App\Enums\ActionItemStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use InvalidArgumentException;
 
 class ActionItem extends Model
 {
     /** @use HasFactory<\Database\Factories\ActionItemFactory> */
     use HasFactory;
+
+    public const STATUSES = [
+        'planned',
+        'converted_to_task',
+        'completed',
+    ];
 
     /**
      * @var list<string>
@@ -31,7 +37,6 @@ class ActionItem extends Model
     protected function casts(): array
     {
         return [
-            'status' => ActionItemStatus::class,
             'target_date' => 'date',
         ];
     }
@@ -63,11 +68,13 @@ class ActionItem extends Model
     /**
      * Scope a query to filter action items by status.
      */
-    public function scopeStatus(Builder $query, ActionItemStatus|string $status): Builder
+    public function scopeStatus(Builder $query, string $status): Builder
     {
-        $enum = $status instanceof ActionItemStatus ? $status : ActionItemStatus::from($status);
+        if (! in_array($status, self::STATUSES, true)) {
+            throw new InvalidArgumentException("Invalid action item status: {$status}");
+        }
 
-        return $query->where('status', $enum->value);
+        return $query->where('status', $status);
     }
 
     /**
