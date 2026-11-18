@@ -72,4 +72,14 @@ class Project extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    /**
+     * Get the bugs for the project.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function bugs(): HasMany
+    {
+        return $this->hasMany(Bug::class);
+    }
 }

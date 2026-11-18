@@ -63,4 +63,24 @@ class Developer extends Model
     {
         return $this->hasMany(Task::class, 'assigned_to');
     }
+
+    /**
+     * Get bugs created by this developer.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function createdBugs(): HasMany
+    {
+        return $this->hasMany(Bug::class, 'created_by');
+    }
+
+    /**
+     * Get bugs assigned to this developer.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function assignedBugs(): HasMany
+    {
+        return $this->hasMany(Bug::class, 'assigned_to');
+    }
 }

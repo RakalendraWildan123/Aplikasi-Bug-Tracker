@@ -40,4 +40,14 @@ class Module extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    /**
+     * Get the bugs for the module.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function bugs(): HasMany
+    {
+        return $this->hasMany(Bug::class);
+    }
 }
