@@ -82,4 +82,14 @@ class Project extends Model
     {
         return $this->hasMany(Bug::class);
     }
+
+    /**
+     * Get the repository release histories for the project.
+     *
+     * @return HasMany<RepoHistory, $this>
+     */
+    public function repoHistories(): HasMany
+    {
+        return $this->hasMany(RepoHistory::class);
+    }
 }
