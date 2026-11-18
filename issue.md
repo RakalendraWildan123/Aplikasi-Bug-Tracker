@@ -1,132 +1,97 @@
-# Planning: Implementasi Tabel `bugs` (Migration, Enum, Model, Relasi, Factory, Seeder & Test)
+# Planning: Implementasi Tabel `repo_histories` (Migration, Model, Relasi, Factory, Seeder & Test)
 
 ## Ringkasan & Tujuan
-Membuat tabel inti **`bugs`** untuk mencatat, melacak, dan memantau laporan bug/insiden yang terhubung ke tabel **`projects`**, **`modules`**, dan **`developers`** pada aplikasi **Laravel 12 + MySQL**, lengkap dengan 2 PHP Backed Enum (`BugSeverity` & `BugStatus`), Migration + 4 Foreign Key + Index, Eloquent Model + Relasi dua arah, Factory, Seeder idempoten, dan pengujian otomatis.
+Membuat tabel **`repo_histories`** untuk mencatat riwayat rilis, tag versi, branch, commit hash, dan ringkasan perubahan (*changelog*) pada setiap **Project** di aplikasi **Laravel 12 + MySQL**, lengkap dengan Migration + Foreign Key + Index, Eloquent Model `RepoHistory` + Relasi dua arah dengan `Project`, Factory, Seeder idempoten, dan pengujian otomatis.
 
-Dokumen ini disusun langkah demi langkah mengikuti pola tabel `tasks` agar dapat langsung diimplementasikan oleh **junior programmer** atau **model AI yang lebih kecil** secara konsisten dan minim error.
+Dokumen ini disusun langkah demi langkah agar mudah diimplementasikan oleh **junior programmer** atau **model AI yang lebih kecil** secara konsisten dengan pola tabel lainnya (`developers`, `projects`, `modules`, `tasks`, `bugs`).
 
-> **Prasyarat Wajib:** Tabel & Model `developers`, `projects`, dan `modules` (sudah tersedia di branch `main`) menjadi referensi Foreign Key untuk tabel `bugs`.
+> **Prasyarat Wajib:** Tabel & Model `projects` beserta `ProjectSeeder` (sudah tersedia di branch `main`) menjadi referensi Foreign Key untuk tabel `repo_histories`.
 
 ---
 
 ## Spesifikasi Skema Tabel
 
-> **Catatan Konvensi Nama:** Gunakan nama tabel plural Bahasa Inggris **`bugs`** (Model: `Bug`) agar konsisten dengan `users`, `developers`, `projects`, `modules`, dan `tasks`. Seluruh nama kolom **wajib `snake_case` huruf kecil**.  
-> *(Jika kebutuhan ERD mewajibkan nama singular `bug`, ubah nama tabel di migrasi menjadi `bug` dan tambahkan `protected $table = 'bug';` pada Model `Bug`.)*
+> **Catatan Konvensi Nama:** Nama tabel **`repo_histories`** sudah sesuai standar plural `snake_case` Laravel sehingga otomatis terhubung ke Model **`App\Models\RepoHistory`**. Seluruh nama kolom **wajib `snake_case` huruf kecil**.
 
-| Nama Kolom | Tipe SQL | Panjang / Nilai / Referensi | Constraint / Default | Method Migration Laravel | Keterangan |
+| Nama Kolom | Tipe SQL | Panjang / Referensi | Constraint / Default | Method Migration Laravel | Keterangan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT UNSIGNED` | Auto Increment | `PRIMARY KEY` | `$table->id();` | ID unik bug |
-| `project_id` | `BIGINT UNSIGNED` | FK -> `projects.id` | `NOT NULL`, `ON DELETE CASCADE` | `$table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();` | Project tempat bug ditemukan |
-| `module_id` | `BIGINT UNSIGNED` | FK -> `modules.id` | `NULLABLE`, `ON DELETE SET NULL` | `$table->foreignId('module_id')->nullable()->constrained('modules')->nullOnDelete();` | Modul terkait (opsional / aman jika modul dihapus) |
-| `created_by` | `BIGINT UNSIGNED` | FK -> `developers.id` | `NOT NULL`, `ON DELETE RESTRICT` | `$table->foreignId('created_by')->constrained('developers')->restrictOnDelete();` | Developer pencatat bug (wajib eksplisit `'developers'`) |
-| `assigned_to` | `BIGINT UNSIGNED` | FK -> `developers.id` | `NULLABLE`, `ON DELETE SET NULL` | `$table->foreignId('assigned_to')->nullable()->constrained('developers')->nullOnDelete();` | Developer penanggung jawab (boleh kosong saat `open`) |
-| `title` | `VARCHAR` | `255` | `NOT NULL` | `$table->string('title', 255);` | Ringkasan/judul bug |
-| `description` | `TEXT` | - | `NULLABLE` | `$table->text('description')->nullable();` | Detail reproduksi & gejala bug |
-| `reported_by` | `VARCHAR` | `150` | `NULLABLE` | `$table->string('reported_by', 150)->nullable();` | Nama pelapor (QA/user/klien, mis. `QA - Sari`) |
-| `reported_date` | `DATE` | - | `NULLABLE` | `$table->date('reported_date')->nullable();` | Tanggal bug dilaporkan |
-| `severity` | `ENUM` | `'critical'`, `'high'`, `'medium'`, `'low'` | `NOT NULL`, `DEFAULT 'medium'` | `$table->enum('severity', ['critical', 'high', 'medium', 'low'])->default('medium');` | Tingkat keparahan bug |
-| `status` | `ENUM` | `'open'`, `'in_progress'`, `'resolved'` | `NOT NULL`, `DEFAULT 'open'` | `$table->enum('status', ['open', 'in_progress', 'resolved'])->default('open');` | Status penanganan bug |
-| `root_cause` | `TEXT` | - | `NULLABLE` | `$table->text('root_cause')->nullable();` | Hasil analisis akar masalah |
-| `solution_notes` | `TEXT` | - | `NULLABLE` | `$table->text('solution_notes')->nullable();` | Catatan perbaikan yang diterapkan |
-| `resolved_at` | `TIMESTAMP` | - | `NULLABLE` | `$table->timestamp('resolved_at')->nullable();` | Waktu aktual bug terselesaikan (`resolved`) |
-| `handover_logs` | `JSON` | Array of objects | `NULLABLE` | `$table->json('handover_logs')->nullable();` | Riwayat serah terima penanganan bug antar developer |
+| `id` | `BIGINT UNSIGNED` | Auto Increment | `PRIMARY KEY` | `$table->id();` | ID unik riwayat repo |
+| `project_id` | `BIGINT UNSIGNED` | FK -> `projects.id` | `NOT NULL`, `ON DELETE CASCADE` | `$table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();` | Project pemilik riwayat rilis |
+| `release_date` | `DATE` | - | `NOT NULL` | `$table->date('release_date');` | Tanggal rilis / catatan commit |
+| `release_tags` | `VARCHAR` | `50` | `NULLABLE` | `$table->string('release_tags', 50)->nullable();` | Tag versi rilis (mis. `v1.0.0`, `v1.2.1-rc1`, boleh kosong untuk non-tag commit) |
+| `branch_name` | `VARCHAR` | `100` | `NOT NULL` | `$table->string('branch_name', 100);` | Nama branch Git (mis. `main`, `release/1.2`, `hotfix/auth`) |
+| `commit_hash` | `VARCHAR` | `40` | `NOT NULL` | `$table->string('commit_hash', 40);` | SHA-1 Git commit hash (maksimal 40 karakter hex) |
+| `summary_changes` | `TEXT` | - | `NULLABLE` | `$table->text('summary_changes')->nullable();` | Ringkasan perubahan (*changelog*) pada rilis tersebut |
 | `created_at` & `updated_at` | `TIMESTAMP` | - | `NULLABLE` | `$table->timestamps();` | Audit timestamp standar Laravel |
 
-**Index Tambahan (untuk performa Board & Monitoring Bug):**
-- `$table->index(['project_id', 'status']);` — filter daftar bug per project berdasarkan status.
-- `$table->index(['severity', 'status']);` — filter cepat bug `critical`/`high` yang masih `open`/`in_progress`.
-- `$table->index(['assigned_to', 'status']);` — monitoring beban bug aktif per developer.
-
-**Konvensi Struktur JSON untuk `handover_logs` (konsisten dengan tabel `tasks`):**
-```json
-[
-  {
-    "from_developer_id": 1,
-    "to_developer_id": 2,
-    "note": "Reproduksi bug terkonfirmasi pada query agregasi, lanjut perbaikan di backend.",
-    "handed_over_at": "2026-11-18T11:15:00Z"
-  }
-]
-```
+**Constraint & Index Tambahan:**
+- `$table->unique(['project_id', 'commit_hash']);` — mencegah pencatatan commit hash yang sama dua kali dalam satu project.
+- `$table->index(['project_id', 'release_date']);` — mempercepat query timeline/changelog rilis terbaru per project.
 
 ---
 
 ## Tahapan Implementasi (Step-by-Step)
 
-### Tahap 1: Buat 2 PHP Backed Enum (`BugSeverity` & `BugStatus`)
-1. Buat `app/Enums/BugSeverity.php` (`enum BugSeverity: string`) dengan 4 case persis sesuai spesifikasi:
-   - `Critical = 'critical'`
-   - `High = 'high'`
-   - `Medium = 'medium'`
-   - `Low = 'low'`
-   - Tambahkan static method `values(): array`.
-2. Buat `app/Enums/BugStatus.php` (`enum BugStatus: string`) dengan 3 case persis sesuai spesifikasi:
-   - `Open = 'open'`
-   - `InProgress = 'in_progress'`
-   - `Resolved = 'resolved'`
-   - Tambahkan static method `values(): array`.
-
-### Tahap 2: Buat File Migration Tabel `bugs`
-1. Pastikan file migrasi `create_developers_table`, `create_projects_table`, dan `create_modules_table` sudah ada dan timestamp migrasi baru ini **lebih baru** dari ketiganya.
+### Tahap 1: Buat File Migration Tabel `repo_histories`
+1. Pastikan file migrasi `create_projects_table` sudah ada dan timestamp migrasi baru ini **lebih baru**.
 2. Jalankan perintah artisan:
    ```bash
-   php artisan make:migration create_bugs_table
+   php artisan make:migration create_repo_histories_table
    ```
-3. Pada method `up()`, definisikan seluruh kolom pada tabel spesifikasi di atas:
-   - **Wajib** menuliskan `'developers'` secara eksplisit pada `->constrained('developers')` untuk `created_by` dan `assigned_to`.
-   - **Hardcode array literal** pada kedua kolom `$table->enum(...)` (jangan impor class Enum di file migration).
-   - Jadikan kolom opsional (`module_id`, `assigned_to`, `description`, `reported_by`, `reported_date`, `root_cause`, `solution_notes`, `resolved_at`, `handover_logs`) bersifat `->nullable()`.
-   - Tambahkan 3 composite index: `['project_id', 'status']`, `['severity', 'status']`, dan `['assigned_to', 'status']`.
+3. Pada method `up()`, buat tabel `repo_histories` sesuai tabel spesifikasi di atas:
+   - Gunakan `$table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();`.
+   - Tentukan panjang `VARCHAR` secara eksplisit: `release_tags` (`50`, nullable), `branch_name` (`100`), `commit_hash` (`40`).
+   - Jadikan `summary_changes` bersifat `->nullable()`.
+   - Tambahkan `$table->unique(['project_id', 'commit_hash']);` dan `$table->index(['project_id', 'release_date']);`.
    - Sertakan `$table->timestamps();`.
-4. Pada method `down()`, pastikan berisi `Schema::dropIfExists('bugs');`.
+4. Pada method `down()`, pastikan berisi `Schema::dropIfExists('repo_histories');`.
 
-### Tahap 3: Buat Eloquent Model `Bug` & Lengkapi Relasi di Model Lain
+### Tahap 2: Buat Eloquent Model `RepoHistory` & Lengkapi Relasi di `Project`
 1. Jalankan perintah artisan:
    ```bash
-   php artisan make:model Bug
+   php artisan make:model RepoHistory
    ```
-2. Di `app/Models/Bug.php`:
+2. Di `app/Models/RepoHistory.php`:
    - Gunakan trait `HasFactory`.
-   - Definisikan `$fillable`:
-     `['project_id', 'module_id', 'created_by', 'assigned_to', 'title', 'description', 'reported_by', 'reported_date', 'severity', 'status', 'root_cause', 'solution_notes', 'resolved_at', 'handover_logs']`.
+   - Definisikan `$fillable`: `['project_id', 'release_date', 'release_tags', 'branch_name', 'commit_hash', 'summary_changes']`.
    - Definisikan method `casts(): array` (konvensi Laravel 12):
-     - `'severity' => BugSeverity::class`
-     - `'status' => BugStatus::class`
-     - `'reported_date' => 'date'`
-     - `'resolved_at' => 'datetime'`
-     - `'handover_logs' => 'array'`
-   - Definisikan 4 relasi `BelongsTo`:
+     - `'release_date' => 'date'`
+   - Tambahkan relasi `BelongsTo`:
      - `project(): BelongsTo` -> `$this->belongsTo(Project::class)`
-     - `module(): BelongsTo` -> `$this->belongsTo(Module::class)`
-     - `creator(): BelongsTo` -> `$this->belongsTo(Developer::class, 'created_by')`
-     - `assignee(): BelongsTo` -> `$this->belongsTo(Developer::class, 'assigned_to')`
-   - Tambahkan query scope umum (*fail-fast* dengan `::from(...)` bila menerima string):
-     - `scopeStatus(Builder $query, BugStatus|string $status): Builder`
-     - `scopeSeverity(Builder $query, BugSeverity|string $severity): Builder`
-     - `scopeOpen(Builder $query): Builder`
+   - Tambahkan query scope umum:
      - `scopeForProject(Builder $query, int $projectId): Builder`
-     - `scopeAssignedTo(Builder $query, int $developerId): Builder`
-3. Lengkapi relasi kebalikan (`HasMany`) pada Model terkait:
-   - `app/Models/Project.php` -> `bugs(): HasMany`
-   - `app/Models/Module.php` -> `bugs(): HasMany`
-   - `app/Models/Developer.php` -> `createdBugs(): HasMany` (`'created_by'`) dan `assignedBugs(): HasMany` (`'assigned_to'`)
+     - `scopeLatestRelease(Builder $query): Builder` -> `orderByDesc('release_date')->orderByDesc('id')`
+     - `scopeBranch(Builder $query, string $branchName): Builder`
+   - *(Opsional namun sangat berguna untuk UI)* Tambahkan helper/accessor `getShortHashAttribute()` atau Attribute `shortHash()` yang mengembalikan 7 karakter pertama dari `commit_hash` (format standar Git).
+3. Di `app/Models/Project.php`:
+   - Tambahkan relasi kebalikan (`HasMany`):
+     ```php
+     public function repoHistories(): HasMany
+     {
+         return $this->hasMany(RepoHistory::class);
+     }
+     ```
 
-### Tahap 4: Buat Factory (`BugFactory`) dan Seeder (`BugSeeder`)
-1. **Factory (`database/factories/BugFactory.php`):**
-   - Generate via `php artisan make:factory BugFactory --model=Bug`.
+### Tahap 3: Buat Factory (`RepoHistoryFactory`) dan Seeder (`RepoHistorySeeder`)
+1. **Factory (`database/factories/RepoHistoryFactory.php`):**
+   - Generate via `php artisan make:factory RepoHistoryFactory --model=RepoHistory`.
    - Gunakan helper multibyte-safe (`Illuminate\Support\Str`).
-   - Pastikan `module_id` konsisten milik `project_id` yang sama (`fn (array $attributes) => Module::factory()->create(['project_id' => $attributes['project_id']])->id`).
-   - Isi default valid: `title` (<= 255), `description`, `reported_by` (<= 150), `reported_date`, `severity` (acak dari `BugSeverity::cases()`), `status` (`BugStatus::Open`), `root_cause` (`null`), `solution_notes` (`null`), `resolved_at` (`null`), `handover_logs` (`[]`).
-   - Tambahkan state helper berguna: `critical()`, `inProgress()`, `resolved()` (mengisi `root_cause`, `solution_notes`, dan `resolved_at => now()`), dan `unassigned()` (`assigned_to => null`).
-2. **Seeder (`database/seeders/BugSeeder.php`):**
-   - Generate via `php artisan make:seeder BugSeeder`.
-   - Pastikan data `developers`, `projects`, dan `modules` sudah tersedia (panggil `DeveloperSeeder`, `ProjectSeeder`, `ModuleSeeder` bila belum cukup).
-   - Isi minimal 4 contoh bug realistis yang mencakup seluruh `BugSeverity` (`critical`, `high`, `medium`, `low`) dan seluruh `BugStatus` (`open`, `in_progress`, `resolved`), termasuk minimal 1 bug `resolved` dengan `root_cause`, `solution_notes`, dan `resolved_at` terisi, serta minimal 1 bug dengan riwayat JSON `handover_logs`.
-   - Gunakan `Bug::updateOrCreate(['project_id' => ..., 'title' => ...], [...])` agar seeder bersifat **idempoten**.
-   - Daftarkan `BugSeeder::class` pada `DatabaseSeeder.php` setelah `DeveloperSeeder`, `ProjectSeeder`, dan `ModuleSeeder`.
+   - Definisikan atribut default valid sesuai batas panjang kolom:
+     - `'project_id' => Project::factory()`
+     - `'release_date' => now()->subDays(fake()->numberBetween(0, 30))->toDateString()`
+     - `'release_tags' => sprintf('v%d.%d.%d', fake()->numberBetween(1, 3), fake()->numberBetween(0, 9), fake()->numberBetween(0, 9))`
+     - `'branch_name' => fake()->randomElement(['main', 'develop', 'release/1.0', 'hotfix/security'])`
+     - `'commit_hash' => fake()->unique()->sha1()` *(persis 40 karakter hex)*
+     - `'summary_changes' => fake()->paragraph()`
+   - Tambahkan state helper `untagged()` (`release_tags => null`) untuk menguji commit tanpa release tag.
+2. **Seeder (`database/seeders/RepoHistorySeeder.php`):**
+   - Generate via `php artisan make:seeder RepoHistorySeeder`.
+   - Pastikan data `projects` (`INTRA`, `KEU`, `HRIS`) sudah tersedia (panggil `$this->call(ProjectSeeder::class);` bila belum ada).
+   - Isi minimal 2 catatan riwayat rilis realistis per project (total 6 record), dengan `commit_hash` 40 karakter hex unik, tag semver (`v1.0.0`, `v1.1.0`, dll.), serta minimal 1 catatan dengan `release_tags => null`.
+   - Gunakan `RepoHistory::updateOrCreate(['project_id' => $project->id, 'commit_hash' => $entry['commit_hash']], $entry)` agar seeder bersifat **idempoten**.
+   - Daftarkan `RepoHistorySeeder::class` pada `DatabaseSeeder.php` setelah `ProjectSeeder::class`.
 
-### Tahap 5: Jalankan & Verifikasi Migrasi di Database
+### Tahap 4: Jalankan & Verifikasi Migrasi di Database
 1. Pastikan service MySQL aktif dan kredensial `.env` valid.
 2. Jalankan migrasi dan uji rollback:
    ```bash
@@ -136,26 +101,21 @@ Dokumen ini disusun langkah demi langkah mengikuti pola tabel `tasks` agar dapat
    ```
 3. Jalankan seeder 2 kali untuk memastikan idempotensi:
    ```bash
-   php artisan db:seed --class=BugSeeder
-   php artisan db:seed --class=BugSeeder
+   php artisan db:seed --class=RepoHistorySeeder
+   php artisan db:seed --class=RepoHistorySeeder
    ```
-4. Verifikasi struktur, index, dan 4 Foreign Key di MySQL (`SHOW CREATE TABLE bugs;`).
+4. Verifikasi struktur tabel, composite unique, index, dan Foreign Key di MySQL (`SHOW CREATE TABLE repo_histories;`).
 
-### Tahap 6: Buat Pengujian Otomatis (Feature Test)
-1. Buat file `tests/Feature/BugTableTest.php` menggunakan `RefreshDatabase`.
+### Tahap 5: Buat Pengujian Otomatis (Feature Test)
+1. Buat file `tests/Feature/RepoHistoryTableTest.php` menggunakan `RefreshDatabase`.
 2. Tulis test case minimal berikut:
-   - **Verifikasi Skema:** Tabel `bugs` ada dan memiliki seluruh 17 kolom (15 kolom spesifikasi + `created_at`, `updated_at`).
-   - **Default & Nullable:** Membuat bug hanya dengan kolom wajib (`project_id`, `created_by`, `title`) berhasil dengan default `severity = BugSeverity::Medium`, `status = BugStatus::Open`, dan semua kolom opsional bernilai `null`.
-   - **Foreign Key Constraint:** Insert `project_id`, `module_id`, `created_by`, atau `assigned_to` yang tidak ada di tabel induk melempar `QueryException`.
-   - **Perilaku Delete Foreign Key:**
-     - Hapus `Project` -> bug ikut terhapus (*cascade*).
-     - Hapus `Module` -> `bug.module_id` berubah menjadi `null` (bug tetap tersimpan).
-     - Hapus `Developer` yang hanya menjadi `assigned_to` -> `bug.assigned_to` berubah menjadi `null`.
-     - Hapus `Developer` yang tercatat sebagai `created_by` -> ditolak (`QueryException`, *restrict*).
-   - **Validasi Enum Negatif:** Nilai `severity` atau `status` tidak valid ditolak di level database (`QueryException`) dan Model cast (`ValueError`).
-   - **Casting JSON & Tanggal:** `handover_logs` tersimpan sebagai JSON dan terbaca kembali sebagai `array`; `reported_date` dan `resolved_at` ter-cast menjadi instance `Carbon`.
-   - **Relasi Eloquent & Scope:** Seluruh relasi (`project`, `module`, `creator`, `assignee`, `Project::bugs`, `Module::bugs`, `Developer::createdBugs`, `Developer::assignedBugs`) dan scope (`status`, `severity`, `open`, `forProject`, `assignedTo`, termasuk *fail-fast* pada typo) berjalan benar.
-   - **Seeder Idempoten:** Menjalankan `BugSeeder` dua kali menghasilkan jumlah record konsisten serta mencakup seluruh `BugSeverity` dan `BugStatus`.
+   - **Verifikasi Skema:** Tabel `repo_histories` ada dan memiliki seluruh 9 kolom (`id`, `project_id`, `release_date`, `release_tags`, `branch_name`, `commit_hash`, `summary_changes`, `created_at`, `updated_at`).
+   - **Kolom Nullable:** Membuat `RepoHistory` tanpa `release_tags` dan `summary_changes` berhasil dengan nilai `null`.
+   - **Foreign Key Constraint:** Insert dengan `project_id` yang tidak ada di `projects` melempar `QueryException`.
+   - **Cascade Delete:** Menghapus `Project` otomatis menghapus seluruh `RepoHistory` miliknya.
+   - **Composite Unique (`project_id`, `commit_hash`):** Duplikat `commit_hash` pada project yang sama ditolak (`QueryException`), sedangkan `commit_hash` yang sama pada project berbeda diperbolehkan.
+   - **Casting, Relasi Dua Arah & Scope:** `release_date` ter-cast menjadi `Carbon`, `$history->project` & `$project->repoHistories` bekerja, serta scope `forProject`, `branch`, dan `latestRelease` mengembalikan urutan dan filter yang tepat.
+   - **Seeder Idempoten:** Menjalankan `RepoHistorySeeder` dua kali menghasilkan jumlah record konsisten (6 record, masing-masing 2 per project `INTRA`, `KEU`, `HRIS`).
 3. Jalankan seluruh test suite:
    ```bash
    php artisan test
@@ -165,22 +125,18 @@ Dokumen ini disusun langkah demi langkah mengikuti pola tabel `tasks` agar dapat
 ---
 
 ## Hal yang Harus Dihindari (Guardrails)
-- **Jangan lupa argumen `'developers'` pada `constrained('developers')`** untuk `created_by` dan `assigned_to`.
-- **Jangan lupa foreign key eksplisit pada relasi Model** (`belongsTo(Developer::class, 'created_by')`, `belongsTo(Developer::class, 'assigned_to')`, `hasMany(Bug::class, 'created_by')`, `hasMany(Bug::class, 'assigned_to')`).
-- **Jangan pakai huruf kapital pada nama kolom SQL** — wajib `snake_case` huruf kecil.
-- **Jangan lupa batas panjang `VARCHAR`**: `title` (`255`) dan `reported_by` (`150`).
-- **Jangan impor class Enum di dalam file migration** — gunakan array literal pada `$table->enum(...)`.
-- **Jangan memberi default literal pada kolom `JSON` di MySQL** — buat `->nullable()` di migration.
-- **Jangan pasang `cascadeOnDelete()` pada `created_by`, `assigned_to`, atau `module_id`** agar riwayat bug tidak ikut terhapus secara tidak sengaja.
-- **Jangan jalankan `BugSeeder` sebelum `DeveloperSeeder`, `ProjectSeeder`, dan `ModuleSeeder`**.
+- **Jangan pakai huruf kapital pada nama kolom SQL** (`Id`, `Project_id`, `Commit_hash`). Wajib `snake_case` huruf kecil.
+- **Jangan lupa batas panjang `VARCHAR`**: `release_tags` (`50`), `branch_name` (`100`), dan `commit_hash` (`40`).
+- **Jangan buat `commit_hash` sebagai `unique()` global tanpa `project_id`** — gunakan composite unique `['project_id', 'commit_hash']` agar terikat per project.
+- **Jangan lupa menambahkan relasi `repoHistories()` pada `Project.php`** selain `project()` pada `RepoHistory.php`.
+- **Jangan jalankan `RepoHistorySeeder` sebelum `ProjectSeeder`** di `DatabaseSeeder.php`.
 - **Jangan commit file `.env`** ke Git.
 
 ---
 
 ## Kriteria Selesai (Definition of Done)
-- [ ] Enum `app/Enums/BugSeverity.php` dan `app/Enums/BugStatus.php` dibuat lengkap sesuai spesifikasi.
-- [ ] Migration `create_bugs_table` dibuat dengan seluruh 15 kolom, 4 Foreign Key, 2 Enum literal + default, 3 composite index, dan rollback bersih.
-- [ ] Model `app/Models/Bug.php` (`$fillable`, `casts()`, 4 relasi `BelongsTo`, query scopes) serta relasi kebalikan di `Project`, `Module`, dan `Developer` telah lengkap.
-- [ ] `BugFactory` (dengan state helpers) dan `BugSeeder` (idempoten, mencakup semua `BugSeverity` & `BugStatus`, `root_cause`, `solution_notes`, `resolved_at`, dan `handover_logs`) tersedia serta terdaftar di `DatabaseSeeder.php`.
-- [ ] `php artisan migrate`, `migrate:rollback --step=1`, dan `db:seed --class=BugSeeder` berjalan tanpa error.
-- [ ] Seluruh pengujian otomatis di `php artisan test` lulus (termasuk uji FK, delete behavior, enum negatif, JSON/date cast, relasi, dan seeder idempoten).
+- [ ] Migration `create_repo_histories_table` dibuat dengan seluruh 7 kolom + `timestamps()`, FK `project_id -> projects.id` (`ON DELETE CASCADE`), composite unique `['project_id', 'commit_hash']`, index `['project_id', 'release_date']`, dan rollback bersih.
+- [ ] Model `app/Models/RepoHistory.php` (`$fillable`, `casts()`, relasi `project()`, scopes) serta relasi `repoHistories()` di `app/Models/Project.php` sudah lengkap.
+- [ ] `RepoHistoryFactory` (dengan state `untagged()`) dan `RepoHistorySeeder` (idempoten) tersedia serta terdaftar di `DatabaseSeeder.php`.
+- [ ] `php artisan migrate`, `migrate:rollback --step=1`, dan `db:seed --class=RepoHistorySeeder` berjalan tanpa error.
+- [ ] Seluruh pengujian otomatis di `php artisan test` lulus (termasuk uji FK, cascade delete, composite unique, casting tanggal, relasi dua arah, scope, dan seeder idempoten).
