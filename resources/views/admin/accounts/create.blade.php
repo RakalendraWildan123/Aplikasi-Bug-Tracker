@@ -12,16 +12,6 @@
             <a href="{{ route('admin.accounts.index') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">&larr; Kembali</a>
         </header>
 
-        @if ($errors->any())
-            <div role="alert" class="rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                <ul class="list-disc space-y-1 pl-4">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <form method="POST" action="{{ route('admin.accounts.store') }}" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
             @csrf
 

@@ -316,6 +316,23 @@ class AuthAndAccountManagementTest extends TestCase
         $this->assertDatabaseHas('developers', ['id' => $historyDev->id, 'user_id' => null, 'is_active' => false]);
     }
 
+    public function test_account_management_renders_notification_popup_and_confirm_modal(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $other = User::factory()->create(['name' => 'Target PopUp']);
+
+        $this->actingAs($admin)
+            ->withSession(['status' => 'Akun Target PopUp berhasil dibuat.'])
+            ->withoutVite()
+            ->get('/admin/accounts')
+            ->assertOk()
+            ->assertSee('id="notification-popup-app"', false)
+            ->assertSee('Akun Target PopUp berhasil dibuat.')
+            ->assertSee('id="confirm-modal-app"', false)
+            ->assertSee('data-confirm-title="Hapus Akun?"', false)
+            ->assertSee('data-confirm-title="Nonaktifkan Akun?"', false);
+    }
+
     public function test_full_end_to_end_lifecycle_admin_creates_developer_who_logs_in_then_gets_deactivated(): void
     {
         $admin = User::factory()->admin()->create([

@@ -15,20 +15,6 @@
             </a>
         </header>
 
-        @if (session('status'))
-            <div role="status" class="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div role="alert" class="rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
-
         <form method="GET" action="{{ route('admin.accounts.index') }}" class="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
             <div>
                 <label for="role" class="block text-xs font-semibold text-slate-600">Filter Role</label>
@@ -99,7 +85,14 @@
                                         Edit
                                     </a>
                                     @if (auth()->id() !== $account->id)
-                                        <form method="POST" action="{{ route('admin.accounts.toggle-active', $account) }}">
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.accounts.toggle-active', $account) }}"
+                                            data-confirm-title="{{ $account->is_active ? 'Nonaktifkan Akun?' : 'Aktifkan Kembali Akun?' }}"
+                                            data-confirm-message="{{ $account->is_active ? 'Akun ' . $account->name . ' tidak akan bisa login sampai diaktifkan kembali.' : 'Akun ' . $account->name . ' akan diizinkan login kembali ke sistem.' }}"
+                                            data-confirm-label="{{ $account->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}"
+                                            data-confirm-variant="{{ $account->is_active ? 'warning' : 'primary' }}"
+                                        >
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium {{ $account->is_active ? 'border-amber-200 text-amber-800 hover:bg-amber-50' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }}">
@@ -109,7 +102,10 @@
                                         <form
                                             method="POST"
                                             action="{{ route('admin.accounts.destroy', $account) }}"
-                                            onsubmit="return confirm('Yakin ingin menghapus akun {{ addslashes($account->name) }}?');"
+                                            data-confirm-title="Hapus Akun?"
+                                            data-confirm-message="Akun {{ $account->name }} akan dihapus dan akses loginnya dicabut secara permanen."
+                                            data-confirm-label="Ya, Hapus Akun"
+                                            data-confirm-variant="danger"
                                         >
                                             @csrf
                                             @method('DELETE')

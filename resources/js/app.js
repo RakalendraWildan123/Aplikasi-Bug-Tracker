@@ -150,3 +150,130 @@ if (accountPasswordEl) {
         },
     }).mount(accountPasswordEl);
 }
+
+const notificationEl = document.getElementById('notification-popup-app');
+
+if (notificationEl) {
+    let initialItems = [];
+    try {
+        initialItems = JSON.parse(notificationEl.dataset.notifications || '[]');
+    } catch {
+        initialItems = [];
+    }
+
+    createApp({
+        setup() {
+            const notifications = ref(initialItems);
+            const timers = new Map();
+
+            function dismiss(id) {
+                const timer = timers.get(id);
+                if (timer) {
+                    clearTimeout(timer);
+                    timers.delete(id);
+                }
+                notifications.value = notifications.value.filter((item) => item.id !== id);
+            }
+
+            function scheduleAutoDismiss(id, delayMs = 5000) {
+                const existing = timers.get(id);
+                if (existing) {
+                    clearTimeout(existing);
+                }
+                timers.set(id, setTimeout(() => dismiss(id), delayMs));
+            }
+
+            function pauseAutoDismiss(id) {
+                const existing = timers.get(id);
+                if (existing) {
+                    clearTimeout(existing);
+                    timers.delete(id);
+                }
+            }
+
+            function resumeAutoDismiss(id) {
+                scheduleAutoDismiss(id, 3000);
+            }
+
+            notifications.value.forEach((item) => {
+                const delay = item.type === 'error' ? 7000 : 5000;
+                scheduleAutoDismiss(item.id, delay);
+            });
+
+            return {
+                notifications,
+                dismiss,
+                pauseAutoDismiss,
+                resumeAutoDismiss,
+            };
+        },
+    }).mount(notificationEl);
+}
+
+const confirmModalEl = document.getElementById('confirm-modal-app');
+
+if (confirmModalEl) {
+    createApp({
+        setup() {
+            const isOpen = ref(false);
+            const title = ref('');
+            const message = ref('');
+            const confirmLabel = ref('Lanjutkan');
+            const variant = ref('danger');
+            let pendingForm = null;
+
+            function open(form) {
+                pendingForm = form;
+                title.value = form.dataset.confirmTitle || 'Konfirmasi Aksi';
+                message.value = form.dataset.confirmMessage || 'Apakah Anda yakin ingin melanjutkan?';
+                confirmLabel.value = form.dataset.confirmLabel || 'Ya, Lanjutkan';
+                variant.value = form.dataset.confirmVariant || 'danger';
+                isOpen.value = true;
+            }
+
+            function close() {
+                isOpen.value = false;
+                pendingForm = null;
+            }
+
+            function confirmAction() {
+                if (!pendingForm) {
+                    close();
+                    return;
+                }
+                const formToSubmit = pendingForm;
+                close();
+                formToSubmit.dataset.confirmed = 'true';
+                formToSubmit.submit();
+            }
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+                if (!form.dataset.confirmTitle || form.dataset.confirmed === 'true') {
+                    return;
+                }
+                event.preventDefault();
+                open(form);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && isOpen.value) {
+                    close();
+                }
+            });
+
+            return {
+                isOpen,
+                title,
+                message,
+                confirmLabel,
+                variant,
+                close,
+                confirmAction,
+            };
+        },
+    }).mount(confirmModalEl);
+}

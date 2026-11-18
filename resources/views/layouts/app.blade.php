@@ -153,6 +153,9 @@
         </div>
     </div>
 
+    @include('partials.notification-popup')
+    @include('partials.confirm-modal')
+
     <script>
         (() => {
             const sidebar = document.getElementById('app-sidebar');

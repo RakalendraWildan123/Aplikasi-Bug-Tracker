@@ -12,22 +12,6 @@
             <a href="{{ route('admin.accounts.index') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">&larr; Kembali</a>
         </header>
 
-        @if (session('status'))
-            <div role="status" class="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div role="alert" class="rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                <ul class="list-disc space-y-1 pl-4">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <form method="POST" action="{{ route('admin.accounts.update', $account) }}" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
             @csrf
             @method('PUT')
@@ -117,7 +101,10 @@
                     <form
                         method="POST"
                         action="{{ route('admin.accounts.destroy', $account) }}"
-                        onsubmit="return confirm('Yakin ingin menghapus akun {{ addslashes($account->name) }} secara permanen?');"
+                        data-confirm-title="Hapus Akun Secara Permanen?"
+                        data-confirm-message="Akun {{ $account->name }} akan dihapus dan akses loginnya dicabut secara permanen."
+                        data-confirm-label="Ya, Hapus Akun"
+                        data-confirm-variant="danger"
                     >
                         @csrf
                         @method('DELETE')

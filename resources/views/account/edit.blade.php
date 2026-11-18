@@ -31,24 +31,6 @@
                 </div>
             </div>
 
-            @if (session('profile_status'))
-                <div role="status" class="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                    {{ session('profile_status') }}
-                </div>
-            @endif
-
-            @if ($errors->hasAny(['name', 'email', 'avatar', 'avatar_bg']))
-                <div role="alert" class="mb-5 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                    <ul class="list-disc space-y-0.5 pl-4">
-                        @foreach (['name', 'email', 'avatar', 'avatar_bg'] as $field)
-                            @foreach ($errors->get($field) as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
             <form method="POST" action="{{ route('account.profile.update') }}" class="space-y-5">
                 @csrf
                 @method('PUT')
@@ -138,24 +120,6 @@
                     <span v-else>Sembunyikan Password</span>
                 </button>
             </div>
-
-            @if (session('password_status'))
-                <div role="status" class="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                    {{ session('password_status') }}
-                </div>
-            @endif
-
-            @if ($errors->hasAny(['current_password', 'password']))
-                <div role="alert" class="mb-5 rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
-                    <ul class="list-disc space-y-0.5 pl-4">
-                        @foreach (['current_password', 'password'] as $field)
-                            @foreach ($errors->get($field) as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
 
             <form method="POST" action="{{ route('account.password.update') }}" class="space-y-5">
                 @csrf

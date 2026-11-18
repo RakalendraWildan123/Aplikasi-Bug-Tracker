@@ -177,5 +177,7 @@
             </div>
         </main>
     </div>
+
+    @include('partials.notification-popup')
 </body>
 </html>
