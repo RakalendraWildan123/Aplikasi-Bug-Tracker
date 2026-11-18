@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Task extends Model
 {
@@ -114,5 +115,15 @@ class Task extends Model
     public function scopeAssignedTo(Builder $query, int $developerId): Builder
     {
         return $query->where('assigned_to', $developerId);
+    }
+
+    /**
+     * Get the source action item converted into this task, if any.
+     *
+     * @return HasOne<ActionItem, $this>
+     */
+    public function sourceActionItem(): HasOne
+    {
+        return $this->hasOne(ActionItem::class, 'converted_task_id');
     }
 }

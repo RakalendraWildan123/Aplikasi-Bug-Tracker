@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AppEvaluation extends Model
 {
@@ -63,5 +64,15 @@ class AppEvaluation extends Model
     public function scopePeriod(Builder $query, string $periodReview): Builder
     {
         return $query->where('period_review', $periodReview);
+    }
+
+    /**
+     * Get the action items resulting from this evaluation.
+     *
+     * @return HasMany<ActionItem, $this>
+     */
+    public function actionItems(): HasMany
+    {
+        return $this->hasMany(ActionItem::class, 'evaluation_id');
     }
 }

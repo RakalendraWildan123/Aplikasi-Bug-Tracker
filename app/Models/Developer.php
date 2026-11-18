@@ -83,4 +83,14 @@ class Developer extends Model
     {
         return $this->hasMany(Bug::class, 'assigned_to');
     }
+
+    /**
+     * Get action items assigned to this developer.
+     *
+     * @return HasMany<ActionItem, $this>
+     */
+    public function assignedActionItems(): HasMany
+    {
+        return $this->hasMany(ActionItem::class, 'assigned_to');
+    }
 }
