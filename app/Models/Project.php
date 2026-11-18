@@ -6,6 +6,7 @@ use App\Enums\ProjectStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -50,5 +51,15 @@ class Project extends Model
         $value = $status instanceof ProjectStatus ? $status->value : $status;
 
         return $query->where('status', $value);
+    }
+
+    /**
+     * Get the modules for the project.
+     *
+     * @return HasMany<Module, $this>
+     */
+    public function modules(): HasMany
+    {
+        return $this->hasMany(Module::class);
     }
 }
