@@ -1,131 +1,135 @@
-# Planning: Implementasi Tabel `developers` (Migration, Model, Factory, Seeder & Test)
+# Planning: Implementasi Tabel `projects` (Migration, Enum, Model, Factory, Seeder & Test)
 
 ## Ringkasan & Tujuan
-Membuat tabel database untuk menyimpan data IT Developer pada project **Laravel 12 + MySQL**, lengkap dengan Migration, PHP Enum, Eloquent Model, Factory, Seeder, dan pengujian otomatis.
+Membuat tabel database untuk menyimpan data Project pada aplikasi **Laravel 12 + MySQL**, lengkap dengan PHP Backed Enum, Migration, Eloquent Model, Factory, Seeder idempoten, dan pengujian otomatis.
 
-Dokumen ini dirancang langkah demi langkah agar dapat langsung diimplementasikan oleh **junior programmer** atau **model AI yang lebih kecil** dengan risiko kesalahan minimal.
+Dokumen ini disusun langkah demi langkah agar dapat langsung diimplementasikan oleh **junior programmer** atau **model AI yang lebih kecil** secara konsisten dengan pola yang sudah ada pada tabel `developers`.
 
 ---
 
 ## Spesifikasi Skema Tabel
 
-> **Catatan Konvensi Nama:** Gunakan nama tabel plural **`developers`** (standar konvensi Laravel Eloquent agar otomatis terhubung dengan model `Developer` dan konsisten dengan tabel `users`, `jobs`, `cache`). Seluruh nama kolom **wajib menggunakan `snake_case` huruf kecil**.  
-> *(Jika kebutuhan eksternal/ERD mewajibkan nama tabel singular `developer`, ganti nama tabel di migrasi menjadi `developer` dan tambahkan `protected $table = 'developer';` pada Model `Developer`.)*
+> **Catatan Konvensi Nama:** Gunakan nama tabel plural **`projects`** (standar konvensi Laravel Eloquent agar otomatis terhubung dengan model `Project` dan konsisten dengan `users` serta `developers`). Seluruh nama kolom **wajib menggunakan `snake_case` huruf kecil**.  
+> *(Jika kebutuhan eksternal/ERD mewajibkan nama tabel singular `project`, ubah nama tabel di migrasi menjadi `project` dan tambahkan `protected $table = 'project';` pada Model `Project`.)*
 
 | Nama Kolom | Tipe SQL | Panjang / Nilai | Constraint / Default | Method Migration Laravel | Keterangan |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT UNSIGNED` | Auto Increment | `PRIMARY KEY` | `$table->id();` | ID unik developer |
-| `name` | `VARCHAR` | `150` | `NOT NULL` | `$table->string('name', 150);` | Nama lengkap developer |
-| `email` | `VARCHAR` | `150` | `UNIQUE`, `NOT NULL` | `$table->string('email', 150)->unique();` | Email unik developer |
-| `role_title` | `ENUM` | `'Fullstack Lead'`, `'Backend'`, `'Frontend'`, `'Mobile'` | `NOT NULL` | `$table->enum('role_title', DeveloperRole::values());` | Peran/posisi developer |
-| `avatar` | `VARCHAR` | `10` | `NOT NULL` | `$table->string('avatar', 10);` | Inisial avatar (mis. `RW`, `JD`) |
-| `avatar_bg` | `VARCHAR` | `50` | `NOT NULL` | `$table->string('avatar_bg', 50);` | Warna/class background avatar (mis. `#4F46E5` atau `bg-indigo-600`) |
-| `is_active` | `BOOLEAN` (`TINYINT(1)`) | - | `DEFAULT TRUE` (`1`) | `$table->boolean('is_active')->default(true);` | Status aktif developer |
+| `id` | `BIGINT UNSIGNED` | Auto Increment | `PRIMARY KEY` | `$table->id();` | ID unik project |
+| `name` | `VARCHAR` | `150` | `NOT NULL` | `$table->string('name', 150);` | Nama project |
+| `code` | `VARCHAR` | `150` | `UNIQUE`, `NOT NULL` | `$table->string('code', 150)->unique();` | Kode unik project (contoh: `INTRA`, `KEU`, `HRIS`) |
+| `description` | `TEXT` | - | `NULLABLE` | `$table->text('description')->nullable();` | Deskripsi singkat/detail project |
+| `repo_url` | `VARCHAR` | `255` | `NULLABLE` | `$table->string('repo_url', 255)->nullable();` | URL repository Git (GitHub/GitLab/dll.) |
+| `status` | `ENUM` | `'active'`, `'maintenance'`, `'archived'` | `NOT NULL`, `DEFAULT 'active'`, `INDEX` | `$table->enum('status', ['active', 'maintenance', 'archived'])->default('active')->index();` | Status siklus hidup project |
+| `color` | `VARCHAR` | `50` | `NOT NULL` | `$table->string('color', 50);` | Warna identitas project (hex mis. `#4F46E5` atau class Tailwind mis. `bg-indigo-600`) |
 | `created_at` & `updated_at` | `TIMESTAMP` | - | `NULLABLE` | `$table->timestamps();` | Audit timestamp standar Laravel |
 
 ---
 
 ## Tahapan Implementasi (Step-by-Step)
 
-### Tahap 1: Buat PHP Backed Enum untuk `role_title`
-1. Buat file baru `app/Enums/DeveloperRole.php` dengan tipe `enum DeveloperRole: string`.
-2. Definisikan 4 case dengan nilai string **persis** sesuai spesifikasi:
-   - `FullstackLead = 'Fullstack Lead'`
-   - `Backend = 'Backend'`
-   - `Frontend = 'Frontend'`
-   - `Mobile = 'Mobile'`
-3. Tambahkan helper static method `values(): array` yang mengembalikan daftar string value (misal `array_column(self::cases(), 'value')`) agar bisa dipakai ulang di migration, factory, dan validasi tanpa duplikasi string.
+### Tahap 1: Buat PHP Backed Enum untuk `status`
+1. Buat file baru `app/Enums/ProjectStatus.php` dengan tipe `enum ProjectStatus: string`.
+2. Definisikan 3 case dengan nilai string **huruf kecil persis** sesuai spesifikasi:
+   - `Active = 'active'`
+   - `Maintenance = 'maintenance'`
+   - `Archived = 'archived'`
+3. Tambahkan helper static method `values(): array` yang mengembalikan `array_column(self::cases(), 'value')` untuk dipakai pada validasi, factory, dan test.
 
-### Tahap 2: Buat File Migration Tabel `developers`
+### Tahap 2: Buat File Migration Tabel `projects`
 1. Jalankan perintah artisan:
    ```bash
-   php artisan make:migration create_developers_table
+   php artisan make:migration create_projects_table
    ```
-2. Pada method `up()`, buat tabel `developers` dengan seluruh kolom pada tabel spesifikasi di atas:
-   - Pastikan panjang `VARCHAR` ditentukan eksplisit (`150`, `150`, `10`, `50`), **jangan** membiarkan default 255.
-   - Pastikan `email` diberi constraint `->unique()`.
-   - Pastikan `role_title` menggunakan nilai enum dari `DeveloperRole::values()`.
-   - Pastikan `is_active` memiliki `->default(true)`.
+2. Pada method `up()`, buat tabel `projects` sesuai spesifikasi tabel di atas:
+   - Tentukan panjang `VARCHAR` secara eksplisit (`150`, `150`, `255`, `50`).
+   - Berikan constraint `->unique()` pada `code`.
+   - **Hardcode array literal** `['active', 'maintenance', 'archived']` di dalam `$table->enum('status', ...)` (jangan mengimpor class Enum di migration agar histori migrasi tetap stabil jika Enum berubah di masa depan).
+   - Berikan `->default('active')->index()` pada kolom `status`.
+   - Jadikan `description` dan `repo_url` bersifat `->nullable()`.
    - Sertakan `$table->timestamps();`.
-3. Pada method `down()`, pastikan berisi `Schema::dropIfExists('developers');` agar rollback bersih.
+3. Pada method `down()`, pastikan berisi `Schema::dropIfExists('projects');`.
 
-### Tahap 3: Buat Eloquent Model `Developer`
+### Tahap 3: Buat Eloquent Model `Project`
 1. Jalankan perintah artisan:
    ```bash
-   php artisan make:model Developer
+   php artisan make:model Project
    ```
-2. Di `app/Models/Developer.php`:
+2. Di `app/Models/Project.php`:
    - Gunakan trait `HasFactory`.
-   - Definisikan `$fillable`: `['name', 'email', 'role_title', 'avatar', 'avatar_bg', 'is_active']`.
+   - Definisikan `$fillable`: `['name', 'code', 'description', 'repo_url', 'status', 'color']`.
    - Definisikan method `casts(): array` (konvensi Laravel 12):
-     - `'role_title' => DeveloperRole::class`
-     - `'is_active' => 'boolean'`
-   - *(Opsional namun direkomendasikan)* Tambahkan local scope `scopeActive($query)` untuk mempermudah query developer yang aktif (`where('is_active', true)`).
+     - `'status' => ProjectStatus::class`
+   - Tambahkan query scope agar query umum lebih rapi:
+     - `scopeActive(Builder $query): Builder` -> memfilter `status = ProjectStatus::Active`.
+     - `scopeStatus(Builder $query, ProjectStatus|string $status): Builder` -> memfilter berdasarkan status tertentu.
 
 ### Tahap 4: Buat Factory dan Seeder
-1. **Factory (`database/factories/DeveloperFactory.php`):**
-   - Generate via `php artisan make:factory DeveloperFactory --model=Developer`.
-   - Pastikan nilai dummy selalu memenuhi batas panjang kolom:
-     - `name`: nama acak (maks 150 karakter).
-     - `email`: `fake()->unique()->safeEmail()` (maks 150 karakter).
-     - `role_title`: acak dari `DeveloperRole::cases()`.
-     - `avatar`: inisial 2 huruf kapital dari nama (maks 10 karakter).
-     - `avatar_bg`: pilih acak dari daftar warna/class Tailwind (maks 50 karakter, mis. `bg-indigo-600`, `bg-emerald-600`, `bg-amber-600`, `bg-rose-600`).
-     - `is_active`: `true`.
-   - Tambahkan state helper `inactive()` pada factory untuk kebutuhan testing developer non-aktif.
-2. **Seeder (`database/seeders/DeveloperSeeder.php`):**
-   - Generate via `php artisan make:seeder DeveloperSeeder`.
-   - Isi minimal 4 data contoh yang mewakili seluruh role (`Fullstack Lead`, `Backend`, `Frontend`, `Mobile`).
-   - Gunakan `Developer::updateOrCreate(['email' => ...], [...])` agar seeder bersifat **idempoten** (aman dijalankan berulang kali tanpa error duplicate email).
-   - Panggil `DeveloperSeeder::class` dari `DatabaseSeeder.php` bila sesuai kebutuhan project.
+1. **Factory (`database/factories/ProjectFactory.php`):**
+   - Generate via `php artisan make:factory ProjectFactory --model=Project`.
+   - Gunakan helper multibyte-safe (`Illuminate\Support\Str`) bila memanipulasi string.
+   - Pastikan data dummy valid dan sesuai batas panjang kolom:
+     - `name`: nama project acak (maks 150 karakter).
+     - `code`: kode unik huruf kapital (mis. `Str::upper(fake()->unique()->lexify('PRJ-????'))`, maks 150 karakter).
+     - `description`: `fake()->paragraph()`.
+     - `repo_url`: `'https://github.com/org/' . Str::slug($name)` (maks 255 karakter).
+     - `status`: `ProjectStatus::Active`.
+     - `color`: pilih acak dari daftar warna (maks 50 karakter, mis. `#4F46E5`, `#10B981`, `#F59E0B`, `#EF4444` atau class Tailwind `bg-indigo-600`, dll.).
+   - Tambahkan state helper pada factory: `maintenance()` dan `archived()` untuk mempermudah testing tiap status.
+2. **Seeder (`database/seeders/ProjectSeeder.php`):**
+   - Generate via `php artisan make:seeder ProjectSeeder`.
+   - Isi minimal 3 data contoh realistis sesuai contoh kode di spesifikasi dan mencakup ketiga status (`active`, `maintenance`, `archived`), misalnya:
+     - `INTRA` — Portal Intranet Perusahaan (`active`)
+     - `KEU` — Sistem Keuangan & Anggaran (`maintenance`)
+     - `HRIS` — Human Resource Information System (`archived` atau `active` + tambah 1 project lain agar seluruh status terwakili)
+   - Gunakan `Project::updateOrCreate(['code' => ...], [...])` agar seeder bersifat **idempoten** (aman dijalankan berkali-kali).
+   - Daftarkan `ProjectSeeder::class` di `DatabaseSeeder.php` (pastikan juga baris lain di `DatabaseSeeder` tidak error saat dijalankan ulang).
 
-### Tahap 5: Jalankan & Verifikasi Migrasi di MySQL
-1. Pastikan service MySQL lokal aktif dan kredensial di `.env` sudah benar.
-2. Jalankan migrasi:
+### Tahap 5: Jalankan & Verifikasi Migrasi di Database
+1. Pastikan service MySQL aktif dan kredensial `.env` valid.
+2. Jalankan migrasi dan uji rollback:
    ```bash
    php artisan migrate
-   ```
-3. Uji rollback dan migrasi ulang untuk memastikan method `down()` bekerja bersih:
-   ```bash
    php artisan migrate:rollback --step=1
    php artisan migrate
    ```
-4. Jalankan seeder sebanyak 2 kali untuk memastikan idempotensi:
+3. Jalankan seeder 2 kali untuk memastikan idempotensi:
    ```bash
-   php artisan db:seed --class=DeveloperSeeder
-   php artisan db:seed --class=DeveloperSeeder
+   php artisan db:seed --class=ProjectSeeder
+   php artisan db:seed --class=ProjectSeeder
    ```
-5. Cek struktur tabel di MySQL (via HeidiSQL / CLI `DESCRIBE developers;`) untuk memastikan tipe data, panjang kolom, nilai `ENUM`, index `UNIQUE` pada `email`, dan default `is_active = 1` sesuai spesifikasi.
+4. Verifikasi struktur tabel di MySQL (`DESCRIBE projects;`) untuk memastikan tipe data, panjang kolom, nilai `ENUM`, index `UNIQUE` pada `code`, index pada `status`, dan default `status = 'active'` sudah sesuai.
 
-### Tahap 6: Buat Pengujian Otomatis (Automated Test)
-1. Buat file test `tests/Feature/DeveloperTableTest.php` menggunakan `RefreshDatabase`.
+### Tahap 6: Buat Pengujian Otomatis (Feature Test)
+1. Buat file `tests/Feature/ProjectTableTest.php` menggunakan `RefreshDatabase`.
 2. Tulis test case minimal berikut:
-   - **Verifikasi Skema:** Tabel `developers` ada dan memiliki seluruh kolom (`id`, `name`, `email`, `role_title`, `avatar`, `avatar_bg`, `is_active`, `created_at`, `updated_at`).
-   - **Default Value `is_active`:** Membuat record tanpa menyertakan `is_active` menghasilkan `is_active === true` di database.
-   - **Constraint Unique `email`:** Mencoba menyimpan 2 developer dengan `email` sama melempar `QueryException`.
-   - **Casting Model:** `role_title` ter-cast menjadi instance `DeveloperRole` dan `is_active` bertipe `bool`.
-   - **Seeder Idempoten:** Menjalankan `DeveloperSeeder` dua kali menghasilkan jumlah record yang konsisten dan mencakup keempat role.
+   - **Verifikasi Skema:** Tabel `projects` ada dan memiliki semua kolom (`id`, `name`, `code`, `description`, `repo_url`, `status`, `color`, `created_at`, `updated_at`).
+   - **Default `status` & Kolom Nullable:** Membuat project tanpa `status`, `description`, dan `repo_url` berhasil dengan `status === ProjectStatus::Active`, `description === null`, dan `repo_url === null`.
+   - **Constraint Unique `code`:** Menyimpan 2 project dengan `code` sama melempar `QueryException`.
+   - **Validasi Nilai Enum `status`:** Memasukkan nilai status tidak valid (mis. `'invalid_status'`) langsung ke database ditolak (`QueryException`), dan lewat Model melempar `ValueError`.
+   - **Casting & Query Scope:** `status` ter-cast menjadi `ProjectStatus`, serta `Project::active()` dan `Project::status(...)` memfilter dengan benar.
+   - **Seeder Idempoten:** Menjalankan `ProjectSeeder` dua kali menghasilkan jumlah record konsisten dan mencakup seluruh nilai `ProjectStatus`.
 3. Jalankan seluruh test suite:
    ```bash
    php artisan test
    ```
-   Pastikan seluruh test (lama maupun baru) lulus tanpa error.
+   Pastikan seluruh test (lama maupun baru) lulus.
 
 ---
 
 ## Hal yang Harus Dihindari (Guardrails)
-- **Jangan gunakan huruf kapital pada nama kolom SQL** (`Id`, `Name`, `Role_title`, `Is_active`). Selalu gunakan `snake_case` huruf kecil.
-- **Jangan lupa batas panjang `VARCHAR`** (`150`, `10`, `50`). Method `$table->string('col')` tanpa argumen kedua membuat `VARCHAR(255)`.
-- **Jangan typo pada nilai `ENUM`**: pastikan persis `'Fullstack Lead'`, `'Backend'`, `'Frontend'`, `'Mobile'`.
-- **Jangan memodifikasi file migrasi lama** yang sudah ada; buat file migrasi baru.
+- **Jangan pakai huruf kapital pada nama kolom SQL** (`Id`, `Code`, `Repo_url`, `Status`). Wajib `snake_case` huruf kecil.
+- **Jangan lupa batas panjang `VARCHAR`** (`150`, `150`, `255`, `50`).
+- **Jangan impor class Enum di dalam file migration** — gunakan array literal `['active', 'maintenance', 'archived']`.
+- **Pastikan nilai `ENUM` huruf kecil persis:** `'active'`, `'maintenance'`, `'archived'`.
+- **Jangan ubah file migrasi lama** yang sudah ada; buat file migrasi baru.
 - **Jangan commit file `.env`** ke Git.
 
 ---
 
 ## Kriteria Selesai (Definition of Done)
-- [ ] Enum `app/Enums/DeveloperRole.php` dibuat dengan 4 nilai role sesuai spesifikasi.
-- [ ] Migration `create_developers_table` dibuat dengan seluruh kolom, panjang tipe data, `UNIQUE`, `ENUM`, dan `default(true)` yang tepat.
-- [ ] Model `app/Models/Developer.php` memiliki `$fillable` dan `casts()` lengkap.
-- [ ] `DeveloperFactory` dan `DeveloperSeeder` (idempoten) tersedia dan berfungsi.
-- [ ] `php artisan migrate`, `migrate:rollback --step=1`, dan `db:seed` berjalan sukses tanpa error.
-- [ ] Seluruh pengujian otomatis di `php artisan test` lulus (termasuk test baru untuk tabel `developers`).
+- [ ] Enum `app/Enums/ProjectStatus.php` dibuat dengan 3 nilai status (`active`, `maintenance`, `archived`).
+- [ ] Migration `create_projects_table` dibuat dengan spesifikasi kolom, panjang tipe data, `UNIQUE` pada `code`, `ENUM` literal dengan default `'active'` + index, dan rollback bersih.
+- [ ] Model `app/Models/Project.php` memiliki `$fillable`, `casts()`, dan query scope (`active`, `status`).
+- [ ] `ProjectFactory` (dengan state `maintenance` & `archived`) dan `ProjectSeeder` (idempoten, memakai contoh kode `INTRA`, `KEU`, `HRIS`) tersedia dan berfungsi.
+- [ ] `php artisan migrate`, `migrate:rollback --step=1`, dan `db:seed --class=ProjectSeeder` berjalan tanpa error.
+- [ ] Seluruh pengujian otomatis di `php artisan test` lulus (termasuk test positif & negatif untuk tabel `projects`).
