@@ -20,6 +20,7 @@ return new class extends Migration
                 ->nullOnDelete();
             $table->string('name', 150);
             $table->string('email', 150)->unique();
+            $table->string('password')->nullable();
             $table->enum('role_title', ['Fullstack Lead', 'Backend', 'Frontend', 'Mobile']);
             $table->string('avatar', 10);
             $table->string('avatar_bg', 50);

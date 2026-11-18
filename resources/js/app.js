@@ -115,3 +115,24 @@ if (mountEl) {
         },
     }).mount(mountEl);
 }
+
+const loginEl = document.getElementById('login-form-app');
+
+if (loginEl) {
+    createApp({
+        setup() {
+            const showPassword = ref(false);
+            const isSubmitting = ref(false);
+
+            function onSubmit() {
+                isSubmitting.value = true;
+            }
+
+            return {
+                showPassword,
+                isSubmitting,
+                onSubmit,
+            };
+        },
+    }).mount(loginEl);
+}

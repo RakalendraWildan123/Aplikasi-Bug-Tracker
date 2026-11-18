@@ -96,10 +96,19 @@ class AuthAndAccountManagementTest extends TestCase
 
     public function test_rbac_middleware_restricts_account_management_to_active_admins(): void
     {
-        // Guest redirected to login
+        // Guests are redirected to login from all protected application routes
+        $this->get('/')->assertRedirect(route('login'));
+        $this->get('/exports/sample-pdf')->assertRedirect(route('login'));
         $this->get('/admin/accounts')->assertRedirect(route('login'));
 
-        // Developer gets 403 Forbidden
+        // Inactive developer is forced logout & redirected to login on homepage
+        $inactiveDev = User::factory()->inactive()->create(['role' => 'developer']);
+        $this->actingAs($inactiveDev)
+            ->get('/')
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        // Developer gets 403 Forbidden on admin routes
         $developerUser = User::factory()->create(['role' => 'developer']);
         $this->actingAs($developerUser)
             ->get('/admin/accounts')
@@ -211,6 +220,7 @@ class AuthAndAccountManagementTest extends TestCase
             ->assertRedirect(route('admin.accounts.edit', $devUser));
 
         $this->assertTrue(Hash::check('newsecret999', $devUser->fresh()->password));
+        $this->assertTrue(Hash::check('newsecret999', $developer->fresh()->password));
     }
 
     public function test_account_seeder_is_idempotent_and_links_all_developers(): void

@@ -27,10 +27,18 @@ class Developer extends Model
         'user_id',
         'name',
         'email',
+        'password',
         'role_title',
         'avatar',
         'avatar_bg',
         'is_active',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
     ];
 
     /**
@@ -39,6 +47,7 @@ class Developer extends Model
     protected function casts(): array
     {
         return [
+            'password' => 'hashed',
             'is_active' => 'boolean',
         ];
     }

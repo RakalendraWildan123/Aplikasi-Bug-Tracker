@@ -65,6 +65,7 @@ class AccountController extends Controller
                     'user_id' => $user->id,
                     'name' => $validated['name'],
                     'email' => $validated['email'],
+                    'password' => $validated['password'],
                     'role_title' => $validated['role_title'],
                     'avatar' => $this->resolveAvatar($validated['avatar'] ?? null, $validated['name']),
                     'avatar_bg' => $validated['avatar_bg'] ?: '#4F46E5',
@@ -176,9 +177,17 @@ class AccountController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user->update([
-            'password' => $validated['password'],
-        ]);
+        DB::transaction(function () use ($user, $validated) {
+            $user->update([
+                'password' => $validated['password'],
+            ]);
+
+            if ($user->developer) {
+                $user->developer->update([
+                    'password' => $validated['password'],
+                ]);
+            }
+        });
 
         return redirect()
             ->route('admin.accounts.edit', $user)

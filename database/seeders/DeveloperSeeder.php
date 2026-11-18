@@ -16,6 +16,7 @@ class DeveloperSeeder extends Seeder
             [
                 'name' => 'Raka Pratama',
                 'email' => 'raka.pratama@bugtracker.test',
+                'password' => 'password',
                 'role_title' => 'Fullstack Lead',
                 'avatar' => 'RP',
                 'avatar_bg' => '#4F46E5',
@@ -24,6 +25,7 @@ class DeveloperSeeder extends Seeder
             [
                 'name' => 'Dina Kusuma',
                 'email' => 'dina.kusuma@bugtracker.test',
+                'password' => 'password',
                 'role_title' => 'Backend',
                 'avatar' => 'DK',
                 'avatar_bg' => '#10B981',
@@ -32,6 +34,7 @@ class DeveloperSeeder extends Seeder
             [
                 'name' => 'Budi Santoso',
                 'email' => 'budi.santoso@bugtracker.test',
+                'password' => 'password',
                 'role_title' => 'Frontend',
                 'avatar' => 'BS',
                 'avatar_bg' => '#F59E0B',
@@ -40,6 +43,7 @@ class DeveloperSeeder extends Seeder
             [
                 'name' => 'Siti Rahma',
                 'email' => 'siti.rahma@bugtracker.test',
+                'password' => 'password',
                 'role_title' => 'Mobile',
                 'avatar' => 'SR',
                 'avatar_bg' => '#EF4444',

@@ -7,6 +7,7 @@ use Database\Seeders\DeveloperSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -22,6 +23,7 @@ class DeveloperTableTest extends TestCase
             'user_id',
             'name',
             'email',
+            'password',
             'role_title',
             'avatar',
             'avatar_bg',
@@ -109,5 +111,11 @@ class DeveloperTableTest extends TestCase
 
         $expected = collect(Developer::ROLES)->sort()->values()->all();
         $this->assertSame($expected, $roles);
+
+        foreach (Developer::all() as $dev) {
+            $this->assertNotNull($dev->password);
+            $this->assertTrue(Hash::check('password', $dev->password));
+            $this->assertArrayNotHasKey('password', $dev->toArray());
+        }
     }
 }

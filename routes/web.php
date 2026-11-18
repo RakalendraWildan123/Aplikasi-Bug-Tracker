@@ -5,13 +5,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
-
-Route::get('/exports/sample-pdf', [ExportController::class, 'samplePdf'])
-    ->name('exports.sample-pdf');
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
@@ -20,6 +13,15 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+Route::middleware(['auth', 'role:admin,developer'])->group(function () {
+    Route::get('/', function () {
+        return view('welcome');
+    })->name('home');
+
+    Route::get('/exports/sample-pdf', [ExportController::class, 'samplePdf'])
+        ->name('exports.sample-pdf');
+});
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin/accounts')

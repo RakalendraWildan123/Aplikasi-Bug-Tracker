@@ -2,18 +2,24 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Services\ExportService;
 use Barryvdh\Snappy\Facades\SnappyPdf;
 use Barryvdh\Snappy\PdfWrapper;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Mockery;
 use Tests\TestCase;
 
 class StackFoundationTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_homepage_renders_vue_standalone_and_native_dnd_board(): void
     {
-        $response = $this->withoutVite()->get('/');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->withoutVite()->get('/');
 
         $response->assertOk();
         $response->assertSee('id="kanban-board-app"', false);
@@ -43,14 +49,16 @@ class StackFoundationTest extends TestCase
             ->with('exports.sample', Mockery::type('array'))
             ->andReturn($pdfMock);
 
-        $firstResponse = $this->get('/exports/sample-pdf');
+        $user = User::factory()->create();
+
+        $firstResponse = $this->actingAs($user)->get('/exports/sample-pdf');
         $firstResponse->assertOk();
         $firstResponse->assertHeader('Content-Type', 'application/pdf');
         $firstResponse->assertHeader('X-Export-Cache', 'MISS');
         $this->assertSame('%PDF-1.4 sample-v1', $firstResponse->getContent());
 
         // Second request must be served from cache without calling SnappyPdf again
-        $secondResponse = $this->get('/exports/sample-pdf');
+        $secondResponse = $this->actingAs($user)->get('/exports/sample-pdf');
         $secondResponse->assertOk();
         $secondResponse->assertHeader('X-Export-Cache', 'HIT');
         $this->assertSame('%PDF-1.4 sample-v1', $secondResponse->getContent());

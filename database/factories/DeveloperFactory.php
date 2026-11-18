@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Developer;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 class DeveloperFactory extends Factory
 {
     protected $model = Developer::class;
+
+    protected static ?string $password;
 
     /**
      * Define the model's default state.
@@ -31,6 +34,7 @@ class DeveloperFactory extends Factory
             'user_id' => null,
             'name' => $name,
             'email' => fake()->unique()->safeEmail(),
+            'password' => static::$password ??= Hash::make('password'),
             'role_title' => fake()->randomElement(Developer::ROLES),
             'avatar' => $initials !== '' ? $initials : 'DV',
             'avatar_bg' => fake()->randomElement([
