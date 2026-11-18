@@ -62,4 +62,14 @@ class Project extends Model
     {
         return $this->hasMany(Module::class);
     }
+
+    /**
+     * Get the tasks for the project.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
 }
