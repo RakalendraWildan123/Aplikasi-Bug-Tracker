@@ -92,4 +92,14 @@ class Project extends Model
     {
         return $this->hasMany(RepoHistory::class);
     }
+
+    /**
+     * Get the periodic evaluations for the project.
+     *
+     * @return HasMany<AppEvaluation, $this>
+     */
+    public function appEvaluations(): HasMany
+    {
+        return $this->hasMany(AppEvaluation::class);
+    }
 }
