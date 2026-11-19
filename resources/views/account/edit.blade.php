@@ -9,17 +9,17 @@
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
 
     {{-- Top Navigation Bar --}}
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
-                <span class="text-slate-300">/</span>
+    <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <span class="text-base font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
+                <span class="text-slate-300 font-normal">/</span>
                 <span class="text-sm font-medium text-slate-600">Akun Saya</span>
             </div>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="text-sm font-semibold text-rose-600 hover:text-rose-700 transition">
+                <button type="submit" class="text-sm font-semibold text-rose-600 hover:text-rose-700 transition px-3 py-1.5 rounded-lg hover:bg-rose-50">
                     Logout
                 </button>
             </form>
@@ -27,19 +27,19 @@
     </header>
 
     {{-- Main Container --}}
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
         {{-- Page Header --}}
         <div class="mb-8">
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Akun Saya</h1>
-            <p class="mt-1 text-sm text-slate-600">Kelola informasi profil pribadi dan kata sandi akun Anda.</p>
+            <p class="mt-1.5 text-sm text-slate-600">Kelola informasi profil pribadi dan kata sandi akun Anda.</p>
         </div>
 
-        {{-- Layout Grid Desktop & Tablet (Tanpa Tab Bersarang) --}}
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
+        {{-- Layout Flex Desktop & Tablet (Tanpa Tab Bersarang) --}}
+        <div class="flex flex-col md:flex-row gap-6 lg:gap-8 items-start w-full">
 
             {{-- Kolom Kiri: Ringkasan Profil --}}
-            <aside class="md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <aside class="w-full md:w-72 lg:w-80 shrink-0 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                 <div class="flex flex-col items-center text-center">
                     {{-- Avatar Display --}}
                     @if ($user->foto_profil_url)
@@ -51,12 +51,12 @@
                     @endif
 
                     <h2 class="text-lg font-bold text-slate-900 leading-snug">{{ $user->name }}</h2>
-                    <span class="mt-1.5 inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                    <span class="mt-1.5 inline-block px-3 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                         {{ $user->roleLabel() }}
                     </span>
                 </div>
 
-                <div class="mt-6 pt-6 border-t border-slate-200 space-y-3.5 text-sm">
+                <div class="mt-6 pt-6 border-t border-slate-200 space-y-4 text-sm w-full">
                     <div>
                         <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Email</span>
                         <span class="font-medium text-slate-800 break-all">{{ $user->email }}</span>
@@ -80,13 +80,13 @@
             </aside>
 
             {{-- Kolom Kanan: Form Edit Profil & Password (Mengalir Tegas, Tanpa Tab) --}}
-            <div class="md:col-span-8 space-y-6">
+            <div class="w-full flex-1 min-w-0 space-y-6">
 
                 {{-- Card 1: Edit Informasi Profil --}}
-                <section class="bg-white border border-slate-200 rounded-xl p-6 sm:p-7 shadow-sm">
+                <section class="w-full bg-white border border-slate-200 rounded-xl p-6 sm:p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4 mb-6">
                         <h2 class="text-lg font-bold text-slate-900">Informasi Profil</h2>
-                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Perbarui nama dan foto profil akun Anda.</p>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Perbarui nama lengkap dan foto profil akun Anda.</p>
                     </div>
 
                     {{-- Status Notifikasi Profil --}}
@@ -99,12 +99,12 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('account.profile.update') }}" enctype="multipart/form-data" class="space-y-5">
+                    <form method="POST" action="{{ route('account.profile.update') }}" enctype="multipart/form-data" class="space-y-5 w-full">
                         @csrf
                         @method('PUT')
 
                         {{-- Input Nama Lengkap (Dapat Diedit) --}}
-                        <div>
+                        <div class="w-full">
                             <label for="name" class="block text-sm font-semibold text-slate-800">
                                 Nama Lengkap <span class="text-rose-500">*</span>
                             </label>
@@ -122,8 +122,8 @@
                         </div>
 
                         {{-- Input Email (TIDAK DAPAT DIEDIT / PERMANEN) --}}
-                        <div>
-                            <div class="flex items-center justify-between">
+                        <div class="w-full">
+                            <div class="flex items-center justify-between mb-1">
                                 <label for="email" class="block text-sm font-semibold text-slate-800">Email Akun</label>
                                 <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                                     Permanen (Tidak dapat diubah)
@@ -136,13 +136,13 @@
                                 value="{{ $user->email }}"
                                 readonly
                                 tabindex="-1"
-                                class="mt-1.5 block w-full rounded-lg border border-slate-200 bg-slate-100/90 px-3.5 py-2 text-sm text-slate-600 cursor-not-allowed select-none"
+                                class="mt-1 block w-full rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-600 cursor-not-allowed select-none"
                             >
-                            <p class="text-xs text-slate-500 mt-1">Alamat email akun Anda bersifat permanen untuk menjamin keamanan identitas akun.</p>
+                            <p class="text-xs text-slate-500 mt-1">Alamat email akun bersifat permanen untuk keamanan identitas Anda.</p>
                         </div>
 
                         {{-- Input Foto Profil --}}
-                        <div>
+                        <div class="w-full">
                             <label for="foto_profil" class="block text-sm font-semibold text-slate-800">Ganti Foto Profil</label>
                             <input
                                 id="foto_profil"
@@ -178,7 +178,7 @@
                 </section>
 
                 {{-- Card 2: Ubah Password Akun --}}
-                <section class="bg-white border border-slate-200 rounded-xl p-6 sm:p-7 shadow-sm">
+                <section class="w-full bg-white border border-slate-200 rounded-xl p-6 sm:p-7 shadow-sm">
                     <div class="border-b border-slate-200 pb-4 mb-6">
                         <h2 class="text-lg font-bold text-slate-900">Ubah Password</h2>
                         <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Pastikan akun menggunakan password baru minimal 8 karakter.</p>
@@ -194,12 +194,12 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('account.password.update') }}" class="space-y-4">
+                    <form method="POST" action="{{ route('account.password.update') }}" class="space-y-4 w-full">
                         @csrf
                         @method('PUT')
 
                         {{-- Password Saat Ini --}}
-                        <div>
+                        <div class="w-full">
                             <label for="current_password" class="block text-sm font-semibold text-slate-800">
                                 Password Saat Ini <span class="text-rose-500">*</span>
                             </label>
@@ -218,7 +218,7 @@
                         </div>
 
                         {{-- Password Baru --}}
-                        <div>
+                        <div class="w-full">
                             <label for="password" class="block text-sm font-semibold text-slate-800">
                                 Password Baru <span class="text-rose-500">*</span>
                             </label>
@@ -237,7 +237,7 @@
                         </div>
 
                         {{-- Konfirmasi Password Baru --}}
-                        <div>
+                        <div class="w-full">
                             <label for="password_confirmation" class="block text-sm font-semibold text-slate-800">
                                 Konfirmasi Password Baru <span class="text-rose-500">*</span>
                             </label>
