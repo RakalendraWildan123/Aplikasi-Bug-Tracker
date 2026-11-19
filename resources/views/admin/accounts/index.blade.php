@@ -97,10 +97,21 @@
                 </div>
 
                 {{-- KATEGORI 2: FITUR MASTER DATA --}}
-                @if ($user->isAdmin())
-                    <div class="space-y-1 pt-4 border-t border-slate-800/80">
-                        <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
+                <div class="space-y-1 pt-4 border-t border-slate-800/80">
+                    <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
+                    {{-- Fitur Master Proyek --}}
+                    <a
+                        href="{{ route('projects.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/>
+                        </svg>
+                        <span>Master Proyek</span>
+                    </a>
+
+                    @if ($user->isAdmin())
                         {{-- Fitur Master Akun (Active State) --}}
                         <a
                             href="{{ route('admin.accounts.index') }}"
@@ -111,8 +122,8 @@
                             </svg>
                             <span>Master Akun</span>
                         </a>
-                    </div>
-                @endif
+                    @endif
+                </div>
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">

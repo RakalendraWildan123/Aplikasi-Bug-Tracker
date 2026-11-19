@@ -37,6 +37,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
     Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');
 
+    // Master Proyek / CRUD Proyek
+    Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
+    Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+    Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
+
     // Master Akun / CRUD Akun (Khusus Atasan / Admin)
     Route::middleware('role:admin')
         ->prefix('admin/accounts')
