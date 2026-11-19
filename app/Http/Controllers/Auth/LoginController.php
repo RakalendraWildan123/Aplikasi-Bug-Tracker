@@ -106,10 +106,10 @@ class LoginController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Anda berhasil keluar dari aplikasi.',
+                'message' => 'Logout berhasil.',
             ]);
         }
 
-        return redirect()->route('login')->with('status', 'Anda berhasil keluar dari aplikasi.');
+        return redirect()->route('login')->with('status', 'Logout berhasil.');
     }
 }
