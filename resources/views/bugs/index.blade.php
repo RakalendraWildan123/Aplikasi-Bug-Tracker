@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pelacak Bug &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans flex flex-col lg:flex-row">
+
+    {{-- Backdrop Sidebar (Tablet Portrait & Mobile) --}}
+    <div
+        id="sidebar-backdrop"
+        class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs hidden lg:hidden"
+        aria-hidden="true"
+    ></div>
+
+    {{-- Navigasi Sidebar di Sebelah Kiri --}}
+    <aside
+        id="app-sidebar"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+    >
+        <div class="flex flex-col flex-1 min-h-0">
+            {{-- Brand Header Sidebar --}}
+            <div class="flex h-16 items-center justify-between border-b border-slate-800 px-5">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shrink-0">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.516 0c.85.493 1.508 1.333 1.508 2.316V18" />
+                        </svg>
+                    </div>
+                    <div class="leading-tight min-w-0">
+                        <span class="block text-sm font-bold tracking-tight text-white truncate">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
+                        <span class="block text-[11px] font-medium text-slate-400">IT Dev Workspace</span>
+                    </div>
+                </div>
+
+                {{-- Tombol Tutup Sidebar untuk Layar Tablet/Mobile --}}
+                <button
+                    type="button"
+                    id="btn-sidebar-close"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden cursor-pointer"
+                    aria-label="Tutup menu navigasi"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Menu Navigasi Utama --}}
+            <nav class="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto" aria-label="Navigasi Sidebar">
+                <p class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</p>
+
+                {{-- Fitur Papan Kanban --}}
+                <a
+                    href="{{ route('kanban.index') }}"
+                    class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                >
+                    <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z"/>
+                    </svg>
+                    <span>Papan Kanban</span>
+                </a>
+
+                {{-- Fitur Daftar Tugas --}}
+                <a
+                    href="{{ route('tasks.index') }}"
+                    class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                >
+                    <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                    </svg>
+                    <span>Daftar Tugas</span>
+                </a>
+
+                {{-- Fitur Pelacak Bug (Active State) --}}
+                <a
+                    href="{{ route('bugs.index') }}"
+                    class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition bg-slate-800 text-white border border-slate-700/70 shadow-xs"
+                >
+                    <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                    </svg>
+                    <span>Pelacak Bug</span>
+                </a>
+
+                {{-- Fitur Akun Saya --}}
+                <a
+                    href="{{ route('account.edit') }}"
+                    class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                >
+                    <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                    <span>Akun Saya</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
+
+    {{-- Area Konten Utama (Kanan) --}}
+    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+
+        {{-- Topbar Khusus Layar Tablet & Mobile --}}
+        <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    id="btn-sidebar-open"
+                    class="p-2 rounded-lg text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    aria-label="Buka menu navigasi sidebar"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                    </svg>
+                </button>
+                <span class="text-base font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if ($user->foto_profil_url)
+                    <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
+                @else
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                        {{ $user->avatar ?? 'AK' }}
+                    </div>
+                @endif
+            </div>
+        </header>
+
+        {{-- Konten Halaman Pelacak Bug --}}
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col">
+
+            {{-- Header Halaman & Tombol Aksi Laporkan Bug --}}
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Pelacak Bug</h1>
+                    <p class="mt-1 text-sm text-slate-600">Pantau, tindak lanjuti, dan selesaikan kendala serta temuan bug sistem secara terpusat.</p>
+                </div>
+
+                {{-- Tombol Buka Pop-up Tambah Bug --}}
+                <button
+                    type="button"
+                    id="btn-open-create-bug"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 shrink-0 cursor-pointer shadow-sm"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    <span>Laporkan Bug</span>
+                </button>
+            </div>
+
+            {{-- Ringkasan Metrik Cepat (Bersih & Tegas, Ramah Desktop & Tablet) --}}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-6">
+                {{-- Total Bug --}}
+                <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs">
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Total Bug</span>
+                    <span class="mt-1 block text-2xl font-extrabold text-slate-900">{{ $metrics['total'] }}</span>
+                </div>
+
+                {{-- Open --}}
+                <div class="bg-white border border-rose-200/80 rounded-xl p-3.5 shadow-2xs bg-rose-50/20">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Open</span>
+                    </div>
+                    <span class="mt-1 block text-2xl font-extrabold text-rose-800">{{ $metrics['open'] }}</span>
+                </div>
+
+                {{-- In Progress --}}
+                <div class="bg-white border border-sky-200/80 rounded-xl p-3.5 shadow-2xs bg-sky-50/20">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                        <span class="text-xs font-bold text-sky-700 uppercase tracking-wider">In Progress</span>
+                    </div>
+                    <span class="mt-1 block text-2xl font-extrabold text-sky-800">{{ $metrics['in_progress'] }}</span>
+                </div>
+
+                {{-- Resolved --}}
+                <div class="bg-white border border-emerald-200/80 rounded-xl p-3.5 shadow-2xs bg-emerald-50/20">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Resolved</span>
+                    </div>
+                    <span class="mt-1 block text-2xl font-extrabold text-emerald-800">{{ $metrics['resolved'] }}</span>
+                </div>
+
+                {{-- Kritis / Critical --}}
+                <div class="bg-white border border-purple-200/80 rounded-xl p-3.5 shadow-2xs bg-purple-50/20 col-span-2 sm:col-span-1">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                        <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Kritis</span>
+                    </div>
+                    <span class="mt-1 block text-2xl font-extrabold text-purple-800">{{ $metrics['critical'] }}</span>
+                </div>
+            </div>
+
+            {{-- Pesan Sukses / Notifikasi Flash --}}
+            @if (session('success_message'))
+                <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 flex items-center justify-between">
+                    <span>{{ session('success_message') }}</span>
+                </div>
+            @endif
+
+            <div id="toast-message" class="hidden mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-emerald-800 items-center justify-between transition-all">
+                <span id="toast-text">Data bug berhasil diperbarui.</span>
+            </div>
+
+            {{-- Filter & Pencarian Sederhana (Tanpa Tab Bersarang) --}}
+            <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-2xs">
+                <form method="GET" action="{{ route('bugs.index') }}" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 flex-wrap">
+                    {{-- Pencarian Kata Kunci --}}
+                    <div class="flex-1 min-w-[220px]">
+                        <label for="search-bug" class="sr-only">Cari Bug</label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="search-bug"
+                                name="search"
+                                value="{{ $selectedSearch }}"
+                                placeholder="Cari judul, pelapor, penyebab..."
+                                class="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                            >
+                            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    {{-- Dropdown Filter Proyek --}}
+                    <div>
+                        <label for="filter-bug-project" class="sr-only">Filter Proyek</label>
+                        <select
+                            id="filter-bug-project"
+                            name="project_id"
+                            class="w-full md:w-auto rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="">Semua Proyek</option>
+                            @foreach ($projects as $proj)
+                                <option value="{{ $proj->id }}" {{ (string)$selectedProject === (string)$proj->id ? 'selected' : '' }}>
+                                    [{{ $proj->code }}] {{ $proj->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Dropdown Filter Tingkat Keparahan --}}
+                    <div>
+                        <label for="filter-bug-severity" class="sr-only">Filter Keparahan</label>
+                        <select
+                            id="filter-bug-severity"
+                            name="severity"
+                            class="w-full md:w-auto rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="">Semua Keparahan</option>
+                            <option value="critical" {{ $selectedSeverity === 'critical' ? 'selected' : '' }}>Kritis (Critical)</option>
+                            <option value="high" {{ $selectedSeverity === 'high' ? 'selected' : '' }}>Tinggi (High)</option>
+                            <option value="medium" {{ $selectedSeverity === 'medium' ? 'selected' : '' }}>Sedang (Medium)</option>
+                            <option value="low" {{ $selectedSeverity === 'low' ? 'selected' : '' }}>Rendah (Low)</option>
+                        </select>
+                    </div>
+
+                    {{-- Dropdown Filter Status --}}
+                    <div>
+                        <label for="filter-bug-status" class="sr-only">Filter Status</label>
+                        <select
+                            id="filter-bug-status"
+                            name="status"
+                            class="w-full md:w-auto rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="open" {{ $selectedStatus === 'open' ? 'selected' : '' }}>Open</option>
+                            <option value="in_progress" {{ $selectedStatus === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                            <option value="resolved" {{ $selectedStatus === 'resolved' ? 'selected' : '' }}>Resolved</option>
+                        </select>
+                    </div>
+
+                    {{-- Dropdown Filter Penanggung Jawab --}}
+                    <div>
+                        <label for="filter-bug-dev" class="sr-only">Filter Penanggung Jawab</label>
+                        <select
+                            id="filter-bug-dev"
+                            name="assigned_to"
+                            class="w-full md:w-auto rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="">Semua Penanggung Jawab</option>
+                            @foreach ($developers as $dev)
+                                <option value="{{ $dev->id }}" {{ (string)$selectedDeveloper === (string)$dev->id ? 'selected' : '' }}>
+                                    {{ $dev->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Tombol Terapkan & Reset --}}
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="submit"
+                            class="px-3.5 py-2 rounded-lg bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 transition cursor-pointer shadow-xs"
+                        >
+                            Filter
+                        </button>
+                        @if ($selectedSearch || $selectedProject || $selectedSeverity || $selectedStatus || $selectedDeveloper)
+                            <a
+                                href="{{ route('bugs.index') }}"
+                                class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-100 hover:text-slate-900 transition"
+                            >
+                                Reset
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+
+            {{-- Tabel Pelacak Bug (Bersih, Tegas, Ramah Desktop & Tablet) --}}
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                <div class="overflow-x-auto min-w-full">
+                    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                        <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-5 pr-3">Bug &amp; Temuan</th>
+                                <th scope="col" class="py-3.5 px-3">Proyek &amp; Modul</th>
+                                <th scope="col" class="py-3.5 px-3">Keparahan</th>
+                                <th scope="col" class="py-3.5 px-3">Status</th>
+                                <th scope="col" class="py-3.5 px-3">Pelapor &amp; Tanggal</th>
+                                <th scope="col" class="py-3.5 px-3">Ditugaskan</th>
+                                <th scope="col" class="py-3.5 pl-3 pr-5 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+                            @forelse ($bugs as $bug)
+                                @php
+                                    $severityBadges = [
+                                        'critical' => 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+                                        'high' => 'bg-orange-100 text-orange-800 border-orange-300 font-semibold',
+                                        'medium' => 'bg-amber-100 text-amber-800 border-amber-300 font-medium',
+                                        'low' => 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
+                                    ];
+                                    $severityLabels = [
+                                        'critical' => 'Kritis',
+                                        'high' => 'Tinggi',
+                                        'medium' => 'Sedang',
+                                        'low' => 'Rendah',
+                                    ];
+                                    $statusBadges = [
+                                        'open' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                        'in_progress' => 'bg-sky-50 text-sky-700 border-sky-200',
+                                        'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    ];
+                                    $statusDots = [
+                                        'open' => 'bg-rose-500',
+                                        'in_progress' => 'bg-sky-500',
+                                        'resolved' => 'bg-emerald-500',
+                                    ];
+                                    $statusLabels = [
+                                        'open' => 'Open',
+                                        'in_progress' => 'In Progress',
+                                        'resolved' => 'Resolved',
+                                    ];
+                                @endphp
+                                <tr class="hover:bg-slate-50/70 transition-colors" id="row-bug-{{ $bug->id }}">
+                                    {{-- 1. Judul & Deskripsi Bug --}}
+                                    <td class="py-4 pl-5 pr-3 max-w-xs sm:max-w-sm">
+                                        <div class="font-bold text-slate-900 leading-snug">{{ $bug->title }}</div>
+                                        @if ($bug->description)
+                                            <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed" title="{{ $bug->description }}">
+                                                {{ \Illuminate\Support\Str::limit($bug->description, 130) }}
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-slate-400 italic mt-0.5">Tanpa deskripsi</p>
+                                        @endif
+                                        @if ($bug->root_cause)
+                                            <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                                <span>Akar Masalah:</span>
+                                                <span class="truncate max-w-[200px]">{{ $bug->root_cause }}</span>
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    {{-- 2. Proyek & Modul (Disatukan) --}}
+                                    <td class="py-4 px-3 whitespace-nowrap">
+                                        <div class="flex flex-col items-start gap-1">
+                                            @if ($bug->project)
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $bug->project->color ?? '#4F46E5' }}"></span>
+                                                    <span>{{ $bug->project->code }}</span>
+                                                </span>
+                                            @endif
+                                            @if ($bug->module)
+                                                <span class="text-xs text-slate-600 font-medium truncate max-w-[150px]" title="{{ $bug->module->name }}">
+                                                    {{ $bug->module->name }}
+                                                </span>
+                                            @elseif (!$bug->project)
+                                                <span class="text-xs text-slate-400 italic">-</span>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    {{-- 3. Tingkat Keparahan --}}
+                                    <td class="py-4 px-3 whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded text-[11px] uppercase tracking-wider border {{ $severityBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                            {{ $severityLabels[$bug->severity] ?? $bug->severity }}
+                                        </span>
+                                    </td>
+
+                                    {{-- 4. Status --}}
+                                    <td class="py-4 px-3 whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border {{ $statusBadges[$bug->status] ?? 'bg-slate-50 text-slate-700 border-slate-200' }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $statusDots[$bug->status] ?? 'bg-slate-400' }}"></span>
+                                            <span>{{ $statusLabels[$bug->status] ?? $bug->status }}</span>
+                                        </span>
+                                    </td>
+
+                                    {{-- 5. Pelapor & Tanggal --}}
+                                    <td class="py-4 px-3 whitespace-nowrap text-xs text-slate-600">
+                                        <div class="font-medium text-slate-800">{{ $bug->reported_by ?: '-' }}</div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">
+                                            {{ $bug->reported_date ? $bug->reported_date->format('d M Y') : '-' }}
+                                        </div>
+                                    </td>
+
+                                    {{-- 6. Ditugaskan & Tombol Ambil Alih --}}
+                                    <td class="py-4 px-3 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            @if ($bug->assignee)
+                                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $bug->assignee->avatar_bg ?? '#1E293B' }}">
+                                                    {{ $bug->assignee->avatar ?? 'AK' }}
+                                                </div>
+                                                <span class="text-xs font-semibold text-slate-800 truncate max-w-[110px]" title="{{ $bug->assignee->name }}">
+                                                    {{ $bug->assignee->name }}
+                                                </span>
+                                            @else
+                                                <span class="text-xs text-slate-400 italic">Belum Ditugaskan</span>
+                                            @endif
+
+                                            @if (!$bug->assigned_to || $bug->assigned_to !== $user->id)
+                                                <button
+                                                    type="button"
+                                                    class="btn-takeover-bug inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs"
+                                                    data-bug-id="{{ $bug->id }}"
+                                                    data-bug-title="{{ $bug->title }}"
+                                                    data-project-code="{{ $bug->project?->code ?? 'Umum' }}"
+                                                    data-project-name="{{ $bug->project?->name ?? 'Proyek Tanpa Nama' }}"
+                                                    data-previous-assignee="{{ $bug->assignee?->name ?? 'Belum Ditugaskan' }}"
+                                                    data-takeover-url="{{ route('bugs.takeover', $bug) }}"
+                                                    title="Ambil alih penanganan bug ini"
+                                                >
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                                                    </svg>
+                                                    <span>Ambil</span>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    {{-- 7. Aksi --}}
+                                    <td class="py-4 pl-3 pr-5 text-right whitespace-nowrap">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            {{-- Tombol Edit Bug --}}
+                                            <button
+                                                type="button"
+                                                class="btn-edit-bug p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                                                data-bug="{{ json_encode([
+                                                    'id' => $bug->id,
+                                                    'title' => $bug->title,
+                                                    'project_id' => $bug->project_id,
+                                                    'module_id' => $bug->module_id,
+                                                    'assigned_to' => $bug->assigned_to,
+                                                    'severity' => $bug->severity,
+                                                    'status' => $bug->status,
+                                                    'reported_by' => $bug->reported_by,
+                                                    'reported_date' => $bug->reported_date ? $bug->reported_date->format('Y-m-d') : '',
+                                                    'description' => $bug->description,
+                                                    'root_cause' => $bug->root_cause,
+                                                    'solution_notes' => $bug->solution_notes,
+                                                ]) }}"
+                                                title="Edit data bug"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                                                </svg>
+                                            </button>
+
+                                            {{-- Tombol Hapus Bug --}}
+                                            <button
+                                                type="button"
+                                                class="btn-delete-bug p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                                                data-bug-id="{{ $bug->id }}"
+                                                data-bug-title="{{ $bug->title }}"
+                                                data-delete-url="{{ route('bugs.destroy', $bug) }}"
+                                                title="Hapus laporan bug"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="py-12 text-center">
+                                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-sm font-bold text-slate-900">Belum Ada Laporan Bug</h3>
+                                        <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                                            Tidak ada data bug yang sesuai dengan kriteria filter saat ini. Silakan buat laporan bug baru atau sesuaikan filter.
+                                        </p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Paginasi Halaman --}}
+                @if ($bugs->hasPages())
+                    <div class="px-5 py-4 border-t border-slate-200 bg-slate-50/50">
+                        {{ $bugs->links() }}
+                    </div>
+                @endif
+            </div>
+
+        </main>
+    </div>
+
+    {{-- ========================================================================= --}}
+    {{-- MODAL TAMBAH BUG (Clean, Assertive & Simple)                              --}}
+    {{-- ========================================================================= --}}
+    <div id="modal-create-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 relative">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Laporkan Bug Baru</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Catat temuan bug atau kendala teknis pada sistem.</p>
+                </div>
+                <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('bugs.store') }}" id="form-create-bug" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="create-bug-title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Judul Bug <span class="text-rose-500">*</span></label>
+                    <input type="text" id="create-bug-title" name="title" required placeholder="Contoh: Timeout 504 saat ekspor PDF" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="create-bug-project" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Proyek <span class="text-rose-500">*</span></label>
+                        <select id="create-bug-project" name="project_id" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="">Pilih Proyek</option>
+                            @foreach ($projects as $proj)
+                                <option value="{{ $proj->id }}">[{{ $proj->code }}] {{ $proj->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="create-bug-module" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modul</label>
+                        <select id="create-bug-module" name="module_id" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="">Tanpa Modul / Umum</option>
+                            @foreach ($modules as $mod)
+                                <option value="{{ $mod->id }}" data-project-id="{{ $mod->project_id }}">{{ $mod->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="create-bug-severity" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Keparahan <span class="text-rose-500">*</span></label>
+                        <select id="create-bug-severity" name="severity" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="critical">Kritis (Critical)</option>
+                            <option value="high">Tinggi (High)</option>
+                            <option value="medium" selected>Sedang (Medium)</option>
+                            <option value="low">Rendah (Low)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="create-bug-status" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
+                        <select id="create-bug-status" name="status" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="open" selected>Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="create-bug-reported-by" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pelapor</label>
+                        <input type="text" id="create-bug-reported-by" name="reported_by" placeholder="Contoh: QA - Sari" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+
+                    <div>
+                        <label for="create-bug-reported-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Laporan</label>
+                        <input type="date" id="create-bug-reported-date" name="reported_date" value="{{ date('Y-m-d') }}" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="create-bug-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
+                    <select id="create-bug-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                        <option value="">Belum Ditugaskan</option>
+                        @foreach ($developers as $dev)
+                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="create-bug-description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi &amp; Langkah Reproduksi</label>
+                    <textarea id="create-bug-description" name="description" rows="2" placeholder="Uraikan detail masalah atau langkah reproduksi bug..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
+                </div>
+
+                <div>
+                    <label for="create-bug-root-cause" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Akar Masalah (Root Cause)</label>
+                    <textarea id="create-bug-root-cause" name="root_cause" rows="2" placeholder="Catatan analisa penyebab bug jika telah ditemukan..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 transition cursor-pointer shadow-xs">Simpan Bug</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ========================================================================= --}}
+    {{-- MODAL EDIT BUG                                                            --}}
+    {{-- ========================================================================= --}}
+    <div id="modal-edit-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 relative">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Perbarui Data Bug</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Ubah status, solusi, atau penugasan penanganan bug.</p>
+                </div>
+                <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form method="POST" id="form-edit-bug" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label for="edit-bug-title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Judul Bug <span class="text-rose-500">*</span></label>
+                    <input type="text" id="edit-bug-title" name="title" required class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="edit-bug-project" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Proyek <span class="text-rose-500">*</span></label>
+                        <select id="edit-bug-project" name="project_id" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            @foreach ($projects as $proj)
+                                <option value="{{ $proj->id }}">[{{ $proj->code }}] {{ $proj->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="edit-bug-module" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modul</label>
+                        <select id="edit-bug-module" name="module_id" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="">Tanpa Modul / Umum</option>
+                            @foreach ($modules as $mod)
+                                <option value="{{ $mod->id }}" data-project-id="{{ $mod->project_id }}">{{ $mod->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="edit-bug-severity" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Keparahan <span class="text-rose-500">*</span></label>
+                        <select id="edit-bug-severity" name="severity" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="critical">Kritis (Critical)</option>
+                            <option value="high">Tinggi (High)</option>
+                            <option value="medium">Sedang (Medium)</option>
+                            <option value="low">Rendah (Low)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="edit-bug-status" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
+                        <select id="edit-bug-status" name="status" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="edit-bug-reported-by" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pelapor</label>
+                        <input type="text" id="edit-bug-reported-by" name="reported_by" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+
+                    <div>
+                        <label for="edit-bug-reported-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Laporan</label>
+                        <input type="date" id="edit-bug-reported-date" name="reported_date" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-bug-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
+                    <select id="edit-bug-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                        <option value="">Belum Ditugaskan</option>
+                        @foreach ($developers as $dev)
+                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="edit-bug-description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi &amp; Langkah Reproduksi</label>
+                    <textarea id="edit-bug-description" name="description" rows="2" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
+                </div>
+
+                <div>
+                    <label for="edit-bug-root-cause" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Akar Masalah (Root Cause)</label>
+                    <textarea id="edit-bug-root-cause" name="root_cause" rows="2" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
+                </div>
+
+                <div>
+                    <label for="edit-bug-solution-notes" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Catatan Solusi (Solution Notes)</label>
+                    <textarea id="edit-bug-solution-notes" name="solution_notes" rows="2" placeholder="Catatan perbaikan jika status sudah Resolved..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 transition cursor-pointer shadow-xs">Perbarui Bug</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ========================================================================= --}}
+    {{-- MODAL HAPUS BUG                                                           --}}
+    {{-- ========================================================================= --}}
+    <div id="modal-delete-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 relative">
+            <div class="flex items-center gap-3.5 mb-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-600 shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Konfirmasi Hapus Bug</h3>
+                    <p class="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                Apakah Anda yakin ingin menghapus laporan bug <span id="delete-bug-title" class="font-bold text-slate-900"></span>?
+            </p>
+
+            <form method="POST" id="form-delete-bug" class="flex items-center justify-end gap-3">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition cursor-pointer shadow-xs">Ya, Hapus</button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ========================================================================= --}}
+    {{-- MODAL AMBIL ALIH BUG                                                      --}}
+    {{-- ========================================================================= --}}
+    <div id="modal-takeover-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 relative">
+            <div class="flex items-center gap-3.5 mb-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 shrink-0">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Konfirmasi Ambil Alih Bug</h3>
+                    <p class="text-xs text-slate-500">Penanganan bug akan dialihkan kepada Anda.</p>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 mb-4 space-y-2 text-xs">
+                <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span class="text-slate-500">Judul Bug:</span>
+                    <span id="takeover-bug-title" class="font-bold text-slate-900 truncate max-w-[220px]"></span>
+                </div>
+                <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span class="text-slate-500">Proyek:</span>
+                    <span id="takeover-project-name" class="font-semibold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                    <span class="text-slate-500">Penanggung Jawab Sebelumnya:</span>
+                    <span id="takeover-previous-assignee" class="font-semibold text-rose-600"></span>
+                </div>
+            </div>
+
+            <form method="POST" id="form-takeover-bug" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="takeover-note" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Catatan Handover (Opsional)</label>
+                    <input type="text" id="takeover-note" name="note" placeholder="Alasan atau konteks pengalihan bug..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 transition cursor-pointer shadow-xs">Konfirmasi Ambil Alih</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Script Interaksi Bug Tracker --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Kontrol Sidebar Responsif
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const btnOpen = document.getElementById('btn-sidebar-open');
+            const btnClose = document.getElementById('btn-sidebar-close');
+
+            const toggleSidebar = (open) => {
+                if (open) {
+                    sidebar.classList.remove('-translate-x-full');
+                    backdrop.classList.remove('hidden');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    backdrop.classList.add('hidden');
+                }
+            };
+
+            btnOpen?.addEventListener('click', () => toggleSidebar(true));
+            btnClose?.addEventListener('click', () => toggleSidebar(false));
+            backdrop?.addEventListener('click', () => toggleSidebar(false));
+
+            // Kontrol Modal Tambah Bug
+            const modalCreate = document.getElementById('modal-create-bug');
+            const btnOpenCreate = document.getElementById('btn-open-create-bug');
+            btnOpenCreate?.addEventListener('click', () => {
+                modalCreate.classList.remove('hidden');
+            });
+
+            // Kontrol Modal Edit Bug
+            const modalEdit = document.getElementById('modal-edit-bug');
+            const formEdit = document.getElementById('form-edit-bug');
+            document.querySelectorAll('.btn-edit-bug').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const data = JSON.parse(btn.dataset.bug);
+                    formEdit.action = `/bugs/${data.id}`;
+                    document.getElementById('edit-bug-title').value = data.title || '';
+                    document.getElementById('edit-bug-project').value = data.project_id || '';
+                    document.getElementById('edit-bug-module').value = data.module_id || '';
+                    document.getElementById('edit-bug-severity').value = data.severity || 'medium';
+                    document.getElementById('edit-bug-status').value = data.status || 'open';
+                    document.getElementById('edit-bug-reported-by').value = data.reported_by || '';
+                    document.getElementById('edit-bug-reported-date').value = data.reported_date || '';
+                    document.getElementById('edit-bug-assigned').value = data.assigned_to || '';
+                    document.getElementById('edit-bug-description').value = data.description || '';
+                    document.getElementById('edit-bug-root-cause').value = data.root_cause || '';
+                    document.getElementById('edit-bug-solution-notes').value = data.solution_notes || '';
+                    modalEdit.classList.remove('hidden');
+                });
+            });
+
+            // Kontrol Modal Hapus Bug
+            const modalDelete = document.getElementById('modal-delete-bug');
+            const formDelete = document.getElementById('form-delete-bug');
+            const deleteTitle = document.getElementById('delete-bug-title');
+            document.querySelectorAll('.btn-delete-bug').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    formDelete.action = btn.dataset.deleteUrl;
+                    deleteTitle.textContent = btn.dataset.bugTitle;
+                    modalDelete.classList.remove('hidden');
+                });
+            });
+
+            // Kontrol Modal Ambil Alih Bug
+            const modalTakeover = document.getElementById('modal-takeover-bug');
+            const formTakeover = document.getElementById('form-takeover-bug');
+            const takeoverTitle = document.getElementById('takeover-bug-title');
+            const takeoverProject = document.getElementById('takeover-project-name');
+            const takeoverAssignee = document.getElementById('takeover-previous-assignee');
+            document.querySelectorAll('.btn-takeover-bug').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    formTakeover.action = btn.dataset.takeoverUrl;
+                    takeoverTitle.textContent = btn.dataset.bugTitle;
+                    takeoverProject.textContent = `[${btn.dataset.projectCode}] ${btn.dataset.projectName}`;
+                    takeoverAssignee.textContent = btn.dataset.previousAssignee;
+                    modalTakeover.classList.remove('hidden');
+                });
+            });
+
+            // Tombol Tutup Semua Modal
+            document.querySelectorAll('.btn-close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modalCreate?.classList.add('hidden');
+                    modalEdit?.classList.add('hidden');
+                    modalDelete?.classList.add('hidden');
+                    modalTakeover?.classList.add('hidden');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

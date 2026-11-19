@@ -30,5 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('tasks.takeover');
     Route::post('/kanban/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('kanban.tasks.takeover');
 
+    Route::get('/bugs', [\App\Http\Controllers\BugController::class, 'index'])->name('bugs.index');
+    Route::post('/bugs', [\App\Http\Controllers\BugController::class, 'store'])->name('bugs.store');
+    Route::put('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'update'])->name('bugs.update');
+    Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
+    Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
