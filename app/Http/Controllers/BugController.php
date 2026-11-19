@@ -137,15 +137,15 @@ class BugController extends Controller
     public function update(Request $request, Bug $bug): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'project_id' => ['required', 'exists:projects,id'],
+            'project_id' => ['sometimes', 'required', 'exists:projects,id'],
             'module_id' => ['nullable', 'exists:modules,id'],
             'assigned_to' => ['nullable', 'exists:users,id'],
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'reported_by' => ['nullable', 'string', 'max:150'],
             'reported_date' => ['nullable', 'date'],
-            'severity' => ['required', 'string', Rule::in(Bug::SEVERITIES)],
-            'status' => ['required', 'string', Rule::in(Bug::STATUSES)],
+            'severity' => ['sometimes', 'required', 'string', Rule::in(Bug::SEVERITIES)],
+            'status' => ['sometimes', 'required', 'string', Rule::in(Bug::STATUSES)],
             'root_cause' => ['nullable', 'string'],
             'solution_notes' => ['nullable', 'string'],
         ], [
@@ -155,10 +155,12 @@ class BugController extends Controller
             'status.required' => 'Status bug wajib dipilih.',
         ]);
 
-        if ($validated['status'] === 'resolved' && ! $bug->resolved_at) {
-            $validated['resolved_at'] = now();
-        } elseif ($validated['status'] !== 'resolved') {
-            $validated['resolved_at'] = null;
+        if (isset($validated['status'])) {
+            if ($validated['status'] === 'resolved' && ! $bug->resolved_at) {
+                $validated['resolved_at'] = now();
+            } elseif ($validated['status'] !== 'resolved') {
+                $validated['resolved_at'] = null;
+            }
         }
 
         $bug->update($validated);

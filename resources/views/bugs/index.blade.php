@@ -136,7 +136,7 @@
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Pelacak Bug</h1>
-                    <p class="mt-1 text-sm text-slate-600">Pantau temuan masalah, analisis akar masalah, serta dokumentasikan solusi penyelesaian bug.</p>
+                    <p class="mt-1 text-sm text-slate-600">Pantau temuan masalah, analisis akar masalah, serta kelola solusi penyelesaian bug secara terpisah dan terstruktur.</p>
                 </div>
 
                 {{-- Tombol Buka Pop-up Tambah Bug --}}
@@ -398,7 +398,7 @@
                                             type="button"
                                             class="btn-detail-bug text-left font-bold text-slate-900 hover:text-indigo-600 transition cursor-pointer leading-snug group flex items-start gap-1"
                                             data-bug="{{ json_encode($bugData) }}"
-                                            title="Klik untuk melihat solusi & riwayat lengkap bug"
+                                            title="Klik untuk melihat dan mengedit detail bug"
                                         >
                                             <span>{{ $bug->title }}</span>
                                             <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -510,36 +510,36 @@
                                         </div>
                                     </td>
 
-                                    {{-- 7. Aksi --}}
+                                    {{-- 7. Aksi: Terpisah Jelas (Detail Saja, Solusi Saja, Hapus) --}}
                                     <td class="py-4 pl-3 pr-5 text-right whitespace-nowrap">
-                                        <div class="flex items-center justify-end gap-2">
-                                            {{-- Tombol Lihat Solusi & Detail Riwayat Bug (Dengan Teks Jelas) --}}
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            {{-- 1. Tombol Detail (Bisa Melihat & Mengedit Detail Bug) --}}
                                             <button
                                                 type="button"
-                                                class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs"
+                                                class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer shadow-2xs"
                                                 data-bug="{{ json_encode($bugData) }}"
-                                                title="Lihat solusi penyelesaian dan riwayat lengkap bug"
+                                                title="Lihat riwayat dan edit detail bug"
                                             >
-                                                <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
                                                 </svg>
-                                                <span>Solusi &amp; Detail</span>
+                                                <span>Detail</span>
                                             </button>
 
-                                            {{-- Tombol Edit Bug --}}
+                                            {{-- 2. Tombol Solusi (Khusus Kelola & Catat Solusi) --}}
                                             <button
                                                 type="button"
-                                                class="btn-edit-bug p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                                                class="btn-solution-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border {{ $bug->solution_notes ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100' }} text-xs font-semibold transition cursor-pointer shadow-2xs"
                                                 data-bug="{{ json_encode($bugData) }}"
-                                                title="Edit data bug & perbarui solusi"
+                                                title="Kelola dan lihat solusi penyelesaian bug"
                                             >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                                                <svg class="w-3.5 h-3.5 {{ $bug->solution_notes ? 'text-emerald-600' : 'text-amber-600' }} shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                 </svg>
+                                                <span>Solusi</span>
                                             </button>
 
-                                            {{-- Tombol Hapus Bug --}}
+                                            {{-- 3. Tombol Hapus Bug --}}
                                             <button
                                                 type="button"
                                                 class="btn-delete-bug p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
@@ -586,23 +586,15 @@
     </div>
 
     {{-- ========================================================================= --}}
-    {{-- MODAL DETAIL & RIWAYAT LENGKAP BUG (Clean, Assertive & Simple)            --}}
+    {{-- MODAL DETAIL BUG (Bisa Dilihat & Diedit Langsung + Riwayat Aktivitas)      --}}
     {{-- ========================================================================= --}}
     <div id="modal-detail-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] flex flex-col">
             {{-- Header Modal --}}
             <div class="flex items-start justify-between pb-4 border-b border-slate-200 shrink-0">
-                <div class="min-w-0 pr-4">
-                    <div class="flex flex-wrap items-center gap-2 mb-2">
-                        <span id="detail-project-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                            <span id="detail-project-dot" class="w-2 h-2 rounded-full shrink-0"></span>
-                            <span id="detail-project-code"></span>
-                        </span>
-                        <span id="detail-module-name" class="text-xs text-slate-600 font-medium truncate max-w-[180px]"></span>
-                        <span id="detail-severity-badge" class="px-2 py-0.5 rounded text-[11px] uppercase tracking-wider border"></span>
-                        <span id="detail-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border"></span>
-                    </div>
-                    <h3 id="detail-bug-title" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug"></h3>
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900">Detail &amp; Edit Bug</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Informasi lengkap, riwayat penanganan, serta formulir pembaruan data bug.</p>
                 </div>
                 <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -611,64 +603,93 @@
                 </button>
             </div>
 
-            {{-- Body Modal (Scrollable) --}}
-            <div class="flex-1 overflow-y-auto py-5 space-y-5 pr-1 text-sm">
-                {{-- Info Ringkas Meta --}}
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                    <div>
-                        <span class="block text-slate-400 uppercase tracking-wider font-semibold text-[10px]">Pelapor</span>
-                        <span id="detail-reported-by" class="font-medium text-slate-800 mt-0.5 block truncate"></span>
-                    </div>
-                    <div>
-                        <span class="block text-slate-400 uppercase tracking-wider font-semibold text-[10px]">Tgl Laporan</span>
-                        <span id="detail-reported-date" class="font-medium text-slate-800 mt-0.5 block"></span>
-                    </div>
-                    <div>
-                        <span class="block text-slate-400 uppercase tracking-wider font-semibold text-[10px]">Penanggung Jawab</span>
-                        <span id="detail-assignee" class="font-medium text-slate-800 mt-0.5 block truncate"></span>
-                    </div>
-                    <div>
-                        <span class="block text-slate-400 uppercase tracking-wider font-semibold text-[10px]">Dibuat Pada</span>
-                        <span id="detail-created-at" class="font-medium text-slate-800 mt-0.5 block"></span>
-                    </div>
-                </div>
+            {{-- Form Edit Detail Bug --}}
+            <form method="POST" id="form-detail-bug" class="flex-1 overflow-y-auto py-5 space-y-4 pr-1 text-sm">
+                @csrf
+                @method('PUT')
 
-                {{-- Deskripsi Temuan Bug --}}
+                {{-- Judul Bug --}}
                 <div>
-                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Deskripsi Permasalahan</h4>
-                    <div id="detail-description" class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed text-xs sm:text-sm whitespace-pre-line"></div>
+                    <label for="detail-edit-title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Judul Bug <span class="text-rose-500">*</span></label>
+                    <input type="text" id="detail-edit-title" name="title" required class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
                 </div>
 
-                {{-- Bagian Solusi & Analisis Masalah --}}
-                <div class="space-y-3 pt-2 border-t border-slate-200">
-                    {{-- Akar Masalah (Root Cause) --}}
+                {{-- Proyek & Modul --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                        <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                            </svg>
-                            <span>Akar Masalah (Root Cause)</span>
-                        </h4>
-                        <div id="detail-root-cause" class="p-3.5 bg-amber-50/50 border border-amber-200 rounded-xl text-slate-800 leading-relaxed text-xs sm:text-sm"></div>
+                        <label for="detail-edit-project" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Proyek <span class="text-rose-500">*</span></label>
+                        <select id="detail-edit-project" name="project_id" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            @foreach ($projects as $proj)
+                                <option value="{{ $proj->id }}">[{{ $proj->code }}] {{ $proj->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    {{-- Solusi Penyelesaian Bug (Solution Notes) --}}
                     <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <h4 class="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>Solusi Penyelesaian Bug</span>
-                            </h4>
-                            <span id="detail-resolved-at" class="text-[11px] font-semibold text-emerald-700"></span>
-                        </div>
-                        <div id="detail-solution-notes" class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl text-emerald-950 leading-relaxed text-xs sm:text-sm whitespace-pre-line font-medium"></div>
+                        <label for="detail-edit-module" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modul</label>
+                        <select id="detail-edit-module" name="module_id" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="">Tanpa Modul / Umum</option>
+                            @foreach ($modules as $mod)
+                                <option value="{{ $mod->id }}" data-project-id="{{ $mod->project_id }}">{{ $mod->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
-                {{-- Detail Riwayat Bug (Timeline & Handover Logs) --}}
-                <div class="pt-2 border-t border-slate-200">
+                {{-- Keparahan & Status --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="detail-edit-severity" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Keparahan <span class="text-rose-500">*</span></label>
+                        <select id="detail-edit-severity" name="severity" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="critical">Kritis (Critical)</option>
+                            <option value="high">Tinggi (High)</option>
+                            <option value="medium">Sedang (Medium)</option>
+                            <option value="low">Rendah (Low)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="detail-edit-status" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
+                        <select id="detail-edit-status" name="status" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Pelapor & Tanggal --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label for="detail-edit-reported-by" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pelapor</label>
+                        <input type="text" id="detail-edit-reported-by" name="reported_by" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+
+                    <div>
+                        <label for="detail-edit-reported-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Laporan</label>
+                        <input type="date" id="detail-edit-reported-date" name="reported_date" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
+                    </div>
+                </div>
+
+                {{-- Penanggung Jawab --}}
+                <div>
+                    <label for="detail-edit-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
+                    <select id="detail-edit-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
+                        <option value="">Belum Ditugaskan</option>
+                        @foreach ($developers as $dev)
+                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Deskripsi Permasalahan --}}
+                <div>
+                    <label for="detail-edit-description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi Permasalahan</label>
+                    <textarea id="detail-edit-description" name="description" rows="3" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900" placeholder="Detail langkah reproduksi bug..."></textarea>
+                </div>
+
+                {{-- Riwayat Aktivitas & Handover (Timeline) --}}
+                <div class="pt-3 border-t border-slate-200">
                     <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -680,28 +701,116 @@
                         {{-- Diisi secara dinamis oleh JavaScript --}}
                     </div>
                 </div>
-            </div>
 
-            {{-- Footer Modal --}}
-            <div class="flex items-center justify-between pt-4 border-t border-slate-200 shrink-0">
-                <button
-                    type="button"
-                    id="btn-detail-trigger-edit"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 transition cursor-pointer shadow-xs"
-                >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                {{-- Tombol Aksi di Bawah Form Detail --}}
+                <div class="flex items-center justify-between pt-4 border-t border-slate-200 shrink-0">
+                    <button
+                        type="button"
+                        class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    >
+                        Tutup
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 transition cursor-pointer shadow-xs"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                        </svg>
+                        <span>Simpan Perubahan Detail</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ========================================================================= --}}
+    {{-- MODAL SOLUSI BUG (Khusus Melihat & Mengelola Solusi Penyelesaian Bug)     --}}
+    {{-- ========================================================================= --}}
+    <div id="modal-solution-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 relative">
+            {{-- Header Modal Solusi --}}
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Solusi Penyelesaian Bug</h3>
+                        <p class="text-xs text-slate-500">Kelola akar masalah teknis, catatan solusi perbaikan, dan status penyelesaian.</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                    <span>Edit &amp; Perbarui Solusi</span>
-                </button>
-
-                <button
-                    type="button"
-                    class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                >
-                    Tutup
                 </button>
             </div>
+
+            {{-- Info Ringkas Bug Terpilih --}}
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl mb-4 text-xs space-y-1">
+                <div class="flex items-center gap-2">
+                    <span id="solution-project-badge" class="font-semibold text-slate-800"></span>
+                    <span id="solution-module-badge" class="text-slate-500"></span>
+                </div>
+                <div id="solution-bug-title" class="font-bold text-slate-900 text-sm leading-snug"></div>
+            </div>
+
+            {{-- Form Solusi Bug --}}
+            <form method="POST" id="form-solution-bug" class="space-y-4">
+                @csrf
+                @method('PUT')
+
+                {{-- Status Penyelesaian --}}
+                <div>
+                    <label for="solution-status" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status Bug <span class="text-rose-500">*</span></label>
+                    <select id="solution-status" name="status" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 cursor-pointer">
+                        <option value="resolved">Resolved (Telah Diselesaikan)</option>
+                        <option value="in_progress">In Progress (Sedang Dikerjakan)</option>
+                        <option value="open">Open (Belum Diselesaikan)</option>
+                    </select>
+                </div>
+
+                {{-- Akar Masalah (Root Cause) --}}
+                <div>
+                    <label for="solution-root-cause" class="block text-xs font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                        </svg>
+                        <span>Akar Masalah (Root Cause)</span>
+                    </label>
+                    <textarea id="solution-root-cause" name="root_cause" rows="2" placeholder="Catatan analisa mengapa bug ini terjadi..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"></textarea>
+                </div>
+
+                {{-- Solusi Penyelesaian (Solution Notes) --}}
+                <div class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label for="solution-notes" class="block text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Dokumentasi Solusi Perbaikan</span>
+                        </label>
+                        <span id="solution-resolved-at" class="text-[11px] font-semibold text-emerald-700"></span>
+                    </div>
+                    <textarea id="solution-notes" name="solution_notes" rows="4" placeholder="Tuliskan dokumentasi solusi teknis, kode patch, atau penanganan bug yang diterapkan..." class="w-full rounded-lg border border-emerald-300 bg-white px-3.5 py-2 text-sm text-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 font-medium"></textarea>
+                    <p class="text-[11px] text-emerald-700">Menyimpan dengan status <strong>Resolved</strong> akan otomatis mencatat stempel waktu penyelesaian bug.</p>
+                </div>
+
+                {{-- Tombol Aksi Modal Solusi --}}
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-600 text-xs sm:text-sm font-semibold text-white hover:bg-emerald-700 transition cursor-pointer shadow-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                        </svg>
+                        <span>Simpan Solusi</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -818,124 +927,6 @@
     </div>
 
     {{-- ========================================================================= --}}
-    {{-- MODAL EDIT BUG (Dengan Fokus Solusi Penyelesaian Bug)                     --}}
-    {{-- ========================================================================= --}}
-    <div id="modal-edit-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 relative">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">Perbarui Data &amp; Solusi Bug</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Ubah status, lengkapi akar masalah, dan catat solusi perbaikan teknis.</p>
-                </div>
-                <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <form method="POST" id="form-edit-bug" class="space-y-4">
-                @csrf
-                @method('PUT')
-                <div>
-                    <label for="edit-bug-title" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Judul Bug <span class="text-rose-500">*</span></label>
-                    <input type="text" id="edit-bug-title" name="title" required class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                        <label for="edit-bug-project" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Proyek <span class="text-rose-500">*</span></label>
-                        <select id="edit-bug-project" name="project_id" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                            @foreach ($projects as $proj)
-                                <option value="{{ $proj->id }}">[{{ $proj->code }}] {{ $proj->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="edit-bug-module" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modul</label>
-                        <select id="edit-bug-module" name="module_id" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                            <option value="">Tanpa Modul / Umum</option>
-                            @foreach ($modules as $mod)
-                                <option value="{{ $mod->id }}" data-project-id="{{ $mod->project_id }}">{{ $mod->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                        <label for="edit-bug-severity" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Keparahan <span class="text-rose-500">*</span></label>
-                        <select id="edit-bug-severity" name="severity" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                            <option value="critical">Kritis (Critical)</option>
-                            <option value="high">Tinggi (High)</option>
-                            <option value="medium">Sedang (Medium)</option>
-                            <option value="low">Rendah (Low)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="edit-bug-status" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
-                        <select id="edit-bug-status" name="status" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                            <option value="open">Open</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                        <label for="edit-bug-reported-by" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pelapor</label>
-                        <input type="text" id="edit-bug-reported-by" name="reported_by" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
-                    </div>
-
-                    <div>
-                        <label for="edit-bug-reported-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Laporan</label>
-                        <input type="date" id="edit-bug-reported-date" name="reported_date" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="edit-bug-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
-                    <select id="edit-bug-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                        <option value="">Belum Ditugaskan</option>
-                        @foreach ($developers as $dev)
-                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="edit-bug-description" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Deskripsi &amp; Langkah Reproduksi</label>
-                    <textarea id="edit-bug-description" name="description" rows="2" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
-                </div>
-
-                <div>
-                    <label for="edit-bug-root-cause" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Akar Masalah (Root Cause)</label>
-                    <textarea id="edit-bug-root-cause" name="root_cause" rows="2" placeholder="Catatan analisa mengapa bug ini terjadi..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900"></textarea>
-                </div>
-
-                <div class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
-                    <label for="edit-bug-solution-notes" class="block text-xs font-bold text-emerald-900 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>Solusi Penyelesaian Bug</span>
-                    </label>
-                    <textarea id="edit-bug-solution-notes" name="solution_notes" rows="3" placeholder="Tuliskan dokumentasi solusi teknis, kode patch, atau penanganan bug yang diterapkan..." class="w-full rounded-lg border border-emerald-300 bg-white px-3.5 py-2 text-sm text-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"></textarea>
-                    <p class="text-[11px] text-emerald-700 mt-1">Mengisi solusi akan otomatis mencatat stempel waktu penyelesaian saat status diubah ke Resolved.</p>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 transition cursor-pointer shadow-xs">Perbarui Bug</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ========================================================================= --}}
     {{-- MODAL HAPUS BUG                                                           --}}
     {{-- ========================================================================= --}}
     <div id="modal-delete-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 flex items-center justify-center">
@@ -1042,77 +1033,27 @@
                 modalCreate.classList.remove('hidden');
             });
 
-            // Helper styling badge keparahan & status
-            const getSeverityClass = (sev) => {
-                const map = {
-                    critical: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
-                    high: 'bg-orange-100 text-orange-800 border-orange-300 font-semibold',
-                    medium: 'bg-amber-100 text-amber-800 border-amber-300 font-medium',
-                    low: 'bg-slate-100 text-slate-700 border-slate-300 font-medium'
-                };
-                return map[sev] || 'bg-slate-100 text-slate-700 border-slate-200';
-            };
-
-            const getStatusClass = (st) => {
-                const map = {
-                    open: 'bg-rose-50 text-rose-700 border-rose-200',
-                    in_progress: 'bg-sky-50 text-sky-700 border-sky-200',
-                    resolved: 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                };
-                return map[st] || 'bg-slate-50 text-slate-700 border-slate-200';
-            };
-
-            // Kontrol Modal Detail & Riwayat Bug
+            // 1. KONTROL MODAL DETAIL BUG (Lihat & Edit Detail)
             const modalDetail = document.getElementById('modal-detail-bug');
-            let currentDetailBug = null;
+            const formDetail = document.getElementById('form-detail-bug');
 
             const openDetailModal = (data) => {
-                currentDetailBug = data;
-
-                // Header Badges & Judul
-                const dot = document.getElementById('detail-project-dot');
-                if (dot) dot.style.backgroundColor = data.project_color || '#4F46E5';
-                document.getElementById('detail-project-code').textContent = data.project_code || 'PROYEK';
-                document.getElementById('detail-module-name').textContent = data.module_name || 'Umum';
-
-                const sevBadge = document.getElementById('detail-severity-badge');
-                sevBadge.className = 'px-2 py-0.5 rounded text-[11px] uppercase tracking-wider border ' + getSeverityClass(data.severity);
-                sevBadge.textContent = data.severity_label || data.severity;
-
-                const stBadge = document.getElementById('detail-status-badge');
-                stBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ' + getStatusClass(data.status);
-                stBadge.textContent = data.status_label || data.status;
-
-                document.getElementById('detail-bug-title').textContent = data.title;
-
-                // Meta Info
-                document.getElementById('detail-reported-by').textContent = data.reported_by || '-';
-                document.getElementById('detail-reported-date').textContent = data.reported_date || '-';
-                document.getElementById('detail-assignee').textContent = data.assignee_name || 'Belum Ditugaskan';
-                document.getElementById('detail-created-at').textContent = data.created_at || '-';
-
-                // Deskripsi
-                document.getElementById('detail-description').textContent = data.description || 'Tidak ada uraian deskripsi tambahan.';
-
-                // Akar Masalah (Root Cause)
-                document.getElementById('detail-root-cause').textContent = data.root_cause || 'Belum dicatat / dalam proses investigasi teknis.';
-
-                // Solusi Penyelesaian (Solution Notes)
-                const solEl = document.getElementById('detail-solution-notes');
-                const resEl = document.getElementById('detail-resolved-at');
-                if (data.solution_notes) {
-                    solEl.textContent = data.solution_notes;
-                    resEl.textContent = data.resolved_at ? `Diselesaikan pada: ${data.resolved_at}` : 'Status: Resolved';
-                } else {
-                    solEl.textContent = 'Belum ada solusi penyelesaian yang didokumentasikan. Klik tombol Edit di bawah untuk menambahkan solusi perbaikan.';
-                    resEl.textContent = data.status === 'resolved' ? 'Status: Resolved' : 'Belum Selesai';
-                }
+                formDetail.action = `/bugs/${data.id}`;
+                document.getElementById('detail-edit-title').value = data.title || '';
+                document.getElementById('detail-edit-project').value = data.project_id || '';
+                document.getElementById('detail-edit-module').value = data.module_id || '';
+                document.getElementById('detail-edit-severity').value = data.severity || 'medium';
+                document.getElementById('detail-edit-status').value = data.status || 'open';
+                document.getElementById('detail-edit-reported-by').value = data.reported_by && data.reported_by !== '-' ? data.reported_by : '';
+                document.getElementById('detail-edit-reported-date').value = data.reported_date_raw || '';
+                document.getElementById('detail-edit-assigned').value = data.assigned_to || '';
+                document.getElementById('detail-edit-description').value = data.description || '';
 
                 // Render Timeline Riwayat & Handover
                 const timelineContainer = document.getElementById('detail-timeline-container');
                 timelineContainer.innerHTML = '';
 
-                // 1. Event Pelaporan
+                // Event 1: Pelaporan
                 const reportEvent = document.createElement('div');
                 reportEvent.className = 'relative flex items-start gap-3 text-xs';
                 reportEvent.innerHTML = `
@@ -1127,7 +1068,7 @@
                 `;
                 timelineContainer.appendChild(reportEvent);
 
-                // 2. Event Handover Logs
+                // Event 2: Handover Logs
                 if (Array.isArray(data.handover_logs) && data.handover_logs.length > 0) {
                     data.handover_logs.forEach((log) => {
                         const logDate = log.handed_over_at ? new Date(log.handed_over_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Waktu Handover';
@@ -1148,7 +1089,7 @@
                     });
                 }
 
-                // 3. Event Resolved (jika bug sudah selesai)
+                // Event 3: Resolved
                 if (data.status === 'resolved' || data.resolved_at) {
                     const resolvedEvent = document.createElement('div');
                     resolvedEvent.className = 'relative flex items-start gap-3 text-xs';
@@ -1176,43 +1117,38 @@
                 });
             });
 
-            // Kontrol Modal Edit Bug
-            const modalEdit = document.getElementById('modal-edit-bug');
-            const formEdit = document.getElementById('form-edit-bug');
+            // 2. KONTROL MODAL SOLUSI BUG (Khusus Kelola & Lihat Solusi)
+            const modalSolution = document.getElementById('modal-solution-bug');
+            const formSolution = document.getElementById('form-solution-bug');
 
-            const openEditModal = (data) => {
-                formEdit.action = `/bugs/${data.id}`;
-                document.getElementById('edit-bug-title').value = data.title || '';
-                document.getElementById('edit-bug-project').value = data.project_id || '';
-                document.getElementById('edit-bug-module').value = data.module_id || '';
-                document.getElementById('edit-bug-severity').value = data.severity || 'medium';
-                document.getElementById('edit-bug-status').value = data.status || 'open';
-                document.getElementById('edit-bug-reported-by').value = data.reported_by && data.reported_by !== '-' ? data.reported_by : '';
-                document.getElementById('edit-bug-reported-date').value = data.reported_date_raw || '';
-                document.getElementById('edit-bug-assigned').value = data.assigned_to || '';
-                document.getElementById('edit-bug-description').value = data.description || '';
-                document.getElementById('edit-bug-root-cause').value = data.root_cause || '';
-                document.getElementById('edit-bug-solution-notes').value = data.solution_notes || '';
-                modalEdit.classList.remove('hidden');
+            const openSolutionModal = (data) => {
+                formSolution.action = `/bugs/${data.id}`;
+                document.getElementById('solution-project-badge').textContent = `[${data.project_code}] ${data.project_name}`;
+                document.getElementById('solution-module-badge').textContent = data.module_name ? `• ${data.module_name}` : '';
+                document.getElementById('solution-bug-title').textContent = data.title;
+                document.getElementById('solution-status').value = data.status || 'resolved';
+                document.getElementById('solution-root-cause').value = data.root_cause || '';
+                document.getElementById('solution-notes').value = data.solution_notes || '';
+
+                const resAtEl = document.getElementById('solution-resolved-at');
+                if (data.resolved_at) {
+                    resAtEl.textContent = `Telah diselesaikan pada: ${data.resolved_at}`;
+                } else {
+                    resAtEl.textContent = '';
+                }
+
+                modalSolution.classList.remove('hidden');
             };
 
-            document.querySelectorAll('.btn-edit-bug').forEach(btn => {
+            document.querySelectorAll('.btn-solution-bug').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const data = JSON.parse(btn.dataset.bug);
-                    openEditModal(data);
+                    openSolutionModal(data);
                 });
             });
 
-            // Trigger Edit dari dalam Modal Detail
-            document.getElementById('btn-detail-trigger-edit')?.addEventListener('click', () => {
-                if (currentDetailBug) {
-                    modalDetail.classList.add('hidden');
-                    openEditModal(currentDetailBug);
-                }
-            });
-
-            // Kontrol Modal Hapus Bug
+            // 3. KONTROL MODAL HAPUS BUG
             const modalDelete = document.getElementById('modal-delete-bug');
             const formDelete = document.getElementById('form-delete-bug');
             const deleteTitle = document.getElementById('delete-bug-title');
@@ -1225,7 +1161,7 @@
                 });
             });
 
-            // Kontrol Modal Ambil Alih Bug
+            // 4. KONTROL MODAL AMBIL ALIH BUG
             const modalTakeover = document.getElementById('modal-takeover-bug');
             const formTakeover = document.getElementById('form-takeover-bug');
             const takeoverTitle = document.getElementById('takeover-bug-title');
@@ -1246,8 +1182,8 @@
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
                 btn.addEventListener('click', () => {
                     modalDetail?.classList.add('hidden');
+                    modalSolution?.classList.add('hidden');
                     modalCreate?.classList.add('hidden');
-                    modalEdit?.classList.add('hidden');
                     modalDelete?.classList.add('hidden');
                     modalTakeover?.classList.add('hidden');
                 });

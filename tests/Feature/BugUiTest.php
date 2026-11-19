@@ -92,7 +92,8 @@ class BugUiTest extends TestCase
         $response->assertSee('QA - Sari');
         $response->assertSee('Akar Masalah:');
         $response->assertSee('Faktor pembulatan desimal belum sesuai tarif TER');
-        $response->assertSee('btn-edit-bug', false);
+        $response->assertSee('btn-detail-bug', false);
+        $response->assertSee('btn-solution-bug', false);
         $response->assertSee('btn-delete-bug', false);
     }
 
@@ -266,7 +267,8 @@ class BugUiTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('id="modal-create-bug"', false);
-        $response->assertSee('id="modal-edit-bug"', false);
+        $response->assertSee('id="modal-detail-bug"', false);
+        $response->assertSee('id="modal-solution-bug"', false);
         $response->assertSee('id="modal-delete-bug"', false);
         $response->assertSee('Laporkan Bug Baru');
     }
@@ -352,10 +354,11 @@ class BugUiTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('id="modal-detail-bug"', false);
-        $response->assertSee('id="detail-solution-notes"', false);
-        $response->assertSee('id="detail-timeline-container"', false);
-        $response->assertSee('id="btn-detail-trigger-edit"', false);
-        $response->assertSee('Solusi Penyelesaian Bug');
+        $response->assertSee('id="modal-solution-bug"', false);
+        $response->assertSee('id="form-detail-bug"', false);
+        $response->assertSee('id="form-solution-bug"', false);
+        $response->assertSee('Simpan Perubahan Detail');
+        $response->assertSee('Simpan Solusi');
         $response->assertSee('Riwayat Aktivitas &amp; Pengalihan (Handover)', false);
     }
 
@@ -373,7 +376,9 @@ class BugUiTest extends TestCase
         $response->assertSee('Solusi:');
         $response->assertSee('Menambahkan index komposit dan cache Redis.');
         $response->assertSee('btn-detail-bug', false);
-        $response->assertSee('Solusi &amp; Detail', false);
+        $response->assertSee('btn-solution-bug', false);
+        $response->assertSee('Detail');
+        $response->assertSee('Solusi');
     }
 
     public function test_user_can_view_single_bug_detail_via_json(): void
