@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/bugs', [\App\Http\Controllers\BugController::class, 'index'])->name('bugs.index');
     Route::post('/bugs', [\App\Http\Controllers\BugController::class, 'store'])->name('bugs.store');
+    Route::get('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'show'])->name('bugs.show');
     Route::put('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'update'])->name('bugs.update');
     Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
     Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');

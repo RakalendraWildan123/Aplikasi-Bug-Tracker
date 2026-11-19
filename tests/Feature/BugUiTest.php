@@ -343,4 +343,67 @@ class BugUiTest extends TestCase
         $this->assertStringNotContainsString('action="' . route('logout') . '"', $sidebarHtml);
         $this->assertStringNotContainsString('Logout', $sidebarHtml);
     }
+
+    public function test_bugs_page_renders_detail_and_history_modal(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/bugs');
+
+        $response->assertOk();
+        $response->assertSee('id="modal-detail-bug"', false);
+        $response->assertSee('id="detail-solution-notes"', false);
+        $response->assertSee('id="detail-timeline-container"', false);
+        $response->assertSee('id="btn-detail-trigger-edit"', false);
+        $response->assertSee('Solusi Penyelesaian Bug');
+        $response->assertSee('Riwayat Aktivitas &amp; Pengalihan (Handover)', false);
+    }
+
+    public function test_bugs_page_displays_solution_notes_badge_in_table(): void
+    {
+        $user = User::factory()->create();
+        $bug = Bug::factory()->resolved()->create([
+            'title' => 'Bug Ekspor PDF Lambat',
+            'solution_notes' => 'Menambahkan index komposit dan cache Redis.',
+        ]);
+
+        $response = $this->actingAs($user)->get('/bugs');
+
+        $response->assertOk();
+        $response->assertSee('Solusi:');
+        $response->assertSee('Menambahkan index komposit dan cache Redis.');
+        $response->assertSee('btn-detail-bug', false);
+    }
+
+    public function test_user_can_view_single_bug_detail_via_json(): void
+    {
+        $user = User::factory()->create();
+        $bug = Bug::factory()->resolved()->create([
+            'title' => 'Bug Detail Test',
+            'solution_notes' => 'Solusi perbaikan tuntas.',
+            'handover_logs' => [
+                [
+                    'from_developer_id' => 1,
+                    'from_developer_name' => 'Dev A',
+                    'to_developer_id' => 2,
+                    'to_developer_name' => 'Dev B',
+                    'note' => 'Alih tugas darurat',
+                    'handed_over_at' => now()->toIso8601String(),
+                ],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/bugs/{$bug->id}");
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'bug' => [
+                'id' => $bug->id,
+                'title' => 'Bug Detail Test',
+                'solution_notes' => 'Solusi perbaikan tuntas.',
+                'status' => 'resolved',
+            ],
+        ]);
+    }
 }

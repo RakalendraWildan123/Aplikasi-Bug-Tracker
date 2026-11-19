@@ -124,6 +124,16 @@ class BugController extends Controller
         return redirect()->route('bugs.index')->with('success_message', 'Laporan bug baru berhasil ditambahkan.');
     }
 
+    public function show(Request $request, Bug $bug): JsonResponse
+    {
+        $bug->load(['project', 'module', 'creator', 'assignee']);
+
+        return response()->json([
+            'success' => true,
+            'bug' => $bug,
+        ]);
+    }
+
     public function update(Request $request, Bug $bug): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
