@@ -10,19 +10,12 @@
 
     {{-- Top Navigation Bar --}}
     <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
             <div class="flex items-center gap-2.5">
                 <span class="text-base font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
                 <span class="text-slate-300 font-normal">/</span>
                 <span class="text-sm font-medium text-slate-600">Akun Saya</span>
             </div>
-
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="text-sm font-semibold text-rose-600 hover:text-rose-700 transition px-3 py-1.5 rounded-lg hover:bg-rose-50">
-                    Logout
-                </button>
-            </form>
         </div>
     </header>
 
