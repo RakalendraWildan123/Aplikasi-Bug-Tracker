@@ -311,8 +311,8 @@
                     <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
                         <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none">
                             <tr>
-                                <th scope="col" class="py-3.5 pl-5 pr-3">Tugas &amp; Modul</th>
-                                <th scope="col" class="py-3.5 px-3">Proyek</th>
+                                <th scope="col" class="py-3.5 pl-5 pr-3">Tugas</th>
+                                <th scope="col" class="py-3.5 px-3">Proyek &amp; Modul</th>
                                 <th scope="col" class="py-3.5 px-3">Tipe</th>
                                 <th scope="col" class="py-3.5 px-3">Status</th>
                                 <th scope="col" class="py-3.5 px-3">Target Selesai</th>
@@ -355,11 +355,15 @@
                                     ];
                                 @endphp
                                 <tr class="hover:bg-slate-50/70 transition-colors" id="row-task-{{ $task->id }}">
-                                    {{-- 1. Judul & Modul Tugas --}}
-                                    <td class="py-4 pl-5 pr-3 max-w-xs">
+                                    {{-- 1. Judul & Deskripsi Tugas (Satu atau Dua Kalimat Inti) --}}
+                                    <td class="py-4 pl-5 pr-3 max-w-xs sm:max-w-sm">
                                         <div class="font-bold text-slate-900 leading-snug">{{ $task->title }}</div>
-                                        @if ($task->module)
-                                            <div class="text-xs text-slate-500 mt-0.5 truncate">{{ $task->module->name }}</div>
+                                        @if ($task->description)
+                                            <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed" title="{{ $task->description }}">
+                                                {{ \Illuminate\Support\Str::limit($task->description, 130) }}
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-slate-400 italic mt-0.5">Tanpa deskripsi</p>
                                         @endif
                                         @if ($task->blocker_notes)
                                             <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
@@ -369,16 +373,23 @@
                                         @endif
                                     </td>
 
-                                    {{-- 2. Proyek --}}
+                                    {{-- 2. Proyek & Modul (Disatukan) --}}
                                     <td class="py-4 px-3 whitespace-nowrap">
-                                        @if ($task->project)
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
-                                                <span>{{ $task->project->code }}</span>
-                                            </span>
-                                        @else
-                                            <span class="text-xs text-slate-400 italic">-</span>
-                                        @endif
+                                        <div class="flex flex-col items-start gap-1">
+                                            @if ($task->project)
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
+                                                    <span>{{ $task->project->code }}</span>
+                                                </span>
+                                            @endif
+                                            @if ($task->module)
+                                                <span class="text-xs text-slate-600 font-medium truncate max-w-[150px]" title="{{ $task->module->name }}">
+                                                    {{ $task->module->name }}
+                                                </span>
+                                            @elseif (!$task->project)
+                                                <span class="text-xs text-slate-400 italic">-</span>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     {{-- 3. Tipe Tugas --}}

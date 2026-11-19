@@ -299,13 +299,18 @@
                                     data-project-id="{{ $task->project_id ?? '' }}"
                                     data-assigned-to="{{ $task->assigned_to ?? '' }}"
                                 >
-                                    {{-- Baris Atas: Badge Proyek, Tipe Tugas & TOMBOL EDIT KARTU --}}
+                                    {{-- Baris Atas: Badge Proyek & Modul, Tipe Tugas & TOMBOL EDIT KARTU --}}
                                     <div class="flex items-center justify-between gap-2 mb-2">
                                         <div class="flex items-center gap-1.5 truncate max-w-[170px]">
                                             @if ($task->project)
-                                                <span class="card-project-badge inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 truncate">
+                                                <span class="card-project-badge inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
                                                     <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
                                                     <span class="truncate">{{ $task->project->code }}</span>
+                                                </span>
+                                            @endif
+                                            @if ($task->module)
+                                                <span class="card-module-name text-[10px] font-medium text-slate-500 truncate" title="{{ $task->module->name }}">
+                                                    {{ $task->module->name }}
                                                 </span>
                                             @endif
                                         </div>
@@ -354,19 +359,12 @@
                                         </div>
                                     </div>
 
-                                    {{-- Modul Tugas --}}
-                                    @if ($task->module)
-                                        <p class="card-module-name text-[11px] font-medium text-slate-500 mb-1 truncate">
-                                            {{ $task->module->name }}
-                                        </p>
-                                    @endif
-
                                     {{-- Judul Tugas --}}
                                     <h4 class="card-title font-bold text-slate-900 text-sm leading-snug mb-1.5">
                                         {{ $task->title }}
                                     </h4>
 
-                                    {{-- Deskripsi Ringkas --}}
+                                    {{-- Deskripsi Ringkas (Satu atau Dua Kalimat Inti) --}}
                                     <p class="card-description text-xs text-slate-600 line-clamp-2 mb-3 {{ $task->description ? '' : 'hidden' }}">
                                         {{ $task->description }}
                                     </p>
