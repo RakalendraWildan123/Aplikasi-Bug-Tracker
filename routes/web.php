@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/', function () {
         return view('home');
     })->name('home');
+
+    Route::get('/account', [AccountProfileController::class, 'edit'])->name('account.edit');
+    Route::put('/account/profile', [AccountProfileController::class, 'updateProfile'])->name('account.profile.update');
+    Route::put('/account/password', [AccountProfileController::class, 'updatePassword'])->name('account.password.update');
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

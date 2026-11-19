@@ -9,14 +9,20 @@
 <body class="min-h-screen bg-slate-100 flex items-center justify-center p-4 text-slate-900 antialiased">
     <div class="w-full max-w-sm bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8 text-center">
         <h1 class="text-2xl font-bold text-slate-900 mb-2">Login Berhasil</h1>
-        <p class="text-sm text-slate-600 mb-6">Halo, {{ auth()->user()->name }}</p>
+        <p class="text-sm text-slate-600 mb-6">Halo, {{ auth()->user()->name }}!</p>
 
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="text-sm font-semibold text-rose-600 hover:text-rose-700 transition">
-                Logout
-            </button>
-        </form>
+        <div class="space-y-3">
+            <a href="{{ route('account.edit') }}" class="flex items-center justify-center w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                Buka Akun Saya
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full text-sm font-semibold text-rose-600 hover:text-rose-700 py-1.5 transition">
+                    Logout
+                </button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

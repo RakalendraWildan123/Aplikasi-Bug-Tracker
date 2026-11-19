@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,13 +12,19 @@ use Illuminate\Validation\Rule;
 
 class AccountProfileController extends Controller
 {
-    public function edit(Request $request): JsonResponse
+    public function edit(Request $request): View|JsonResponse
     {
         $user = $request->user();
 
-        return response()->json([
+        if ($request->wantsJson()) {
+            return response()->json([
+                'user' => $user,
+                'developer' => $user->developer,
+            ]);
+        }
+
+        return view('account.edit', [
             'user' => $user,
-            'developer' => $user->developer,
         ]);
     }
 
@@ -54,7 +61,7 @@ class AccountProfileController extends Controller
 
         $userPayload = [
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => $user->email, // Email bersifat permanen dan tidak dapat diubah
             'foto_profil' => $newPhotoPath,
         ];
 
