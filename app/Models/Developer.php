@@ -2,17 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\DeveloperFactory;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Developer extends Model
+class Developer extends User
 {
-    /** @use HasFactory<\Database\Factories\DeveloperFactory> */
+    /** @use HasFactory<DeveloperFactory> */
     use HasFactory;
+
+    protected $table = 'users';
 
     public const ROLES = [
         'Fullstack Lead',
@@ -21,59 +20,31 @@ class Developer extends Model
         'Mobile',
     ];
 
-    /**
-     * @var list<string>
-     */
-    protected $fillable = [
-        'user_id',
-        'name',
-        'email',
-        'password',
-        'role_title',
-        'avatar',
-        'avatar_bg',
-        'foto_profil',
-        'is_active',
-    ];
-
-    /**
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-    ];
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected static function booted(): void
     {
-        return [
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-        ];
+        static::addGlobalScope('developer_role', function (Builder $builder) {
+            $builder->where('role', 'developer');
+        });
+
+        static::creating(function (Developer $developer) {
+            $developer->role = 'developer';
+        });
     }
 
     /**
-     * Get the user account associated with this developer.
-     *
-     * @return BelongsTo<User, $this>
+     * Compatibility helper: user returns $this.
      */
-    public function user(): BelongsTo
+    public function getUserAttribute(): self
     {
-        return $this->belongsTo(User::class);
+        return $this;
     }
 
     /**
-     * Get the public URL for the developer's profile photo, if set.
-     *
-     * @return Attribute<?string, never>
+     * Compatibility helper: user_id returns $this->id.
      */
-    protected function fotoProfilUrl(): Attribute
+    public function getUserIdAttribute(): int
     {
-        return Attribute::make(
-            get: fn (): ?string => $this->foto_profil ? '/storage/'.ltrim($this->foto_profil, '/') : null,
-        );
+        return (int) $this->id;
     }
 
     /**
@@ -82,55 +53,5 @@ class Developer extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Get tasks created by this developer.
-     *
-     * @return HasMany<Task, $this>
-     */
-    public function createdTasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'created_by');
-    }
-
-    /**
-     * Get tasks assigned to this developer.
-     *
-     * @return HasMany<Task, $this>
-     */
-    public function assignedTasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'assigned_to');
-    }
-
-    /**
-     * Get bugs created by this developer.
-     *
-     * @return HasMany<Bug, $this>
-     */
-    public function createdBugs(): HasMany
-    {
-        return $this->hasMany(Bug::class, 'created_by');
-    }
-
-    /**
-     * Get bugs assigned to this developer.
-     *
-     * @return HasMany<Bug, $this>
-     */
-    public function assignedBugs(): HasMany
-    {
-        return $this->hasMany(Bug::class, 'assigned_to');
-    }
-
-    /**
-     * Get action items assigned to this developer.
-     *
-     * @return HasMany<ActionItem, $this>
-     */
-    public function assignedActionItems(): HasMany
-    {
-        return $this->hasMany(ActionItem::class, 'assigned_to');
     }
 }

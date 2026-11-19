@@ -7,22 +7,20 @@ use App\Http\Requests\Admin\StoreAccountRequest;
 use App\Http\Requests\Admin\UpdateAccountRequest;
 use App\Models\Developer;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 
 class AccountController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): JsonResponse
     {
         $roleFilter = $request->string('role')->toString();
         $statusFilter = $request->string('status')->toString();
 
         $accounts = User::query()
-            ->with('developer')
             ->when(in_array($roleFilter, User::ROLES, true), fn ($q) => $q->where('role', $roleFilter))
             ->when($statusFilter === 'active', fn ($q) => $q->where('is_active', true))
             ->when($statusFilter === 'inactive', fn ($q) => $q->where('is_active', false))
@@ -30,93 +28,92 @@ class AccountController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.accounts.index', [
+        return response()->json([
             'accounts' => $accounts,
-            'roleLabels' => User::ROLE_LABELS,
-            'roleFilter' => $roleFilter,
-            'statusFilter' => $statusFilter,
+            'role_labels' => User::ROLE_LABELS,
+            'role_filter' => $roleFilter,
+            'status_filter' => $statusFilter,
         ]);
     }
 
-    public function create(): View
+    public function create(): JsonResponse
     {
-        return view('admin.accounts.create', [
-            'roleLabels' => User::ROLE_LABELS,
-            'developerRoles' => Developer::ROLES,
+        return response()->json([
+            'role_labels' => User::ROLE_LABELS,
+            'developer_roles' => Developer::ROLES,
         ]);
     }
 
-    public function store(StoreAccountRequest $request): RedirectResponse
+    public function show(User $user): JsonResponse
+    {
+        return response()->json([
+            'account' => $user,
+        ]);
+    }
+
+    public function edit(User $user): JsonResponse
+    {
+        return response()->json([
+            'account' => $user,
+            'role_labels' => User::ROLE_LABELS,
+            'developer_roles' => Developer::ROLES,
+        ]);
+    }
+
+    public function store(StoreAccountRequest $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validated();
         $isActive = array_key_exists('is_active', $validated) ? (bool) $validated['is_active'] : true;
         $role = $validated['role'];
-        $photoPath = $request->hasFile('foto_profil')
-            ? $request->file('foto_profil')->store('profile-photos', 'public')
-            : null;
 
-        DB::transaction(function () use ($validated, $role, $isActive, $photoPath) {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => $validated['password'],
-                'role' => $role,
-                'is_active' => $isActive,
-                'foto_profil' => $photoPath,
-            ]);
+        $photoPath = null;
+        if ($request->hasFile('foto_profil')) {
+            $photoPath = $request->file('foto_profil')->store('profile-photos', 'public');
+        }
 
-            if ($role === 'developer') {
-                Developer::create([
-                    'user_id' => $user->id,
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'password' => $validated['password'],
-                    'role_title' => $validated['role_title'],
-                    'avatar' => $this->resolveAvatar($validated['avatar'] ?? null, $validated['name']),
-                    'avatar_bg' => ($validated['avatar_bg'] ?? null) ?: '#4F46E5',
-                    'foto_profil' => $photoPath,
-                    'is_active' => $isActive,
-                ]);
-            }
-        });
+        $userPayload = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'role' => $role,
+            'is_active' => $isActive,
+            'foto_profil' => $photoPath,
+        ];
+
+        if ($role === 'developer') {
+            $avatarInput = trim((string) ($validated['avatar'] ?? ''));
+            $userPayload['role_title'] = $validated['role_title'] ?? ($validated['developer_role_title'] ?? 'Backend');
+            $userPayload['avatar'] = $avatarInput !== ''
+                ? Str::upper(Str::substr($avatarInput, 0, 10))
+                : $this->generateInitials($validated['name']);
+            $userPayload['avatar_bg'] = ($validated['avatar_bg'] ?? null) ?: '#4F46E5';
+        } else {
+            $userPayload['role_title'] = null;
+            $userPayload['avatar'] = null;
+            $userPayload['avatar_bg'] = null;
+        }
+
+        $createdUser = User::query()->create($userPayload);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Akun berhasil dibuat.',
+                'account' => $createdUser,
+            ], 201);
+        }
 
         return redirect()
             ->route('admin.accounts.index')
-            ->with('status', "Akun {$validated['name']} berhasil dibuat.");
+            ->with('status', 'Akun berhasil dibuat.');
     }
 
-    public function edit(User $user): View
-    {
-        $user->load('developer');
-
-        return view('admin.accounts.edit', [
-            'account' => $user,
-            'roleLabels' => User::ROLE_LABELS,
-            'developerRoles' => Developer::ROLES,
-        ]);
-    }
-
-    public function update(UpdateAccountRequest $request, User $user): RedirectResponse
+    public function update(UpdateAccountRequest $request, User $user): JsonResponse|RedirectResponse
     {
         $validated = $request->validated();
+        $isActive = array_key_exists('is_active', $validated) ? (bool) $validated['is_active'] : (bool) $user->is_active;
         $role = $validated['role'];
-        $isActive = array_key_exists('is_active', $validated) ? (bool) $validated['is_active'] : $user->is_active;
 
-        if ($request->user()->is($user)) {
-            if ($role !== 'admin') {
-                return back()
-                    ->withErrors(['role' => 'Anda tidak dapat menurunkan peran akun Anda sendiri.'])
-                    ->withInput();
-            }
-
-            if (! $isActive) {
-                return back()
-                    ->withErrors(['is_active' => 'Anda tidak dapat menonaktifkan akun Anda sendiri.'])
-                    ->withInput();
-            }
-        }
-
-        $oldPhoto = $user->foto_profil ?? $user->developer?->foto_profil;
+        $oldPhoto = $user->foto_profil;
         $newPhotoPath = $oldPhoto;
         $shouldDeleteOld = false;
 
@@ -128,145 +125,134 @@ class AccountController extends Controller
             $shouldDeleteOld = $oldPhoto !== null;
         }
 
-        DB::transaction(function () use ($user, $validated, $role, $isActive, $newPhotoPath) {
-            $user->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'role' => $role,
-                'is_active' => $isActive,
-                'foto_profil' => $newPhotoPath,
-            ]);
+        $userPayload = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $role,
+            'is_active' => $isActive,
+            'foto_profil' => $newPhotoPath,
+        ];
 
-            if ($role === 'developer') {
-                $developerData = [
-                    'user_id' => $user->id,
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'role_title' => $validated['role_title'],
-                    'avatar' => $this->resolveAvatar($validated['avatar'] ?? null, $validated['name']),
-                    'avatar_bg' => ($validated['avatar_bg'] ?? null) ?: '#4F46E5',
-                    'foto_profil' => $newPhotoPath,
-                    'is_active' => $isActive,
-                ];
+        if (! empty($validated['password'])) {
+            $userPayload['password'] = $validated['password'];
+        }
 
-                if ($user->developer) {
-                    $user->developer->update($developerData);
-                } else {
-                    Developer::create($developerData);
-                }
-            } elseif ($user->developer) {
-                $user->developer->update([
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'foto_profil' => $newPhotoPath,
-                    'is_active' => $isActive,
-                ]);
-            }
-        });
+        if ($role === 'developer') {
+            $avatarInput = trim((string) ($validated['avatar'] ?? ''));
+            $userPayload['role_title'] = $validated['role_title'] ?? ($validated['developer_role_title'] ?? ($user->role_title ?? 'Backend'));
+            $userPayload['avatar'] = $avatarInput !== ''
+                ? Str::upper(Str::substr($avatarInput, 0, 10))
+                : ($user->avatar ?: $this->generateInitials($validated['name']));
+            $userPayload['avatar_bg'] = ($validated['avatar_bg'] ?? null) ?: ($user->avatar_bg ?? '#4F46E5');
+        } else {
+            $userPayload['role_title'] = null;
+            $userPayload['avatar'] = null;
+            $userPayload['avatar_bg'] = null;
+        }
+
+        $user->update($userPayload);
 
         if ($shouldDeleteOld && $oldPhoto) {
             Storage::disk('public')->delete($oldPhoto);
         }
 
-        return redirect()
-            ->route('admin.accounts.index')
-            ->with('status', "Akun {$user->name} berhasil diperbarui.");
-    }
-
-    public function toggleActive(Request $request, User $user): RedirectResponse
-    {
-        if ($request->user()->is($user)) {
-            return back()->withErrors(['account' => 'Anda tidak dapat menonaktifkan akun Anda sendiri.']);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Akun berhasil diperbarui.',
+                'account' => $user->fresh(),
+            ]);
         }
 
-        DB::transaction(function () use ($user) {
-            $nextStatus = ! $user->is_active;
+        return redirect()
+            ->route('admin.accounts.index')
+            ->with('status', 'Akun berhasil diperbarui.');
+    }
 
-            $user->update(['is_active' => $nextStatus]);
-
-            if ($user->developer) {
-                $user->developer->update(['is_active' => $nextStatus]);
+    public function toggleActive(Request $request, User $user): JsonResponse|RedirectResponse
+    {
+        if ($user->id === $request->user()->id) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Anda tidak dapat menonaktifkan akun sendiri.',
+                ], 422);
             }
-        });
 
-        $label = $user->fresh()->is_active ? 'diaktifkan' : 'dinonaktifkan';
+            return back()->withErrors(['account' => 'Anda tidak dapat menonaktifkan akun sendiri.']);
+        }
+
+        $nextState = ! $user->is_active;
+        $user->update(['is_active' => $nextState]);
+
+        $statusMessage = $nextState
+            ? "Akun {$user->name} berhasil diaktifkan."
+            : "Akun {$user->name} berhasil dinonaktifkan.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => $statusMessage,
+                'is_active' => $user->fresh()->is_active,
+            ]);
+        }
 
         return redirect()
             ->route('admin.accounts.index')
-            ->with('status', "Akun {$user->name} berhasil {$label}.");
+            ->with('status', $statusMessage);
     }
 
-    public function resetPassword(Request $request, User $user): RedirectResponse
+    public function resetPassword(Request $request, User $user): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        DB::transaction(function () use ($user, $validated) {
-            $user->update([
-                'password' => $validated['password'],
-            ]);
+        $user->update([
+            'password' => $validated['password'],
+        ]);
 
-            if ($user->developer) {
-                $user->developer->update([
-                    'password' => $validated['password'],
-                ]);
-            }
-        });
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => "Password {$user->name} berhasil direset.",
+            ]);
+        }
 
         return redirect()
             ->route('admin.accounts.edit', $user)
             ->with('status', "Password akun {$user->name} berhasil direset.");
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user): JsonResponse|RedirectResponse
     {
         if ($request->user()->is($user)) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Anda tidak dapat menghapus akun Anda sendiri.',
+                ], 422);
+            }
+
             return back()->withErrors(['account' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
         }
 
-        $name = $user->name;
         $photoToDelete = $user->foto_profil;
-        $keepPhotoForDeveloper = false;
 
-        DB::transaction(function () use ($user, &$keepPhotoForDeveloper) {
-            $developer = $user->developer;
+        $user->delete();
 
-            if ($developer) {
-                $hasCreatedHistory = $developer->createdTasks()->exists()
-                    || $developer->createdBugs()->exists();
-
-                if ($hasCreatedHistory) {
-                    $keepPhotoForDeveloper = $developer->foto_profil !== null;
-                    $developer->update([
-                        'user_id' => null,
-                        'is_active' => false,
-                    ]);
-                } else {
-                    $developer->delete();
-                }
-            }
-
-            $user->delete();
-        });
-
-        if ($photoToDelete && ! $keepPhotoForDeveloper) {
+        if ($photoToDelete) {
             Storage::disk('public')->delete($photoToDelete);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Akun berhasil dihapus.',
+            ]);
         }
 
         return redirect()
             ->route('admin.accounts.index')
-            ->with('status', "Akun {$name} berhasil dihapus.");
+            ->with('status', 'Akun berhasil dihapus.');
     }
 
-    private function resolveAvatar(?string $avatar, string $name): string
+    private function generateInitials(string $name): string
     {
-        $trimmed = trim((string) $avatar);
-
-        if ($trimmed !== '') {
-            return Str::upper(Str::substr($trimmed, 0, 10));
-        }
-
         $initials = collect(preg_split('/\s+/', trim($name)))
             ->filter()
             ->take(2)

@@ -17,7 +17,11 @@ Route::post('/logout', [LoginController::class, 'logout'])
 
 Route::middleware(['auth', 'role:admin,developer'])->group(function () {
     Route::get('/', function () {
-        return view('welcome');
+        return response()->json([
+            'name' => config('app.name', 'Aplikasi Bug Tracker'),
+            'description' => 'Aplikasi Monitoring & Manajemen IT Developer API',
+            'status' => 'online',
+        ]);
     })->name('home');
 
     Route::get('/account', [AccountProfileController::class, 'edit'])->name('account.edit');
@@ -35,6 +39,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/', [AccountController::class, 'index'])->name('index');
         Route::get('/create', [AccountController::class, 'create'])->name('create');
         Route::post('/', [AccountController::class, 'store'])->name('store');
+        Route::get('/{user}', [AccountController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [AccountController::class, 'edit'])->name('edit');
         Route::put('/{user}', [AccountController::class, 'update'])->name('update');
         Route::patch('/{user}/toggle-active', [AccountController::class, 'toggleActive'])->name('toggle-active');

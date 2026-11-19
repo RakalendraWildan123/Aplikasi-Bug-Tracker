@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -15,11 +14,20 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $table = 'users';
+
     public const ROLES = ['admin', 'developer'];
 
     public const ROLE_LABELS = [
         'admin' => 'Atasan / Admin',
         'developer' => 'Developer',
+    ];
+
+    public const DEVELOPER_ROLES = [
+        'Fullstack Lead',
+        'Backend',
+        'Frontend',
+        'Mobile',
     ];
 
     /**
@@ -32,8 +40,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'is_active',
+        'role_title',
+        'avatar',
+        'avatar_bg',
         'foto_profil',
+        'is_active',
     ];
 
     /**
@@ -61,13 +72,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the developer profile linked to this user account, if any.
-     *
-     * @return HasOne<Developer, $this>
+     * Compatibility helper: returns self if developer, null if admin.
      */
-    public function developer(): HasOne
+    public function getDeveloperAttribute(): ?self
     {
-        return $this->hasOne(Developer::class);
+        return $this->role === 'developer' ? $this : null;
     }
 
     public function isAdmin(): bool
@@ -103,5 +112,71 @@ class User extends Authenticatable
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to only include developers.
+     */
+    public function scopeDevelopers(Builder $query): Builder
+    {
+        return $query->where('role', 'developer');
+    }
+
+    /**
+     * Scope a query to only include admins.
+     */
+    public function scopeAdmins(Builder $query): Builder
+    {
+        return $query->where('role', 'admin');
+    }
+
+    /**
+     * Get tasks created by this user/developer.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by');
+    }
+
+    /**
+     * Get tasks assigned to this user/developer.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    /**
+     * Get bugs created by this user/developer.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function createdBugs(): HasMany
+    {
+        return $this->hasMany(Bug::class, 'created_by');
+    }
+
+    /**
+     * Get bugs assigned to this user/developer.
+     *
+     * @return HasMany<Bug, $this>
+     */
+    public function assignedBugs(): HasMany
+    {
+        return $this->hasMany(Bug::class, 'assigned_to');
+    }
+
+    /**
+     * Get action items assigned to this user/developer.
+     *
+     * @return HasMany<ActionItem, $this>
+     */
+    public function assignedActionItems(): HasMany
+    {
+        return $this->hasMany(ActionItem::class, 'assigned_to');
     }
 }

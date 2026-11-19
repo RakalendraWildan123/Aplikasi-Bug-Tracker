@@ -29,7 +29,6 @@ class StoreAccountRequest extends FormRequest
                 'email',
                 'max:150',
                 Rule::unique('users', 'email'),
-                Rule::when($isDeveloper, [Rule::unique('developers', 'email')]),
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in(User::ROLES)],

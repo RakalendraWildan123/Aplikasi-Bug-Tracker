@@ -19,12 +19,9 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
 
     public function test_01_guest_can_view_login_page(): void
     {
-        $this->withoutVite()
-            ->get('/login')
+        $this->get('/login')
             ->assertOk()
-            ->assertSee('Masuk ke Sistem')
-            ->assertSee('name="email"', false)
-            ->assertSee('name="password"', false);
+            ->assertJsonStructure(['message']);
     }
 
     public function test_02_authenticated_user_cannot_open_guest_login_page(): void
@@ -214,12 +211,11 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         ]);
 
         $this->actingAs($dev)
-            ->withoutVite()
             ->get('/')
             ->assertOk()
-            ->assertSee('Dina Kusuma')
-            ->assertDontSee('Selamat datang,')
-            ->assertDontSee(route('logout'), false);
+            ->assertJson([
+                'status' => 'online',
+            ]);
     }
 
     public function test_13_active_admin_can_open_blank_dashboard_and_sees_admin_sidebar(): void
@@ -230,13 +226,11 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->withoutVite()
             ->get('/')
             ->assertOk()
-            ->assertSee('Kepala IT')
-            ->assertSee('Atasan / Admin')
-            ->assertSee('Manajemen Akun')
-            ->assertDontSee('Selamat datang,');
+            ->assertJson([
+                'status' => 'online',
+            ]);
     }
 
     public function test_14_dashboard_renders_left_sidebar_with_dashboard_and_my_account_without_logout(): void
@@ -244,15 +238,9 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->withoutVite()
-            ->get('/')
+            ->get('/account')
             ->assertOk()
-            ->assertSee('id="app-sidebar"', false)
-            ->assertSee(route('home'), false)
-            ->assertSee(route('account.edit'), false)
-            ->assertSee('Dashboard')
-            ->assertSee('Akun Saya')
-            ->assertDontSee(route('logout'), false);
+            ->assertJsonStructure(['user', 'developer']);
     }
 
     public function test_15_dashboard_hides_account_management_menu_from_developer(): void
@@ -260,11 +248,8 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         $dev = User::factory()->create(['role' => 'developer']);
 
         $this->actingAs($dev)
-            ->withoutVite()
-            ->get('/')
-            ->assertOk()
-            ->assertDontSee('Manajemen Akun')
-            ->assertDontSee(route('admin.accounts.index'), false);
+            ->get('/admin/accounts')
+            ->assertForbidden();
     }
 
     public function test_16_dashboard_shows_account_management_menu_for_admin(): void
@@ -272,30 +257,25 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)
-            ->withoutVite()
-            ->get('/')
+            ->get('/admin/accounts')
             ->assertOk()
-            ->assertSee('Manajemen Akun')
-            ->assertSee(route('admin.accounts.index'), false);
+            ->assertJsonStructure(['accounts']);
     }
 
     public function test_17_dashboard_displays_linked_developer_avatar_in_sidebar(): void
     {
-        $user = User::factory()->create(['name' => 'Budi Santoso', 'role' => 'developer']);
-        Developer::factory()->create([
-            'user_id' => $user->id,
+        $user = User::factory()->create([
             'name' => 'Budi Santoso',
-            'email' => $user->email,
+            'role' => 'developer',
             'role_title' => 'Frontend',
             'avatar' => 'BS',
         ]);
 
         $this->actingAs($user)
-            ->withoutVite()
-            ->get('/')
+            ->get('/account')
             ->assertOk()
-            ->assertSee('Budi Santoso')
-            ->assertSee('BS');
+            ->assertJsonPath('developer.avatar', 'BS')
+            ->assertJsonPath('developer.role_title', 'Frontend');
     }
 
     public function test_18_dashboard_works_for_admin_without_linked_developer_profile(): void
@@ -305,11 +285,10 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         $this->assertNull($admin->developer);
 
         $this->actingAs($admin)
-            ->withoutVite()
-            ->get('/')
+            ->get('/account')
             ->assertOk()
-            ->assertSee('Direktur Teknologi')
-            ->assertSee('DT');
+            ->assertJsonPath('user.name', 'Direktur Teknologi')
+            ->assertJsonPath('developer', null);
     }
 
     public function test_19_deactivated_developer_is_logged_out_when_accessing_dashboard(): void
@@ -362,28 +341,20 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
 
     public function test_23_developer_can_view_my_account_page_with_avatar_fields(): void
     {
-        $user = User::factory()->create(['name' => 'Siti Rahma', 'role' => 'developer']);
-        Developer::factory()->create([
-            'user_id' => $user->id,
+        $user = User::factory()->create([
             'name' => 'Siti Rahma',
-            'email' => $user->email,
+            'email' => 'siti@bugtracker.test',
+            'role' => 'developer',
             'role_title' => 'Mobile',
             'avatar' => 'SR',
             'avatar_bg' => '#EF4444',
         ]);
 
         $this->actingAs($user)
-            ->withoutVite()
             ->get('/account')
             ->assertOk()
-            ->assertSee('Akun Saya')
-            ->assertSee('Informasi Profil')
-            ->assertSee('Ubah Password')
-            ->assertSee('Inisial Avatar')
-            ->assertSee('Warna Avatar (HEX)')
-            ->assertSee('Mobile')
-            ->assertSee(route('logout'), false)
-            ->assertSee('Keluar');
+            ->assertJsonPath('user.email', 'siti@bugtracker.test')
+            ->assertJsonPath('developer.avatar_bg', '#EF4444');
     }
 
     public function test_24_admin_without_developer_profile_views_my_account_without_avatar_fields(): void
@@ -391,12 +362,10 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
         $admin = User::factory()->admin()->create(['name' => 'Admin Utama']);
 
         $this->actingAs($admin)
-            ->withoutVite()
             ->get('/account')
             ->assertOk()
-            ->assertSee('Akun Saya')
-            ->assertSee('Admin Utama')
-            ->assertDontSee('Inisial Avatar');
+            ->assertJsonPath('user.name', 'Admin Utama')
+            ->assertJsonPath('developer', null);
     }
 
     public function test_25_owner_can_update_name_email_and_avatar_synced_to_developer(): void
@@ -405,11 +374,6 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
             'name' => 'Nama Awal',
             'email' => 'awal@bugtracker.test',
             'role' => 'developer',
-        ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Nama Awal',
-            'email' => 'awal@bugtracker.test',
             'avatar' => 'NA',
             'avatar_bg' => '#4F46E5',
         ]);
@@ -426,21 +390,13 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
 
         $this->assertSame('Nama Terbarui', $user->fresh()->name);
         $this->assertSame('terbarui@bugtracker.test', $user->fresh()->email);
-        $this->assertSame('Nama Terbarui', $developer->fresh()->name);
-        $this->assertSame('terbarui@bugtracker.test', $developer->fresh()->email);
-        $this->assertSame('NT', $developer->fresh()->avatar);
-        $this->assertSame('#0EA5E9', $developer->fresh()->avatar_bg);
+        $this->assertSame('NT', $user->fresh()->avatar);
+        $this->assertSame('#0EA5E9', $user->fresh()->avatar_bg);
     }
 
     public function test_26_empty_avatar_auto_generates_uppercase_initials_from_name(): void
     {
-        $user = User::factory()->create(['name' => 'Galih Prakoso', 'role' => 'developer']);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Galih Prakoso',
-            'email' => $user->email,
-            'avatar' => 'XX',
-        ]);
+        $user = User::factory()->create(['name' => 'Galih Prakoso', 'role' => 'developer', 'avatar' => 'XX']);
 
         $this->actingAs($user)
             ->put('/account/profile', [
@@ -451,7 +407,7 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
             ])
             ->assertRedirect(route('account.edit'));
 
-        $this->assertSame('WS', $developer->fresh()->avatar);
+        $this->assertSame('WS', $user->fresh()->avatar);
     }
 
     public function test_27_profile_update_rejects_duplicate_email_used_by_another_user(): void
@@ -544,11 +500,6 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
             'password' => 'password-lama',
             'role' => 'developer',
         ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'email' => 'ganti.pass@bugtracker.test',
-            'password' => 'password-lama',
-        ]);
 
         $this->actingAs($user)
             ->put('/account/password', [
@@ -560,7 +511,6 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
             ->assertSessionHas('password_status');
 
         $this->assertTrue(Hash::check('password-baru-2026', $user->fresh()->password));
-        $this->assertTrue(Hash::check('password-baru-2026', $developer->fresh()->password));
 
         // Logout lalu pastikan password lama ditolak dan password baru diterima
         $this->post('/logout')->assertRedirect(route('login'));

@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Developer;
 use App\Models\User;
-use Database\Seeders\AccountSeeder;
+use Database\Seeders\DeveloperSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,25 +17,26 @@ class AuthAndAccountManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_users_and_developers_auth_columns_exist_with_constraints(): void
+    public function test_users_table_has_unified_developer_and_auth_columns(): void
     {
-        $this->assertTrue(Schema::hasColumns('users', ['role', 'is_active', 'foto_profil']));
-        $this->assertTrue(Schema::hasColumns('developers', ['user_id', 'foto_profil']));
+        $this->assertTrue(Schema::hasColumns('users', [
+            'id',
+            'name',
+            'email',
+            'password',
+            'role',
+            'role_title',
+            'avatar',
+            'avatar_bg',
+            'foto_profil',
+            'is_active',
+        ]));
 
-        $user = User::factory()->create();
-        $developer = Developer::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'developer', 'role_title' => 'Backend']);
 
-        $this->assertSame($user->id, $developer->user->id);
-        $this->assertSame($developer->id, $user->developer->id);
-
-        // Unique 1-to-1 constraint on developers.user_id
-        $this->assertThrows(function () use ($user) {
-            Developer::factory()->create(['user_id' => $user->id]);
-        }, QueryException::class);
-
-        // Deleting user sets developers.user_id to null (keeps developer history)
-        $user->delete();
-        $this->assertNull($developer->fresh()->user_id);
+        $this->assertTrue($user->isDeveloper());
+        $this->assertSame('Backend', $user->role_title);
+        $this->assertSame($user->id, $user->developer->id);
     }
 
     public function test_admin_and_developer_can_login_and_logout(): void
@@ -174,38 +175,31 @@ class AuthAndAccountManagementTest extends TestCase
             'name' => 'Dev Lama',
             'email' => 'old.dev@bugtracker.test',
             'role' => 'developer',
-            'is_active' => true,
-        ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $devUser->id,
-            'name' => 'Dev Lama',
-            'email' => 'old.dev@bugtracker.test',
             'role_title' => 'Frontend',
             'is_active' => true,
         ]);
 
-        // Update syncs both User and Developer
+        // Update syncs user/developer fields
         $this->actingAs($admin)->put("/admin/accounts/{$devUser->id}", [
             'name' => 'Dev Baru',
             'email' => 'new.dev@bugtracker.test',
             'role' => 'developer',
-            'is_active' => 1,
             'role_title' => 'Fullstack Lead',
             'avatar' => 'DB',
             'avatar_bg' => '#0EA5E9',
         ])->assertRedirect(route('admin.accounts.index'));
 
-        $this->assertSame('Dev Baru', $devUser->fresh()->name);
-        $this->assertSame('new.dev@bugtracker.test', $developer->fresh()->email);
-        $this->assertSame('Fullstack Lead', $developer->fresh()->role_title);
+        $fresh = $devUser->fresh();
+        $this->assertSame('Dev Baru', $fresh->name);
+        $this->assertSame('new.dev@bugtracker.test', $fresh->email);
+        $this->assertSame('Fullstack Lead', $fresh->role_title);
 
-        // Toggle active syncs both User and Developer
+        // Toggle active
         $this->actingAs($admin)
             ->patch("/admin/accounts/{$devUser->id}/toggle-active")
             ->assertRedirect(route('admin.accounts.index'));
 
         $this->assertFalse($devUser->fresh()->is_active);
-        $this->assertFalse($developer->fresh()->is_active);
 
         // Admin cannot deactivate self
         $this->actingAs($admin)
@@ -222,23 +216,19 @@ class AuthAndAccountManagementTest extends TestCase
             ->assertRedirect(route('admin.accounts.edit', $devUser));
 
         $this->assertTrue(Hash::check('newsecret999', $devUser->fresh()->password));
-        $this->assertTrue(Hash::check('newsecret999', $developer->fresh()->password));
     }
 
-    public function test_account_seeder_is_idempotent_and_links_all_developers(): void
+    public function test_developer_seeder_is_idempotent_and_creates_admin_and_developers(): void
     {
-        $this->seed(AccountSeeder::class);
-        $this->seed(AccountSeeder::class);
+        $this->seed(DeveloperSeeder::class);
+        $this->seed(DeveloperSeeder::class);
 
         $this->assertDatabaseCount('users', 5);
-        $this->assertDatabaseCount('developers', 4);
+        $this->assertSame(4, User::query()->where('role', 'developer')->count());
 
         $admin = User::query()->where('email', 'admin@bugtracker.test')->firstOrFail();
         $this->assertSame('admin', $admin->role);
         $this->assertNull($admin->developer);
-
-        $linkedDevs = Developer::query()->whereNotNull('user_id')->count();
-        $this->assertSame(4, $linkedDevs);
     }
 
     public function test_developer_cannot_perform_any_account_management_mutations(): void
@@ -294,45 +284,36 @@ class AuthAndAccountManagementTest extends TestCase
             ->assertSessionHasErrors('account');
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
 
-        // Deleting developer without created task/bug history removes both User and Developer
+        // Deleting developer without history removes User
         $unusedUser = User::factory()->create(['role' => 'developer']);
-        $unusedDev = Developer::factory()->create(['user_id' => $unusedUser->id]);
 
         $this->actingAs($admin)
             ->delete("/admin/accounts/{$unusedUser->id}")
             ->assertRedirect(route('admin.accounts.index'));
 
         $this->assertDatabaseMissing('users', ['id' => $unusedUser->id]);
-        $this->assertDatabaseMissing('developers', ['id' => $unusedDev->id]);
 
-        // Deleting developer with created Task preserves Developer history with user_id = null
+        // Deleting developer with created Task preserves Task with created_by = null
         $historyUser = User::factory()->create(['role' => 'developer']);
-        $historyDev = Developer::factory()->create(['user_id' => $historyUser->id, 'is_active' => true]);
-        \App\Models\Task::factory()->create(['created_by' => $historyDev->id]);
+        $task = \App\Models\Task::factory()->create(['created_by' => $historyUser->id]);
 
         $this->actingAs($admin)
             ->delete("/admin/accounts/{$historyUser->id}")
             ->assertRedirect(route('admin.accounts.index'));
 
         $this->assertDatabaseMissing('users', ['id' => $historyUser->id]);
-        $this->assertDatabaseHas('developers', ['id' => $historyDev->id, 'user_id' => null, 'is_active' => false]);
+        $this->assertNull($task->fresh()->created_by);
     }
 
-    public function test_account_management_renders_notification_popup_and_confirm_modal(): void
+    public function test_account_management_returns_json_accounts_list(): void
     {
         $admin = User::factory()->admin()->create();
         $other = User::factory()->create(['name' => 'Target PopUp']);
 
         $this->actingAs($admin)
-            ->withSession(['status' => 'Akun Target PopUp berhasil dibuat.'])
-            ->withoutVite()
             ->get('/admin/accounts')
             ->assertOk()
-            ->assertSee('id="notification-popup-app"', false)
-            ->assertSee('Akun Target PopUp berhasil dibuat.')
-            ->assertSee('id="confirm-modal-app"', false)
-            ->assertSee('data-confirm-title="Hapus Akun?"', false)
-            ->assertSee('data-confirm-title="Nonaktifkan Akun?"', false);
+            ->assertJsonStructure(['accounts', 'role_labels', 'role_filter', 'status_filter']);
     }
 
     public function test_admin_can_upload_sync_and_cleanup_profile_photo_via_account_crud(): void
@@ -397,10 +378,9 @@ class AuthAndAccountManagementTest extends TestCase
             'password' => 'devpass123',
         ])->assertRedirect(route('home'));
 
-        $this->withoutVite()->get('/')
+        $this->get('/account')
             ->assertOk()
-            ->assertSee('Nadia Putri')
-            ->assertDontSee('Manajemen Akun');
+            ->assertJsonPath('user.name', 'Nadia Putri');
 
         // 3. Developer cannot access account creation page
         $this->get('/admin/accounts/create')->assertForbidden();
@@ -427,7 +407,6 @@ class AuthAndAccountManagementTest extends TestCase
         $this->seed();
 
         $this->assertDatabaseCount('users', 6); // Test User + Admin + 4 Developers
-        $this->assertDatabaseCount('developers', 4);
         $this->assertDatabaseCount('projects', 3);
         $this->assertDatabaseCount('modules', 6);
         $this->assertDatabaseCount('tasks', 4);

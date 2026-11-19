@@ -21,11 +21,12 @@ return new class extends Migration
                 ->constrained('modules')
                 ->nullOnDelete();
             $table->foreignId('created_by')
-                ->constrained('developers')
-                ->restrictOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->foreignId('assigned_to')
                 ->nullable()
-                ->constrained('developers')
+                ->constrained('users')
                 ->nullOnDelete();
             $table->string('title', 255);
             $table->text('description')->nullable();

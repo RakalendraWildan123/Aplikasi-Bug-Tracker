@@ -31,10 +31,10 @@ class DeveloperFactory extends Factory
             ->implode('');
 
         return [
-            'user_id' => null,
             'name' => $name,
             'email' => fake()->unique()->safeEmail(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => 'developer',
             'role_title' => fake()->randomElement(Developer::ROLES),
             'avatar' => $initials !== '' ? $initials : 'DV',
             'avatar_bg' => fake()->randomElement([

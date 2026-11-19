@@ -144,8 +144,9 @@ class BugTableTest extends TestCase
         $assignee->delete();
         $this->assertNull($bug->fresh()->assigned_to);
 
-        // Deleting creator developer is restricted
-        $this->assertThrows(fn () => $creator->delete(), QueryException::class);
+        // Deleting creator developer sets created_by to null (keeps bug)
+        $creator->delete();
+        $this->assertNull($bug->fresh()->created_by);
 
         // Deleting project cascades to bugs
         $project->delete();

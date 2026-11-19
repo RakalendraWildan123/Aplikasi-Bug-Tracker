@@ -4,21 +4,23 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 
 class LoginController extends Controller
 {
-    public function show(): View
+    public function show(): JsonResponse
     {
-        return view('auth.login');
+        return response()->json([
+            'message' => 'Endpoint autentikasi. Kirimkan HTTP POST dengan payload email dan password.',
+        ]);
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request): JsonResponse|RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],
@@ -30,6 +32,12 @@ class LoginController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.",
+                ], 429);
+            }
+
             return back()
                 ->withErrors(['email' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik."])
                 ->onlyInput('email');
@@ -39,6 +47,12 @@ class LoginController extends Controller
 
         if ($user && ! $user->is_active) {
             RateLimiter::hit($throttleKey, 60);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Akun Anda sedang dinonaktifkan. Hubungi Atasan / Admin.',
+                ], 403);
+            }
 
             return back()
                 ->withErrors(['email' => 'Akun Anda sedang dinonaktifkan. Hubungi Atasan / Admin.'])
@@ -52,6 +66,12 @@ class LoginController extends Controller
         ], $request->boolean('remember'))) {
             RateLimiter::hit($throttleKey, 60);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Email atau password tidak sesuai.',
+                ], 422);
+            }
+
             return back()
                 ->withErrors(['email' => 'Email atau password tidak sesuai.'])
                 ->onlyInput('email');
@@ -61,6 +81,14 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $authenticated = $request->user();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Login berhasil.',
+                'user' => $authenticated,
+            ]);
+        }
+
         $defaultRedirect = $authenticated && $authenticated->isAdmin()
             ? route('admin.accounts.index')
             : route('home');
@@ -68,12 +96,18 @@ class LoginController extends Controller
         return redirect()->intended($defaultRedirect);
     }
 
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request): JsonResponse|RedirectResponse
     {
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Anda berhasil keluar dari aplikasi.',
+            ]);
+        }
 
         return redirect()->route('login')->with('status', 'Anda berhasil keluar dari aplikasi.');
     }

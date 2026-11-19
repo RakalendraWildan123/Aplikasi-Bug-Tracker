@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Developer;
+use App\Models\User;
 use Database\Seeders\DeveloperSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,15 +16,15 @@ class DeveloperTableTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_developers_table_has_expected_columns(): void
+    public function test_users_table_has_unified_developer_columns(): void
     {
-        $this->assertTrue(Schema::hasTable('developers'));
-        $this->assertTrue(Schema::hasColumns('developers', [
+        $this->assertTrue(Schema::hasTable('users'));
+        $this->assertTrue(Schema::hasColumns('users', [
             'id',
-            'user_id',
             'name',
             'email',
             'password',
+            'role',
             'role_title',
             'avatar',
             'avatar_bg',
@@ -39,6 +40,7 @@ class DeveloperTableTest extends TestCase
         $developer = Developer::create([
             'name' => 'Andi Wijaya',
             'email' => 'andi.wijaya@bugtracker.test',
+            'password' => 'secret123',
             'role_title' => 'Backend',
             'avatar' => 'AW',
             'avatar_bg' => '#4F46E5',
@@ -68,9 +70,11 @@ class DeveloperTableTest extends TestCase
     {
         $this->expectException(QueryException::class);
 
-        DB::table('developers')->insert([
+        DB::table('users')->insert([
             'name' => 'Invalid Role Dev',
             'email' => 'invalid.role@bugtracker.test',
+            'password' => 'secret123',
+            'role' => 'developer',
             'role_title' => 'DevOps',
             'avatar' => 'IR',
             'avatar_bg' => '#4F46E5',
@@ -97,12 +101,15 @@ class DeveloperTableTest extends TestCase
         $this->assertNotContains($inactiveDev->id, $activeIds);
     }
 
-    public function test_developer_seeder_is_idempotent_and_seeds_all_roles(): void
+    public function test_developer_seeder_is_idempotent_and_seeds_all_roles_and_admin(): void
     {
         $this->seed(DeveloperSeeder::class);
         $this->seed(DeveloperSeeder::class);
 
-        $this->assertDatabaseCount('developers', 4);
+        // 1 Admin + 4 Developers
+        $this->assertDatabaseCount('users', 5);
+        $this->assertSame(4, Developer::query()->count());
+        $this->assertSame(1, User::query()->where('role', 'admin')->count());
 
         $roles = Developer::query()
             ->pluck('role_title')

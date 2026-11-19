@@ -15,16 +15,15 @@ class StackFoundationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_homepage_renders_clean_dashboard_layout_for_authenticated_user(): void
+    public function test_homepage_renders_api_status_response(): void
     {
         $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->withoutVite()->get('/');
+        $response = $this->actingAs($user)->get('/');
 
         $response->assertOk();
-        $response->assertSee('id="app-sidebar"', false);
-        $response->assertSee('Dashboard');
-        $response->assertSee('Akun Saya');
+        $response->assertJson([
+            'status' => 'online',
+        ]);
     }
 
     public function test_database_and_redis_export_cache_defaults_are_configured(): void

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Developer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -19,39 +18,36 @@ class MyAccountTest extends TestCase
         $this->get('/account')->assertRedirect(route('login'));
     }
 
-    public function test_dashboard_and_my_account_render_left_sidebar_navigation_per_role(): void
+    public function test_account_and_admin_endpoints_accessible_per_role(): void
     {
         $dev = User::factory()->create(['name' => 'Dev User', 'role' => 'developer']);
         $this->actingAs($dev)
-            ->withoutVite()
-            ->get('/')
+            ->get('/account')
             ->assertOk()
-            ->assertSee('id="app-sidebar"', false)
-            ->assertSee('Dashboard')
-            ->assertSee('Akun Saya')
-            ->assertDontSee('Manajemen Akun');
+            ->assertJsonPath('user.name', 'Dev User');
+
+        $this->actingAs($dev)
+            ->get('/admin/accounts')
+            ->assertForbidden();
 
         $admin = User::factory()->admin()->create(['name' => 'Admin User']);
         $this->actingAs($admin)
-            ->withoutVite()
             ->get('/account')
             ->assertOk()
-            ->assertSee('id="app-sidebar"', false)
-            ->assertSee('Akun Saya')
-            ->assertSee('Manajemen Akun');
+            ->assertJsonPath('user.name', 'Admin User');
+
+        $this->actingAs($admin)
+            ->get('/admin/accounts')
+            ->assertOk()
+            ->assertJsonStructure(['accounts']);
     }
 
-    public function test_account_owner_can_update_profile_and_syncs_developer_without_role_escalation(): void
+    public function test_account_owner_can_update_profile_without_role_escalation(): void
     {
         $user = User::factory()->create([
             'name' => 'Raka Lama',
             'email' => 'raka.lama@bugtracker.test',
             'role' => 'developer',
-        ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Raka Lama',
-            'email' => 'raka.lama@bugtracker.test',
             'avatar' => 'RL',
             'avatar_bg' => '#4F46E5',
         ]);
@@ -68,16 +64,12 @@ class MyAccountTest extends TestCase
             ->assertSessionHas('profile_status');
 
         $freshUser = $user->fresh();
-        $freshDev = $developer->fresh();
 
         $this->assertSame('Raka Baru', $freshUser->name);
         $this->assertSame('raka.baru@bugtracker.test', $freshUser->email);
         $this->assertSame('developer', $freshUser->role);
-
-        $this->assertSame('Raka Baru', $freshDev->name);
-        $this->assertSame('raka.baru@bugtracker.test', $freshDev->email);
-        $this->assertSame('RB', $freshDev->avatar);
-        $this->assertSame('#10B981', $freshDev->avatar_bg);
+        $this->assertSame('RB', $freshUser->avatar);
+        $this->assertSame('#10B981', $freshUser->avatar_bg);
     }
 
     public function test_account_owner_can_change_password_with_valid_current_password(): void
@@ -86,11 +78,6 @@ class MyAccountTest extends TestCase
             'email' => 'owner@bugtracker.test',
             'password' => 'oldpass123',
             'role' => 'developer',
-        ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'email' => 'owner@bugtracker.test',
-            'password' => 'oldpass123',
         ]);
 
         // Wrong current password rejected
@@ -102,7 +89,7 @@ class MyAccountTest extends TestCase
             ])
             ->assertSessionHasErrors('current_password');
 
-        // Correct current password updates both users and developers
+        // Correct current password updates password
         $this->actingAs($user)
             ->put('/account/password', [
                 'current_password' => 'oldpass123',
@@ -113,7 +100,6 @@ class MyAccountTest extends TestCase
             ->assertSessionHas('password_status');
 
         $this->assertTrue(Hash::check('newpass123', $user->fresh()->password));
-        $this->assertTrue(Hash::check('newpass123', $developer->fresh()->password));
 
         // Can log in with new password
         $this->post('/logout');
@@ -132,11 +118,6 @@ class MyAccountTest extends TestCase
             'email' => 'foto.dev@bugtracker.test',
             'role' => 'developer',
         ]);
-        $developer = Developer::factory()->create([
-            'user_id' => $user->id,
-            'name' => 'Foto Dev',
-            'email' => 'foto.dev@bugtracker.test',
-        ]);
 
         // 1. Upload initial photo
         $firstPhoto = UploadedFile::fake()->image('avatar-1.jpg', 300, 300);
@@ -151,15 +132,13 @@ class MyAccountTest extends TestCase
 
         $firstPath = $user->fresh()->foto_profil;
         $this->assertNotNull($firstPath);
-        $this->assertSame($firstPath, $developer->fresh()->foto_profil);
         Storage::disk('public')->assertExists($firstPath);
 
-        // Sidebar displays uploaded photo
+        // API returns uploaded photo URL
         $this->actingAs($user->fresh())
-            ->withoutVite()
-            ->get('/')
+            ->get('/account')
             ->assertOk()
-            ->assertSee($user->fresh()->foto_profil_url, false);
+            ->assertJsonPath('user.foto_profil', $firstPath);
 
         // 2. Replace with new photo -> old photo removed
         $secondPhoto = UploadedFile::fake()->image('avatar-2.png', 300, 300);
@@ -175,7 +154,6 @@ class MyAccountTest extends TestCase
         $this->assertNotSame($firstPath, $secondPath);
         Storage::disk('public')->assertMissing($firstPath);
         Storage::disk('public')->assertExists($secondPath);
-        $this->assertSame($secondPath, $developer->fresh()->foto_profil);
 
         // 3. Reject non-image file
         $badFile = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
@@ -197,7 +175,6 @@ class MyAccountTest extends TestCase
             ->assertRedirect(route('account.edit'));
 
         $this->assertNull($user->fresh()->foto_profil);
-        $this->assertNull($developer->fresh()->foto_profil);
         Storage::disk('public')->assertMissing($secondPath);
     }
 }

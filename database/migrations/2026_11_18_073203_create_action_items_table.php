@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('action_plan');
             $table->foreignId('assigned_to')
                 ->nullable()
-                ->constrained('developers')
+                ->constrained('users')
                 ->nullOnDelete();
             $table->date('target_date')->nullable();
             $table->enum('status', ['planned', 'converted_to_task', 'completed'])

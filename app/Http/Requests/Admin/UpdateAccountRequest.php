@@ -22,7 +22,6 @@ class UpdateAccountRequest extends FormRequest
         /** @var User $targetUser */
         $targetUser = $this->route('user');
         $isDeveloper = $this->input('role') === 'developer';
-        $developerId = $targetUser->developer?->id;
 
         return [
             'name' => ['required', 'string', 'max:150'],
@@ -32,9 +31,6 @@ class UpdateAccountRequest extends FormRequest
                 'email',
                 'max:150',
                 Rule::unique('users', 'email')->ignore($targetUser->id),
-                Rule::when($isDeveloper || $developerId !== null, [
-                    Rule::unique('developers', 'email')->ignore($developerId),
-                ]),
             ],
             'role' => ['required', Rule::in(User::ROLES)],
             'is_active' => ['sometimes', 'boolean'],
