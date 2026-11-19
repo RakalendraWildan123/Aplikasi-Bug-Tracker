@@ -70,7 +70,7 @@ class AccountVerificationAndModalTest extends TestCase
         $response->assertSee('modal-edit');
         $response->assertSee('step-verification');
         $response->assertSee('step-edit-form');
-        $response->assertSee('Permanen (Tidak dapat diedit)');
+        $response->assertDontSee('Permanen (Tidak dapat diedit)');
     }
 
     public function test_user_can_update_profile_and_password_with_verified_current_password(): void

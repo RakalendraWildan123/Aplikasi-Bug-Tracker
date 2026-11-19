@@ -128,12 +128,7 @@
 
                         <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
                             <span class="font-semibold text-slate-500">Alamat Email</span>
-                            <div class="sm:col-span-2 flex items-center gap-2.5 flex-wrap">
-                                <span class="font-medium text-slate-900 text-base">{{ $user->email }}</span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                    Permanen (Tidak dapat diedit)
-                                </span>
-                            </div>
+                            <span class="sm:col-span-2 font-medium text-slate-900 text-base break-all">{{ $user->email }}</span>
                         </div>
 
                         <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
@@ -327,14 +322,9 @@
                         >
                     </div>
 
-                    {{-- 2. Email (TIDAK DAPAT DIEDIT / PERMANEN) --}}
+                    {{-- 2. Email Akun --}}
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label for="edit-email" class="block text-sm font-semibold text-slate-800">Email Akun</label>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                Permanen (Tidak dapat diedit)
-                            </span>
-                        </div>
+                        <label for="edit-email" class="block text-sm font-semibold text-slate-800 mb-1">Email Akun</label>
                         <input
                             id="edit-email"
                             type="email"
@@ -343,7 +333,6 @@
                             tabindex="-1"
                             class="block w-full rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm text-slate-600 cursor-not-allowed select-none"
                         >
-                        <p class="text-xs text-slate-500 mt-1">Email akun Anda dikunci dan tidak dapat diubah oleh pemilik akun.</p>
                     </div>
 
                     {{-- 3. Foto Profil --}}
