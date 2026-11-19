@@ -44,6 +44,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
 
+    // Master Modul / CRUD Modul
+    Route::get('/modules', [\App\Http\Controllers\ModuleController::class, 'index'])->name('modules.index');
+    Route::post('/modules', [\App\Http\Controllers\ModuleController::class, 'store'])->name('modules.store');
+    Route::get('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'show'])->name('modules.show');
+    Route::put('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'update'])->name('modules.update');
+    Route::delete('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'destroy'])->name('modules.destroy');
+
     // Master Akun / CRUD Akun (Khusus Atasan / Admin)
     Route::middleware('role:admin')
         ->prefix('admin/accounts')
