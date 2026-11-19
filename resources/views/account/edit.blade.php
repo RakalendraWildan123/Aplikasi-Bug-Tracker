@@ -6,171 +6,257 @@
     <title>Akun Saya &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans flex flex-col lg:flex-row">
 
-    {{-- Top Navigation Bar --}}
-    <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-            <div class="flex items-center gap-2.5">
-                <span class="text-base font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
-                <span class="text-slate-300 font-normal">/</span>
-                <span class="text-sm font-medium text-slate-600">Akun Saya</span>
+    {{-- Backdrop Sidebar (Tablet Portrait & Mobile) --}}
+    <div
+        id="sidebar-backdrop"
+        class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs hidden lg:hidden"
+        aria-hidden="true"
+    ></div>
+
+    {{-- Navigasi Sidebar di Sebelah Kiri --}}
+    <aside
+        id="app-sidebar"
+        class="fixed inset-y-0 left-0 z-50 flex w-68 sm:w-72 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+    >
+        <div class="flex flex-col flex-1 min-h-0">
+            {{-- Brand Header Sidebar --}}
+            <div class="flex h-16 items-center justify-between border-b border-slate-800 px-5">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shrink-0">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.516 0c.85.493 1.508 1.333 1.508 2.316V18" />
+                        </svg>
+                    </div>
+                    <div class="leading-tight min-w-0">
+                        <span class="block text-sm font-bold tracking-tight text-white truncate">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
+                        <span class="block text-[11px] font-medium text-slate-400">IT Dev Workspace</span>
+                    </div>
+                </div>
+
+                {{-- Tombol Tutup Sidebar untuk Layar Tablet/Mobile --}}
+                <button
+                    type="button"
+                    id="btn-sidebar-close"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden cursor-pointer"
+                    aria-label="Tutup menu navigasi"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
+
+            {{-- Menu Navigasi Utama --}}
+            <nav class="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto" aria-label="Navigasi Sidebar">
+                <p class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu Utama</p>
+
+                {{-- Fitur Akun Saya (Active State) --}}
+                <a
+                    href="{{ route('account.edit') }}"
+                    class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition bg-slate-800 text-white border border-slate-700/70 shadow-xs"
+                >
+                    <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                    <span>Akun Saya</span>
+                </a>
+            </nav>
         </div>
-    </header>
 
-    {{-- Main Container --}}
-    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {{-- Footer Sidebar: Info Ringkas Pengguna & Tombol Logout --}}
+        <div class="border-t border-slate-800 p-4 space-y-3">
+            <div class="flex items-center gap-3 px-1 py-1">
+                @if ($user->foto_profil_url)
+                    <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0">
+                @else
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                        {{ $user->avatar ?? 'AK' }}
+                    </div>
+                @endif
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-white truncate leading-tight">{{ $user->name }}</p>
+                    <p class="text-xs text-slate-400 truncate">{{ $user->roleLabel() }}</p>
+                </div>
+            </div>
 
-        {{-- Page Header --}}
-        <div class="mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Akun Saya</h1>
-            <p class="mt-1.5 text-sm text-slate-600">Rincian informasi akun dan profil Anda.</p>
+            {{-- Tombol Logout --}}
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button
+                    type="submit"
+                    class="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition cursor-pointer"
+                >
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+                    </svg>
+                    Logout
+                </button>
+            </form>
         </div>
+    </aside>
 
-        {{-- Layout Grid Desktop & Tablet (Tanpa Tab Bersarang) --}}
-        <div class="flex flex-col md:flex-row gap-6 lg:gap-8 items-start w-full">
+    {{-- Area Konten Utama (Kanan) --}}
+    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
 
-            {{-- Kolom Kiri: Ringkasan Profil & Tombol Logout --}}
-            <aside class="w-full md:w-72 lg:w-80 shrink-0 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <div class="flex flex-col items-center text-center">
-                    {{-- Avatar Display --}}
+        {{-- Topbar Khusus Layar Tablet & Mobile --}}
+        <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    id="btn-sidebar-open"
+                    class="p-2 rounded-lg text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    aria-label="Buka menu navigasi sidebar"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                    </svg>
+                </button>
+                <span class="text-base font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if ($user->foto_profil_url)
+                    <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
+                @else
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                        {{ $user->avatar ?? 'AK' }}
+                    </div>
+                @endif
+            </div>
+        </header>
+
+        {{-- Konten Halaman Akun Saya --}}
+        <main class="flex-1 p-4 sm:p-6 lg:p-10 max-w-5xl w-full mx-auto">
+
+            {{-- Judul Halaman & Tombol Aksi --}}
+            <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-200">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Akun Saya</h1>
+                    <p class="mt-1 text-sm text-slate-600">Rincian informasi akun dan profil Anda.</p>
+                </div>
+
+                {{-- Tombol Buka Pop-up Edit Akun --}}
+                <button
+                    type="button"
+                    id="btn-open-modal"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 shrink-0 cursor-pointer shadow-sm"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                    </svg>
+                    Edit Akun
+                </button>
+            </div>
+
+            {{-- Status Notifikasi Berhasil --}}
+            @if (session('profile_status'))
+                <div role="status" class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2.5">
+                    <svg class="w-5 h-5 shrink-0 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="font-medium">{{ session('profile_status') }}</span>
+                </div>
+            @endif
+
+            {{-- Kartu Utama Informasi Akun (Read-Only) --}}
+            <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                {{-- Profil Header Card --}}
+                <div class="p-6 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-center gap-5 bg-slate-50/60">
                     @if ($user->foto_profil_url)
-                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-full object-cover border-2 border-slate-200 shadow-sm mb-4">
+                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200 shadow-sm shrink-0">
                     @else
-                        <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-sm" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
                             {{ $user->avatar ?? 'AK' }}
                         </div>
                     @endif
 
-                    <h2 class="text-lg font-bold text-slate-900 leading-snug">{{ $user->name }}</h2>
-                    <span class="mt-1.5 inline-block px-3 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                        {{ $user->roleLabel() }}
-                    </span>
+                    <div class="text-center sm:text-left flex-1 min-w-0">
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight truncate">{{ $user->name }}</h2>
+                        <div class="mt-2.5 flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                            <span class="inline-block px-3 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                {{ $user->roleLabel() }}
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Aktif
+                            </span>
+                            @if ($user->isDeveloper() && $user->role_title)
+                                <span class="inline-block px-3 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                    {{ $user->role_title }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mt-6 pt-6 border-t border-slate-200 space-y-4 text-sm w-full">
-                    <div>
-                        <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Email</span>
-                        <span class="font-medium text-slate-800 break-all">{{ $user->email }}</span>
+                {{-- Header Seksi Informasi Akun --}}
+                <div class="px-6 sm:px-8 pt-6 pb-2">
+                    <h3 class="text-base font-bold text-slate-900">Informasi Akun</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Rincian profil dan identitas akun Anda.</p>
+                </div>
+
+                {{-- Tabel / Rincian Informasi Akun --}}
+                <div class="p-6 sm:p-8 pt-2 divide-y divide-slate-100 text-sm">
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <span class="font-semibold text-slate-500">Nama Lengkap</span>
+                        <span class="sm:col-span-2 font-medium text-slate-900 text-base">{{ $user->name }}</span>
                     </div>
 
-                    <div>
-                        <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Status Akun</span>
-                        <span class="inline-flex items-center gap-1.5 font-medium text-emerald-700">
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                        <span class="font-semibold text-slate-500">Alamat Email</span>
+                        <span class="sm:col-span-2 font-medium text-slate-900 text-base break-all">{{ $user->email }}</span>
+                    </div>
+
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                        <span class="font-semibold text-slate-500">Kata Sandi (Password)</span>
+                        <div class="sm:col-span-2 flex items-center gap-2 text-slate-700">
+                            <span class="font-mono text-base tracking-widest text-slate-600">••••••••••••</span>
+                            <span class="text-xs text-slate-400 font-medium">(Tersimpan aman & terenkripsi)</span>
+                        </div>
+                    </div>
+
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                        <span class="font-semibold text-slate-500">Foto Profil</span>
+                        <div class="sm:col-span-2 flex items-center gap-3">
+                            @if ($user->foto_profil_url)
+                                <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
+                                <span class="text-xs text-slate-500">Foto kustom terpasang</span>
+                            @else
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                                    {{ $user->avatar ?? 'AK' }}
+                                </div>
+                                <span class="text-xs text-slate-500">Menggunakan inisial avatar bawaan</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <span class="font-semibold text-slate-500">Hak Akses / Peran</span>
+                        <span class="sm:col-span-2 font-medium text-slate-900">{{ $user->roleLabel() }}</span>
+                    </div>
+
+                    <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <span class="font-semibold text-slate-500">Status Akun</span>
+                        <span class="sm:col-span-2 inline-flex items-center gap-1.5 font-medium text-emerald-700">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Aktif
                         </span>
                     </div>
-
-                    @if ($user->isDeveloper() && $user->role_title)
-                    <div>
-                        <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Spesialisasi</span>
-                        <span class="font-medium text-slate-800">{{ $user->role_title }}</span>
-                    </div>
-                    @endif
                 </div>
 
-                {{-- Fitur Logout di Halaman Akun Saya --}}
-                <div class="mt-6 pt-6 border-t border-slate-200 w-full">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 hover:border-rose-300 focus:ring-2 focus:ring-rose-500 focus:outline-none cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                            </svg>
-                            Logout
-                        </button>
-                    </form>
+                {{-- Hint Keamanan --}}
+                <div class="px-6 sm:px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                    </svg>
+                    <span>Untuk mengubah nama, foto profil, atau kata sandi, klik tombol <strong>Edit Akun</strong> dan konfirmasi password Anda terlebih dahulu.</span>
                 </div>
-            </aside>
-
-            {{-- Kolom Kanan: Tampilan Informasi Saja (Read-Only) + Tombol Buka Pop-up Edit --}}
-            <div class="w-full flex-1 min-w-0 space-y-6">
-
-                <section class="w-full bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-200 gap-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900">Informasi Akun</h2>
-                            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Rincian data profil dan keamanan akun Anda saat ini.</p>
-                        </div>
-
-                        {{-- Tombol Buka Pop-up Edit --}}
-                        <button
-                            type="button"
-                            id="btn-open-modal"
-                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none shrink-0 cursor-pointer shadow-sm"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                            </svg>
-                            Edit Akun
-                        </button>
-                    </div>
-
-                    {{-- Status Notifikasi Berhasil --}}
-                    @if (session('profile_status'))
-                        <div role="status" class="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2.5">
-                            <svg class="w-5 h-5 shrink-0 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span class="font-medium">{{ session('profile_status') }}</span>
-                        </div>
-                    @endif
-
-                    {{-- Daftar Rincian Informasi Akun (Read-only) --}}
-                    <div class="mt-6 divide-y divide-slate-100 text-sm">
-
-                        <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <span class="font-semibold text-slate-500">Nama Lengkap</span>
-                            <span class="sm:col-span-2 font-medium text-slate-900 text-base">{{ $user->name }}</span>
-                        </div>
-
-                        <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                            <span class="font-semibold text-slate-500">Alamat Email</span>
-                            <span class="sm:col-span-2 font-medium text-slate-900 text-base break-all">{{ $user->email }}</span>
-                        </div>
-
-                        <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                            <span class="font-semibold text-slate-500">Kata Sandi (Password)</span>
-                            <div class="sm:col-span-2 flex items-center gap-2 text-slate-700">
-                                <span class="font-mono text-lg tracking-widest text-slate-600">••••••••••••</span>
-                                <span class="text-xs text-slate-400 font-medium">(Tersimpan aman & terenkripsi)</span>
-                            </div>
-                        </div>
-
-                        <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                            <span class="font-semibold text-slate-500">Foto Profil</span>
-                            <div class="sm:col-span-2 flex items-center gap-3">
-                                @if ($user->foto_profil_url)
-                                    <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-12 h-12 rounded-full object-cover border border-slate-200 shadow-xs">
-                                    <span class="text-xs text-slate-500">Foto kustom terpasang</span>
-                                @else
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
-                                        {{ $user->avatar ?? 'AK' }}
-                                    </div>
-                                    <span class="text-xs text-slate-500">Menggunakan inisial avatar bawaan</span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="py-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <span class="font-semibold text-slate-500">Hak Akses / Peran</span>
-                            <span class="sm:col-span-2 font-medium text-slate-900">{{ $user->roleLabel() }}</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 pt-5 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
-                        <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-                        </svg>
-                        <span>Untuk mengubah nama, foto profil, atau kata sandi, klik tombol <strong>Edit Akun</strong> dan konfirmasi password Anda terlebih dahulu.</span>
-                    </div>
-                </section>
-
             </div>
-        </div>
-    </main>
+
+        </main>
+    </div>
 
     {{-- MODAL POP-UP EDIT AKUN (Tidak Pindah Halaman) --}}
     <div
@@ -322,7 +408,7 @@
                         >
                     </div>
 
-                    {{-- 2. Email Akun --}}
+                    {{-- 2. Email Akun (Read-only) --}}
                     <div>
                         <label for="edit-email" class="block text-sm font-semibold text-slate-800 mb-1">Email Akun</label>
                         <input
@@ -432,9 +518,32 @@
         </div>
     </div>
 
-    {{-- Script Interaktivitas Pop-Up Modal (Tanpa Pindah Halaman) --}}
+    {{-- Script Interaktivitas Pop-Up Modal & Sidebar --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Kontrol Sidebar Responsif
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const btnSidebarOpen = document.getElementById('btn-sidebar-open');
+            const btnSidebarClose = document.getElementById('btn-sidebar-close');
+
+            const openSidebar = () => {
+                if (!sidebar || !backdrop) return;
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            };
+
+            const closeSidebar = () => {
+                if (!sidebar || !backdrop) return;
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            };
+
+            btnSidebarOpen?.addEventListener('click', openSidebar);
+            btnSidebarClose?.addEventListener('click', closeSidebar);
+            backdrop?.addEventListener('click', closeSidebar);
+
+            // Kontrol Modal Pop-up Edit Akun
             const modal = document.getElementById('modal-edit');
             const btnOpenModal = document.getElementById('btn-open-modal');
             const btnCloseModal = document.getElementById('btn-close-modal');
@@ -452,7 +561,7 @@
             const hiddenCurrentPassword = document.getElementById('hidden-current-password');
 
             // Buka Modal Pop-up
-            btnOpenModal.addEventListener('click', () => {
+            btnOpenModal?.addEventListener('click', () => {
                 modal.classList.remove('hidden');
                 stepVerify.classList.remove('hidden');
                 stepEditForm.classList.add('hidden');
@@ -468,11 +577,11 @@
                 verifyError.classList.add('hidden');
             };
 
-            btnCloseModal.addEventListener('click', closeModal);
+            btnCloseModal?.addEventListener('click', closeModal);
             cancelButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
             // Tutup modal jika klik backdrop di luar dialog
-            modal.addEventListener('click', (e) => {
+            modal?.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeModal();
                 }
@@ -480,8 +589,12 @@
 
             // Tutup modal jika tekan tombol Escape
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                    closeModal();
+                if (e.key === 'Escape') {
+                    if (!modal.classList.contains('hidden')) {
+                        closeModal();
+                    } else if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                        closeSidebar();
+                    }
                 }
             });
 
@@ -553,10 +666,10 @@
                 }
             };
 
-            btnSubmitVerify.addEventListener('click', executeVerify);
+            btnSubmitVerify?.addEventListener('click', executeVerify);
 
             // Bisa tekan Enter di input password verifikasi
-            inputVerifyPassword.addEventListener('keydown', (e) => {
+            inputVerifyPassword?.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     executeVerify();
