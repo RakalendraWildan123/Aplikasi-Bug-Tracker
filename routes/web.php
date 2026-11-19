@@ -37,5 +37,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
     Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');
 
+    // Master Akun / CRUD Akun (Khusus Atasan / Admin)
+    Route::middleware('role:admin')
+        ->prefix('admin/accounts')
+        ->name('admin.accounts.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AccountController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\AccountController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Admin\AccountController::class, 'store'])->name('store');
+            Route::get('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'show'])->name('show');
+            Route::get('/{user}/edit', [\App\Http\Controllers\Admin\AccountController::class, 'edit'])->name('edit');
+            Route::put('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'update'])->name('update');
+            Route::patch('/{user}/toggle-active', [\App\Http\Controllers\Admin\AccountController::class, 'toggleActive'])->name('toggle-active');
+            Route::patch('/{user}/reset-password', [\App\Http\Controllers\Admin\AccountController::class, 'resetPassword'])->name('reset-password');
+            Route::delete('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'destroy'])->name('destroy');
+        });
+
+    Route::get('/exports/sample-pdf', [\App\Http\Controllers\ExportController::class, 'samplePdf'])->name('exports.sample-pdf');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

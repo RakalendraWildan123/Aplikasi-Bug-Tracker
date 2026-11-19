@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreAccountRequest;
 use App\Http\Requests\Admin\UpdateAccountRequest;
 use App\Models\Developer;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,20 @@ use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): View|JsonResponse
     {
         $roleFilter = $request->string('role')->toString();
         $statusFilter = $request->string('status')->toString();
+        $search = $request->string('search')->toString();
 
         $accounts = User::query()
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('role_title', 'like', "%{$search}%");
+                });
+            })
             ->when(in_array($roleFilter, User::ROLES, true), fn ($q) => $q->where('role', $roleFilter))
             ->when($statusFilter === 'active', fn ($q) => $q->where('is_active', true))
             ->when($statusFilter === 'inactive', fn ($q) => $q->where('is_active', false))
@@ -28,20 +37,45 @@ class AccountController extends Controller
             ->orderBy('name')
             ->get();
 
-        return response()->json([
+        $metrics = [
+            'total' => User::query()->count(),
+            'admin' => User::query()->where('role', 'admin')->count(),
+            'developer' => User::query()->where('role', 'developer')->count(),
+            'active' => User::query()->where('is_active', true)->count(),
+        ];
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'accounts' => $accounts,
+                'role_labels' => User::ROLE_LABELS,
+                'role_filter' => $roleFilter,
+                'status_filter' => $statusFilter,
+                'metrics' => $metrics,
+            ]);
+        }
+
+        return view('admin.accounts.index', [
+            'user' => $request->user(),
             'accounts' => $accounts,
-            'role_labels' => User::ROLE_LABELS,
-            'role_filter' => $roleFilter,
-            'status_filter' => $statusFilter,
+            'roleLabels' => User::ROLE_LABELS,
+            'developerRoles' => Developer::ROLES,
+            'roleFilter' => $roleFilter,
+            'statusFilter' => $statusFilter,
+            'search' => $search,
+            'metrics' => $metrics,
         ]);
     }
 
-    public function create(): JsonResponse
+    public function create(Request $request): View|JsonResponse|RedirectResponse
     {
-        return response()->json([
-            'role_labels' => User::ROLE_LABELS,
-            'developer_roles' => Developer::ROLES,
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'role_labels' => User::ROLE_LABELS,
+                'developer_roles' => Developer::ROLES,
+            ]);
+        }
+
+        return redirect()->route('admin.accounts.index', ['action' => 'create']);
     }
 
     public function show(User $user): JsonResponse
@@ -51,13 +85,17 @@ class AccountController extends Controller
         ]);
     }
 
-    public function edit(User $user): JsonResponse
+    public function edit(Request $request, User $user): View|JsonResponse|RedirectResponse
     {
-        return response()->json([
-            'account' => $user,
-            'role_labels' => User::ROLE_LABELS,
-            'developer_roles' => Developer::ROLES,
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'account' => $user,
+                'role_labels' => User::ROLE_LABELS,
+                'developer_roles' => Developer::ROLES,
+            ]);
+        }
+
+        return redirect()->route('admin.accounts.index', ['edit' => $user->id]);
     }
 
     public function store(StoreAccountRequest $request): JsonResponse|RedirectResponse

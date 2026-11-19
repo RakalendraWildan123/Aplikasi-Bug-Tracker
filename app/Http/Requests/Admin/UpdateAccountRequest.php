@@ -32,6 +32,7 @@ class UpdateAccountRequest extends FormRequest
                 'max:150',
                 Rule::unique('users', 'email')->ignore($targetUser->id),
             ],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', Rule::in(User::ROLES)],
             'is_active' => ['sometimes', 'boolean'],
             'role_title' => [
