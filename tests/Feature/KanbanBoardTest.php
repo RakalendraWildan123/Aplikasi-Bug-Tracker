@@ -139,4 +139,78 @@ class KanbanBoardTest extends TestCase
         $response->assertStatus(422);
         $this->assertSame('todo', $task->fresh()->status);
     }
+
+    public function test_kanban_board_renders_quick_navigation_and_edit_buttons(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $task = Task::factory()->create([
+            'title' => 'Tugas dengan Tombol Edit',
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)->get('/kanban');
+
+        $response->assertOk();
+        $response->assertSee('Navigasi Cepat:');
+        $response->assertSee('Semua Kolom');
+        $response->assertSee('btn-quick-nav');
+        $response->assertSee('btn-edit-task');
+        $response->assertSee('modal-edit-task');
+    }
+
+    public function test_authenticated_user_can_update_task_details_via_put(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $dev = User::factory()->create(['role' => 'developer']);
+
+        $task = Task::factory()->create([
+            'title' => 'Judul Lama',
+            'description' => 'Deskripsi lama',
+            'task_type' => 'feature',
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->putJson("/kanban/tasks/{$task->id}", [
+                'title' => 'Judul Baru Diperbarui',
+                'description' => 'Deskripsi baru lengkap',
+                'task_type' => 'enhancement',
+                'status' => 'in_progress',
+                'target_date' => '2026-12-01',
+                'blocker_notes' => 'Menunggu review API',
+                'assigned_to' => $dev->id,
+            ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Data tugas berhasil diperbarui.',
+        ]);
+
+        $fresh = $task->fresh();
+        $this->assertSame('Judul Baru Diperbarui', $fresh->title);
+        $this->assertSame('Deskripsi baru lengkap', $fresh->description);
+        $this->assertSame('enhancement', $fresh->task_type);
+        $this->assertSame('in_progress', $fresh->status);
+        $this->assertSame('2026-12-01', $fresh->target_date->format('Y-m-d'));
+        $this->assertSame('Menunggu review API', $fresh->blocker_notes);
+        $this->assertSame($dev->id, $fresh->assigned_to);
+    }
+
+    public function test_update_task_validates_required_fields(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $task = Task::factory()->create(['title' => 'Judul Tetap']);
+
+        $response = $this->actingAs($user)
+            ->putJson("/kanban/tasks/{$task->id}", [
+                'title' => '',
+                'task_type' => 'invalid_type',
+                'status' => 'invalid_status',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['title', 'task_type', 'status']);
+        $this->assertSame('Judul Tetap', $task->fresh()->title);
+    }
 }

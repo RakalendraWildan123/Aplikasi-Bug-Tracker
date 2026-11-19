@@ -70,6 +70,7 @@ class KanbanController extends Controller
         ];
 
         $projects = Project::query()->orderBy('name')->get(['id', 'name', 'code', 'color']);
+        $developers = \App\Models\Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -82,10 +83,47 @@ class KanbanController extends Controller
             'user' => $request->user(),
             'columns' => $columns,
             'projects' => $projects,
+            'developers' => $developers,
             'taskTypes' => Task::TYPES,
             'selectedProject' => $projectFilter,
             'selectedType' => $typeFilter,
         ]);
+    }
+
+    public function update(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'task_type' => ['required', 'string', Rule::in(Task::TYPES)],
+            'status' => ['required', 'string', Rule::in(Task::STATUSES)],
+            'target_date' => ['nullable', 'date'],
+            'blocker_notes' => ['nullable', 'string', 'max:500'],
+            'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
+        ], [
+            'title.required' => 'Judul tugas wajib diisi.',
+            'task_type.required' => 'Tipe tugas wajib dipilih.',
+            'status.required' => 'Status tugas wajib dipilih.',
+        ]);
+
+        $newStatus = $validated['status'];
+        if ($newStatus === 'done' && ! $task->completed_at) {
+            $validated['completed_at'] = now();
+        } elseif ($newStatus !== 'done') {
+            $validated['completed_at'] = null;
+        }
+
+        $task->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data tugas berhasil diperbarui.',
+                'task' => $task->fresh(['project', 'module', 'assignee']),
+            ]);
+        }
+
+        return redirect()->route('kanban.index')->with('status_message', 'Data tugas berhasil diperbarui.');
     }
 
     public function updateStatus(Request $request, Task $task): JsonResponse|RedirectResponse

@@ -111,7 +111,7 @@
         <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col">
 
             {{-- Header Halaman & Filter Ringkas --}}
-            <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-slate-200">
+            <div class="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Papan Kanban</h1>
                     <p class="mt-1 text-sm text-slate-600">Visualisasi alur pengerjaan tugas tim pengembang (To Do, In Progress, Review, Done).</p>
@@ -166,17 +166,96 @@
                 </form>
             </div>
 
+            {{-- TOMBOL NAVIGASI CEPAT DI PAPAN KANBAN (Lompat / Fokus Kolom) --}}
+            <div class="mb-5 flex items-center justify-between gap-3 flex-wrap bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+                <div class="flex items-center gap-2 overflow-x-auto pb-0.5 max-w-full">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                        </svg>
+                        Navigasi Cepat:
+                    </span>
+
+                    {{-- Tombol Semua Kolom --}}
+                    <button
+                        type="button"
+                        class="btn-quick-nav inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-xs transition cursor-pointer"
+                        data-target="all"
+                    >
+                        Semua Kolom
+                    </button>
+
+                    {{-- Tombol Kolom To Do --}}
+                    <button
+                        type="button"
+                        class="btn-quick-nav inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                        data-target="todo"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                        <span>To Do</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-100 text-slate-700 font-bold border border-slate-200 quick-count-todo">
+                            {{ $columns['todo']['tasks']->count() }}
+                        </span>
+                    </button>
+
+                    {{-- Tombol Kolom In Progress --}}
+                    <button
+                        type="button"
+                        class="btn-quick-nav inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                        data-target="in_progress"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                        <span>In Progress</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-sky-50 text-sky-700 font-bold border border-sky-200 quick-count-in_progress">
+                            {{ $columns['in_progress']['tasks']->count() }}
+                        </span>
+                    </button>
+
+                    {{-- Tombol Kolom Review --}}
+                    <button
+                        type="button"
+                        class="btn-quick-nav inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                        data-target="review"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Review</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-50 text-amber-700 font-bold border border-amber-200 quick-count-review">
+                            {{ $columns['review']['tasks']->count() }}
+                        </span>
+                    </button>
+
+                    {{-- Tombol Kolom Done --}}
+                    <button
+                        type="button"
+                        class="btn-quick-nav inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                        data-target="done"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Done</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 quick-count-done">
+                            {{ $columns['done']['tasks']->count() }}
+                        </span>
+                    </button>
+                </div>
+
+                {{-- Indikator Total Tugas --}}
+                <span class="text-xs font-semibold text-slate-500">
+                    Total: <strong class="text-slate-900 total-task-count">{{ $columns['todo']['tasks']->count() + $columns['in_progress']['tasks']->count() + $columns['review']['tasks']->count() + $columns['done']['tasks']->count() }}</strong> Tugas
+                </span>
+            </div>
+
             {{-- Pesan Status Berhasil --}}
             <div id="toast-message" class="hidden mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs sm:text-sm font-medium text-emerald-800 items-center justify-between transition-all">
                 <span id="toast-text">Status tugas berhasil diperbarui.</span>
             </div>
 
             {{-- Papan Kanban (4 Kolom Tegas, Ramah Desktop & Tablet) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4.5 items-start w-full">
+            <div id="kanban-board-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4.5 items-start w-full">
 
                 @foreach ($columns as $colKey => $column)
                     <div
-                        class="w-full flex flex-col rounded-xl border border-slate-200 bg-slate-100/70 shadow-xs overflow-hidden"
+                        id="column-{{ $colKey }}"
+                        class="kanban-column w-full flex flex-col rounded-xl border border-slate-200 bg-slate-100/70 shadow-xs overflow-hidden transition-all duration-200"
                         data-column-status="{{ $colKey }}"
                     >
                         {{-- Header Kolom --}}
@@ -199,65 +278,88 @@
                         >
                             @forelse ($column['tasks'] as $task)
                                 <div
-                                    class="kanban-card bg-white border border-slate-200 rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all select-none cursor-grab active:cursor-grabbing"
+                                    class="kanban-card bg-white border border-slate-200 rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all select-none cursor-grab active:cursor-grabbing relative"
                                     draggable="true"
+                                    id="card-task-{{ $task->id }}"
                                     data-task-id="{{ $task->id }}"
                                     data-current-status="{{ $task->status }}"
                                 >
-                                    {{-- Baris Atas: Badge Proyek & Tipe Tugas --}}
+                                    {{-- Baris Atas: Badge Proyek, Tipe Tugas & TOMBOL EDIT KARTU --}}
                                     <div class="flex items-center justify-between gap-2 mb-2">
-                                        @if ($task->project)
-                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[170px]">
-                                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
-                                                <span class="truncate">{{ $task->project->code }}</span>
-                                            </span>
-                                        @endif
+                                        <div class="flex items-center gap-1.5 truncate max-w-[170px]">
+                                            @if ($task->project)
+                                                <span class="card-project-badge inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 truncate">
+                                                    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
+                                                    <span class="truncate">{{ $task->project->code }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
 
-                                        {{-- Badge Tipe Tugas --}}
-                                        @php
-                                            $typeBadges = [
-                                                'feature' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                                'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                                'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                                'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
-                                            ];
-                                            $typeLabels = [
-                                                'feature' => 'Fitur',
-                                                'enhancement' => 'Peningkatan',
-                                                'refactor' => 'Refaktor',
-                                                'maintenance' => 'Maintenance',
-                                            ];
-                                        @endphp
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $typeBadges[$task->task_type] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
-                                            {{ $typeLabels[$task->task_type] ?? $task->task_type }}
-                                        </span>
+                                        <div class="flex items-center gap-1.5 shrink-0">
+                                            {{-- Badge Tipe Tugas --}}
+                                            @php
+                                                $typeBadges = [
+                                                    'feature' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                                    'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
+                                                    'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                    'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                                ];
+                                                $typeLabels = [
+                                                    'feature' => 'Fitur',
+                                                    'enhancement' => 'Peningkatan',
+                                                    'refactor' => 'Refaktor',
+                                                    'maintenance' => 'Maintenance',
+                                                ];
+                                            @endphp
+                                            <span class="card-type-badge px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $typeBadges[$task->task_type] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                                {{ $typeLabels[$task->task_type] ?? $task->task_type }}
+                                            </span>
+
+                                            {{-- TOMBOL EDIT PADA KARTU --}}
+                                            <button
+                                                type="button"
+                                                class="btn-edit-task p-1 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                                                title="Edit Tugas: {{ $task->title }}"
+                                                aria-label="Edit Tugas {{ $task->title }}"
+                                                data-task-id="{{ $task->id }}"
+                                                data-title="{{ $task->title }}"
+                                                data-description="{{ $task->description }}"
+                                                data-task-type="{{ $task->task_type }}"
+                                                data-status="{{ $task->status }}"
+                                                data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
+                                                data-blocker-notes="{{ $task->blocker_notes }}"
+                                                data-assigned-to="{{ $task->assigned_to }}"
+                                                data-project-code="{{ $task->project?->code }}"
+                                                data-project-name="{{ $task->project?->name }}"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {{-- Modul Tugas --}}
                                     @if ($task->module)
-                                        <p class="text-[11px] font-medium text-slate-500 mb-1 truncate">
+                                        <p class="card-module-name text-[11px] font-medium text-slate-500 mb-1 truncate">
                                             {{ $task->module->name }}
                                         </p>
                                     @endif
 
                                     {{-- Judul Tugas --}}
-                                    <h4 class="font-bold text-slate-900 text-sm leading-snug mb-1.5">
+                                    <h4 class="card-title font-bold text-slate-900 text-sm leading-snug mb-1.5">
                                         {{ $task->title }}
                                     </h4>
 
                                     {{-- Deskripsi Ringkas --}}
-                                    @if ($task->description)
-                                        <p class="text-xs text-slate-600 line-clamp-2 mb-3">
-                                            {{ $task->description }}
-                                        </p>
-                                    @endif
+                                    <p class="card-description text-xs text-slate-600 line-clamp-2 mb-3 {{ $task->description ? '' : 'hidden' }}">
+                                        {{ $task->description }}
+                                    </p>
 
                                     {{-- Catatan Blocker (Jika Ada) --}}
-                                    @if ($task->blocker_notes)
-                                        <div class="mb-3 rounded-lg border border-rose-200 bg-rose-50 p-2 text-[11px] text-rose-800 leading-tight">
-                                            <span class="font-semibold text-rose-900">Kendala:</span> {{ $task->blocker_notes }}
-                                        </div>
-                                    @endif
+                                    <div class="card-blocker-container mb-3 rounded-lg border border-rose-200 bg-rose-50 p-2 text-[11px] text-rose-800 leading-tight {{ $task->blocker_notes ? '' : 'hidden' }}">
+                                        <span class="font-semibold text-rose-900">Kendala:</span> <span class="card-blocker-text">{{ $task->blocker_notes }}</span>
+                                    </div>
 
                                     {{-- Footer Kartu: Deadline & Avatar Assignee --}}
                                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
@@ -266,14 +368,14 @@
                                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                             </svg>
-                                            <span class="font-medium text-slate-600 text-[11px]">
+                                            <span class="card-target-date font-medium text-slate-600 text-[11px]">
                                                 {{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}
                                             </span>
                                         </div>
 
                                         {{-- Assignee Pengembang --}}
-                                        @if ($task->assignee)
-                                            <div class="flex items-center gap-1.5" title="Ditugaskan kepada: {{ $task->assignee->name }}">
+                                        <div class="card-assignee-container flex items-center gap-1.5" title="Ditugaskan kepada: {{ $task->assignee?->name ?? 'Belum ditugaskan' }}">
+                                            @if ($task->assignee)
                                                 @if ($task->assignee->foto_profil_url)
                                                     <img src="{{ $task->assignee->foto_profil_url }}" alt="{{ $task->assignee->name }}" class="w-6 h-6 rounded-full object-cover border border-slate-200">
                                                 @else
@@ -281,13 +383,13 @@
                                                         {{ $task->assignee->avatar ?? 'DV' }}
                                                     </div>
                                                 @endif
-                                                <span class="text-[11px] font-semibold text-slate-700 truncate max-w-[80px]">
+                                                <span class="card-assignee-name text-[11px] font-semibold text-slate-700 truncate max-w-[80px]">
                                                     {{ $task->assignee->name }}
                                                 </span>
-                                            </div>
-                                        @else
-                                            <span class="text-[11px] text-slate-400 italic">Belum ditugaskan</span>
-                                        @endif
+                                            @else
+                                                <span class="card-assignee-name text-[11px] text-slate-400 italic">Belum ditugaskan</span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     {{-- Quick Move Status Selector (Ramah Tablet & Desktop) --}}
@@ -324,7 +426,179 @@
         </main>
     </div>
 
-    {{-- Script Interaktivitas Papan Kanban & Drag-Drop --}}
+    {{-- MODAL POP-UP EDIT TUGAS (Tidak Pindah Halaman) --}}
+    <div
+        id="modal-edit-task"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden"
+        aria-labelledby="modal-edit-title"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transition-all transform duration-200">
+            {{-- Modal Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="modal-edit-title" class="text-base font-bold text-slate-900 leading-tight">Edit Tugas</h3>
+                        <p id="modal-task-project" class="text-xs text-slate-500 font-medium">Proyek</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    id="btn-close-edit-modal"
+                    class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
+                    aria-label="Tutup"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Form Edit Tugas --}}
+            <form id="form-edit-task" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <input type="hidden" id="edit-task-id" value="">
+
+                {{-- Alert Error Validasi --}}
+                <div id="edit-task-error" class="hidden rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-800">
+                    <span id="edit-task-error-text">Terjadi kesalahan validasi.</span>
+                </div>
+
+                {{-- 1. Judul Tugas --}}
+                <div>
+                    <label for="edit-task-title" class="block text-xs font-semibold text-slate-800 mb-1">
+                        Judul Tugas <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                        id="edit-task-title"
+                        type="text"
+                        required
+                        class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                        placeholder="Masukkan judul tugas"
+                    >
+                </div>
+
+                {{-- 2. Deskripsi Tugas --}}
+                <div>
+                    <label for="edit-task-desc" class="block text-xs font-semibold text-slate-800 mb-1">
+                        Deskripsi Tugas
+                    </label>
+                    <textarea
+                        id="edit-task-desc"
+                        rows="3"
+                        class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 resize-none"
+                        placeholder="Rincian deskripsi tugas"
+                    ></textarea>
+                </div>
+
+                {{-- 3. Row Tipe & Status --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="edit-task-type" class="block text-xs font-semibold text-slate-800 mb-1">
+                            Tipe Tugas <span class="text-rose-500">*</span>
+                        </label>
+                        <select
+                            id="edit-task-type"
+                            required
+                            class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="feature">Fitur (Feature)</option>
+                            <option value="enhancement">Peningkatan (Enhancement)</option>
+                            <option value="refactor">Refaktor (Refactor)</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="edit-task-status" class="block text-xs font-semibold text-slate-800 mb-1">
+                            Status <span class="text-rose-500">*</span>
+                        </label>
+                        <select
+                            id="edit-task-status"
+                            required
+                            class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- 4. Row Deadline & Assignee --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="edit-task-target-date" class="block text-xs font-semibold text-slate-800 mb-1">
+                            Target Selesai (Deadline)
+                        </label>
+                        <input
+                            id="edit-task-target-date"
+                            type="date"
+                            class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="edit-task-assigned-to" class="block text-xs font-semibold text-slate-800 mb-1">
+                            Ditugaskan Kepada
+                        </label>
+                        <select
+                            id="edit-task-assigned-to"
+                            class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                        >
+                            <option value="">Belum Ditugaskan</option>
+                            @foreach ($developers as $dev)
+                                <option value="{{ $dev->id }}">{{ $dev->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- 5. Catatan Kendala (Blocker Notes) --}}
+                <div>
+                    <label for="edit-task-blocker" class="block text-xs font-semibold text-slate-800 mb-1">
+                        Catatan Kendala (Blocker Notes)
+                    </label>
+                    <input
+                        id="edit-task-blocker"
+                        type="text"
+                        placeholder="Contoh: Menunggu akses kredensial API"
+                        class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                    >
+                </div>
+
+                {{-- Tombol Aksi Modal --}}
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200">
+                    <button
+                        type="button"
+                        id="btn-cancel-edit-task"
+                        class="px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit"
+                        id="btn-submit-edit-task"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition cursor-pointer shadow-sm"
+                    >
+                        <span id="submit-btn-text">Simpan Perubahan</span>
+                        <svg id="submit-spinner" class="hidden w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Script Interaktivitas Papan Kanban, Navigasi Cepat, Edit Modal & Drag-Drop --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Kontrol Sidebar Responsif
@@ -349,7 +623,7 @@
             btnSidebarClose?.addEventListener('click', closeSidebar);
             backdrop?.addEventListener('click', closeSidebar);
 
-            // Toast feedback
+            // Toast Feedback
             const toast = document.getElementById('toast-message');
             const toastText = document.getElementById('toast-text');
             let toastTimer;
@@ -367,7 +641,307 @@
                 }, 3500);
             };
 
-            // Update status kartu ke server
+            // TOMBOL NAVIGASI CEPAT (Lompat / Fokus Kolom)
+            const quickNavButtons = document.querySelectorAll('.btn-quick-nav');
+            const columns = document.querySelectorAll('.kanban-column');
+
+            quickNavButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-target');
+
+                    // Update styling tombol navigasi cepat
+                    quickNavButtons.forEach(b => {
+                        b.classList.remove('bg-slate-900', 'text-white', 'shadow-xs');
+                        b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-200');
+                    });
+                    btn.classList.add('bg-slate-900', 'text-white', 'shadow-xs');
+                    btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
+
+                    if (target === 'all') {
+                        // Tampilkan semua kolom
+                        columns.forEach(col => {
+                            col.classList.remove('hidden', 'ring-4', 'ring-indigo-500/50');
+                        });
+                        document.getElementById('kanban-board-container')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        const targetCol = document.getElementById(`column-${target}`);
+                        if (targetCol) {
+                            // Scroll halus ke kolom tujuan
+                            targetCol.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+                            // Efek highlight kolom sesaat
+                            columns.forEach(col => col.classList.remove('ring-4', 'ring-indigo-500/50'));
+                            targetCol.classList.add('ring-4', 'ring-indigo-500/50');
+                            setTimeout(() => {
+                                targetCol.classList.remove('ring-4', 'ring-indigo-500/50');
+                            }, 1800);
+                        }
+                    }
+                });
+            });
+
+            // Refresh Counter Kolom & Navigasi Cepat
+            const refreshColumnCounters = () => {
+                let total = 0;
+                document.querySelectorAll('.kanban-dropzone').forEach(dropzone => {
+                    const status = dropzone.getAttribute('data-status');
+                    const cardsCount = dropzone.querySelectorAll('.kanban-card').length;
+                    total += cardsCount;
+
+                    // Counter di header kolom
+                    const columnWrapper = dropzone.closest('[data-column-status]');
+                    if (columnWrapper) {
+                        const counter = columnWrapper.querySelector('.column-count');
+                        if (counter) counter.textContent = cardsCount;
+
+                        // Placeholder kosong
+                        if (cardsCount === 0 && !dropzone.querySelector('.empty-placeholder')) {
+                            dropzone.innerHTML = `
+                                <div class="empty-placeholder flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-400">
+                                    <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 017 3h10a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0119 21z"/>
+                                    </svg>
+                                    <p class="text-xs font-medium">Belum ada tugas</p>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Counter di tombol navigasi cepat
+                    const quickCounter = document.querySelector(`.quick-count-${status}`);
+                    if (quickCounter) quickCounter.textContent = cardsCount;
+                });
+
+                // Update total
+                const totalEl = document.querySelector('.total-task-count');
+                if (totalEl) totalEl.textContent = total;
+            };
+
+            // MODAL EDIT TUGAS
+            const modalEdit = document.getElementById('modal-edit-task');
+            const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+            const btnCancelEditTask = document.getElementById('btn-cancel-edit-task');
+            const formEditTask = document.getElementById('form-edit-task');
+
+            const editTaskId = document.getElementById('edit-task-id');
+            const editTaskTitle = document.getElementById('edit-task-title');
+            const editTaskDesc = document.getElementById('edit-task-desc');
+            const editTaskType = document.getElementById('edit-task-type');
+            const editTaskStatus = document.getElementById('edit-task-status');
+            const editTaskTargetDate = document.getElementById('edit-task-target-date');
+            const editTaskAssignedTo = document.getElementById('edit-task-assigned-to');
+            const editTaskBlocker = document.getElementById('edit-task-blocker');
+            const modalTaskProject = document.getElementById('modal-task-project');
+
+            const editTaskError = document.getElementById('edit-task-error');
+            const editTaskErrorText = document.getElementById('edit-task-error-text');
+            const btnSubmitEditTask = document.getElementById('btn-submit-edit-task');
+            const submitBtnText = document.getElementById('submit-btn-text');
+            const submitSpinner = document.getElementById('submit-spinner');
+
+            const closeEditModal = () => {
+                modalEdit?.classList.add('hidden');
+                editTaskError?.classList.add('hidden');
+            };
+
+            btnCloseEditModal?.addEventListener('click', closeEditModal);
+            btnCancelEditTask?.addEventListener('click', closeEditModal);
+
+            modalEdit?.addEventListener('click', (e) => {
+                if (e.target === modalEdit) {
+                    closeEditModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (modalEdit && !modalEdit.classList.contains('hidden')) {
+                        closeEditModal();
+                    } else if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                        closeSidebar();
+                    }
+                }
+            });
+
+            // Klik Tombol Edit pada Kartu
+            document.addEventListener('click', (e) => {
+                const btnEdit = e.target.closest('.btn-edit-task');
+                if (!btnEdit) return;
+
+                const taskId = btnEdit.getAttribute('data-task-id');
+                const title = btnEdit.getAttribute('data-title') || '';
+                const desc = btnEdit.getAttribute('data-description') || '';
+                const taskType = btnEdit.getAttribute('data-task-type') || 'feature';
+                const status = btnEdit.getAttribute('data-status') || 'todo';
+                const targetDate = btnEdit.getAttribute('data-target-date') || '';
+                const blocker = btnEdit.getAttribute('data-blocker-notes') || '';
+                const assignedTo = btnEdit.getAttribute('data-assigned-to') || '';
+                const projCode = btnEdit.getAttribute('data-project-code') || '';
+                const projName = btnEdit.getAttribute('data-project-name') || '';
+
+                editTaskId.value = taskId;
+                editTaskTitle.value = title;
+                editTaskDesc.value = desc;
+                editTaskType.value = taskType;
+                editTaskStatus.value = status;
+                editTaskTargetDate.value = targetDate;
+                editTaskAssignedTo.value = assignedTo;
+                editTaskBlocker.value = blocker;
+                modalTaskProject.textContent = projCode ? `[${projCode}] ${projName}` : 'Tugas';
+
+                editTaskError.classList.add('hidden');
+                modalEdit.classList.remove('hidden');
+                setTimeout(() => editTaskTitle.focus(), 100);
+            });
+
+            // Submit Form Edit Tugas via AJAX
+            formEditTask?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const taskId = editTaskId.value;
+                if (!taskId) return;
+
+                const payload = {
+                    title: editTaskTitle.value.trim(),
+                    description: editTaskDesc.value.trim() || null,
+                    task_type: editTaskType.value,
+                    status: editTaskStatus.value,
+                    target_date: editTaskTargetDate.value || null,
+                    assigned_to: editTaskAssignedTo.value || null,
+                    blocker_notes: editTaskBlocker.value.trim() || null,
+                };
+
+                if (!payload.title) {
+                    editTaskError.classList.remove('hidden');
+                    editTaskErrorText.textContent = 'Judul tugas wajib diisi.';
+                    editTaskTitle.focus();
+                    return;
+                }
+
+                btnSubmitEditTask.disabled = true;
+                submitBtnText.textContent = 'Menyimpan...';
+                submitSpinner.classList.remove('hidden');
+                editTaskError.classList.add('hidden');
+
+                try {
+                    const response = await fetch(`/kanban/tasks/${taskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        closeEditModal();
+                        showToast(data.message || 'Data tugas berhasil diperbarui.');
+
+                        const card = document.getElementById(`card-task-${taskId}`);
+                        if (card) {
+                            // Update Judul
+                            const titleEl = card.querySelector('.card-title');
+                            if (titleEl) titleEl.textContent = payload.title;
+
+                            // Update Deskripsi
+                            const descEl = card.querySelector('.card-description');
+                            if (descEl) {
+                                if (payload.description) {
+                                    descEl.textContent = payload.description;
+                                    descEl.classList.remove('hidden');
+                                } else {
+                                    descEl.textContent = '';
+                                    descEl.classList.add('hidden');
+                                }
+                            }
+
+                            // Update Tipe Badge
+                            const typeBadge = card.querySelector('.card-type-badge');
+                            if (typeBadge) {
+                                const typeLabels = { feature: 'Fitur', enhancement: 'Peningkatan', refactor: 'Refaktor', maintenance: 'Maintenance' };
+                                const typeBadges = {
+                                    feature: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                    enhancement: 'bg-violet-50 text-violet-700 border-violet-200',
+                                    refactor: 'bg-amber-50 text-amber-700 border-amber-200',
+                                    maintenance: 'bg-slate-100 text-slate-700 border-slate-200'
+                                };
+                                typeBadge.className = `card-type-badge px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${typeBadges[payload.task_type] || 'bg-slate-100 text-slate-700 border-slate-200'}`;
+                                typeBadge.textContent = typeLabels[payload.task_type] || payload.task_type;
+                            }
+
+                            // Update Blocker Notes
+                            const blockerContainer = card.querySelector('.card-blocker-container');
+                            const blockerText = card.querySelector('.card-blocker-text');
+                            if (blockerContainer && blockerText) {
+                                if (payload.blocker_notes) {
+                                    blockerText.textContent = payload.blocker_notes;
+                                    blockerContainer.classList.remove('hidden');
+                                } else {
+                                    blockerContainer.classList.add('hidden');
+                                }
+                            }
+
+                            // Update Target Date
+                            const targetDateEl = card.querySelector('.card-target-date');
+                            if (targetDateEl) {
+                                targetDateEl.textContent = payload.target_date || 'Tanpa batas';
+                            }
+
+                            // Update Assignee Name
+                            const assigneeNameEl = card.querySelector('.card-assignee-name');
+                            if (assigneeNameEl) {
+                                const selectedOption = editTaskAssignedTo.options[editTaskAssignedTo.selectedIndex];
+                                assigneeNameEl.textContent = payload.assigned_to && selectedOption ? selectedOption.text : 'Belum ditugaskan';
+                            }
+
+                            // Update Data Attributes pada tombol edit
+                            const btnEdit = card.querySelector('.btn-edit-task');
+                            if (btnEdit) {
+                                btnEdit.setAttribute('data-title', payload.title);
+                                btnEdit.setAttribute('data-description', payload.description || '');
+                                btnEdit.setAttribute('data-task-type', payload.task_type);
+                                btnEdit.setAttribute('data-status', payload.status);
+                                btnEdit.setAttribute('data-target-date', payload.target_date || '');
+                                btnEdit.setAttribute('data-blocker-notes', payload.blocker_notes || '');
+                                btnEdit.setAttribute('data-assigned-to', payload.assigned_to || '');
+                            }
+
+                            // Pindahkan kartu jika status berubah
+                            const currentStatus = card.getAttribute('data-current-status');
+                            if (payload.status !== currentStatus) {
+                                const targetDropzone = document.querySelector(`.kanban-dropzone[data-status="${payload.status}"]`);
+                                if (targetDropzone) {
+                                    const placeholder = targetDropzone.querySelector('.empty-placeholder');
+                                    if (placeholder) placeholder.remove();
+
+                                    targetDropzone.appendChild(card);
+                                    card.setAttribute('data-current-status', payload.status);
+
+                                    const select = card.querySelector('.task-status-select');
+                                    if (select) select.value = payload.status;
+                                }
+                            }
+
+                            refreshColumnCounters();
+                        }
+                    } else {
+                        editTaskError.classList.remove('hidden');
+                        editTaskErrorText.textContent = data.message || 'Gagal menyimpan perubahan tugas.';
+                    }
+                } catch (error) {
+                    editTaskError.classList.remove('hidden');
+                    editTaskErrorText.textContent = 'Terjadi kesalahan koneksi saat menyimpan tugas.';
+                } finally {
+                    btnSubmitEditTask.disabled = false;
+                    submitBtnText.textContent = 'Simpan Perubahan';
+                    submitSpinner.classList.add('hidden');
+                }
+            });
+
+            // Update status kartu ke server (Quick Select & Drag-Drop)
             const updateTaskStatus = async (taskId, newStatus, cardElement) => {
                 try {
                     const response = await fetch(`/kanban/tasks/${taskId}/status`, {
@@ -383,21 +957,20 @@
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        // Pindahkan kartu ke dropzone kolom baru
                         const targetDropzone = document.querySelector(`.kanban-dropzone[data-status="${newStatus}"]`);
                         if (targetDropzone && cardElement) {
-                            // Hapus placeholder kosong jika ada
                             const placeholder = targetDropzone.querySelector('.empty-placeholder');
                             if (placeholder) placeholder.remove();
 
                             targetDropzone.appendChild(cardElement);
                             cardElement.setAttribute('data-current-status', newStatus);
 
-                            // Sinkronkan select status pada kartu
                             const select = cardElement.querySelector('.task-status-select');
                             if (select) select.value = newStatus;
 
-                            // Refresh counter setiap kolom
+                            const btnEdit = cardElement.querySelector('.btn-edit-task');
+                            if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
+
                             refreshColumnCounters();
                             showToast(data.message || 'Status tugas berhasil diperbarui.');
                         }
@@ -407,31 +980,6 @@
                 } catch (error) {
                     showToast('Terjadi kesalahan koneksi saat memperbarui status.', true);
                 }
-            };
-
-            // Fungsi refresh jumlah tugas di header setiap kolom
-            const refreshColumnCounters = () => {
-                document.querySelectorAll('.kanban-dropzone').forEach(dropzone => {
-                    const status = dropzone.getAttribute('data-status');
-                    const cardsCount = dropzone.querySelectorAll('.kanban-card').length;
-                    const columnWrapper = dropzone.closest('[data-column-status]');
-                    if (columnWrapper) {
-                        const counter = columnWrapper.querySelector('.column-count');
-                        if (counter) counter.textContent = cardsCount;
-
-                        // Jika kosong, tambahkan placeholder jika belum ada
-                        if (cardsCount === 0 && !dropzone.querySelector('.empty-placeholder')) {
-                            dropzone.innerHTML = `
-                                <div class="empty-placeholder flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-400">
-                                    <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 017 3h10a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0119 21z"/>
-                                    </svg>
-                                    <p class="text-xs font-medium">Belum ada tugas</p>
-                                </div>
-                            `;
-                        }
-                    }
-                });
             };
 
             // Event listener ganti status via select
