@@ -11,7 +11,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/', function () {
-        return view('home');
+        return redirect()->route('account.edit');
     })->name('home');
 
     Route::get('/account', [AccountProfileController::class, 'edit'])->name('account.edit');

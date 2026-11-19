@@ -11,15 +11,10 @@
     {{-- Top Navigation Bar --}}
     <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
-                    </svg>
-                    Beranda
-                </a>
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-900 tracking-tight">{{ config('app.name', 'Aplikasi Bug Tracker') }}</span>
                 <span class="text-slate-300">/</span>
-                <span class="text-sm font-bold text-slate-900">Akun Saya</span>
+                <span class="text-sm font-medium text-slate-600">Akun Saya</span>
             </div>
 
             <form method="POST" action="{{ route('logout') }}">

@@ -94,7 +94,7 @@ class LoginController extends Controller
             ]);
         }
 
-        return redirect()->route('home');
+        return redirect()->route('account.edit');
     }
 
     public function logout(Request $request): JsonResponse|RedirectResponse
