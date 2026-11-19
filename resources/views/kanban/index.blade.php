@@ -110,60 +110,61 @@
         {{-- Konten Halaman Papan Kanban --}}
         <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col">
 
-            {{-- Header Halaman & Filter Ringkas --}}
-            <div class="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
+            {{-- Header Halaman & Filter Instan --}}
+            <div class="mb-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Papan Kanban</h1>
                     <p class="mt-1 text-sm text-slate-600">Visualisasi alur pengerjaan tugas tim pengembang (To Do, In Progress, Review, Done).</p>
                 </div>
 
-                {{-- Filter Ringkas Sederhana (Tanpa Tab Bersarang) --}}
-                <form method="GET" action="{{ route('kanban.index') }}" class="flex flex-wrap items-center gap-2.5">
-                    {{-- Filter Proyek --}}
-                    <div>
-                        <label for="select-project" class="sr-only">Filter Proyek</label>
+                {{-- Dropdown Filter Instan Per Project & Per Developer --}}
+                <div class="flex flex-wrap items-center gap-2.5">
+                    {{-- Filter Proyek Instan --}}
+                    <div class="flex items-center gap-1.5">
+                        <label for="filter-project" class="text-xs font-semibold text-slate-500 shrink-0">Proyek:</label>
                         <select
-                            id="select-project"
+                            id="filter-project"
                             name="project_id"
-                            onchange="this.form.submit()"
                             class="rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
                             <option value="">Semua Proyek</option>
                             @foreach ($projects as $proj)
-                                <option value="{{ $proj->id }}" {{ $selectedProject == $proj->id ? 'selected' : '' }}>
+                                <option value="{{ $proj->id }}" {{ (string)$selectedProject === (string)$proj->id ? 'selected' : '' }}>
                                     [{{ $proj->code }}] {{ $proj->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
-                    {{-- Filter Tipe Tugas --}}
-                    <div>
-                        <label for="select-type" class="sr-only">Filter Tipe Tugas</label>
+                    {{-- Filter Developer Instan --}}
+                    <div class="flex items-center gap-1.5">
+                        <label for="filter-developer" class="text-xs font-semibold text-slate-500 shrink-0">Developer:</label>
                         <select
-                            id="select-type"
-                            name="task_type"
-                            onchange="this.form.submit()"
+                            id="filter-developer"
+                            name="developer_id"
                             class="rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm font-medium text-slate-700 shadow-2xs transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
-                            <option value="">Semua Tipe</option>
-                            <option value="feature" {{ $selectedType === 'feature' ? 'selected' : '' }}>Fitur (Feature)</option>
-                            <option value="enhancement" {{ $selectedType === 'enhancement' ? 'selected' : '' }}>Peningkatan (Enhancement)</option>
-                            <option value="refactor" {{ $selectedType === 'refactor' ? 'selected' : '' }}>Refaktor (Refactor)</option>
-                            <option value="maintenance" {{ $selectedType === 'maintenance' ? 'selected' : '' }}>Pemeliharaan (Maintenance)</option>
+                            <option value="">Semua Developer</option>
+                            @foreach ($developers as $dev)
+                                <option value="{{ $dev->id }}" {{ (string)($selectedDeveloper ?? '') === (string)$dev->id ? 'selected' : '' }}>
+                                    {{ $dev->name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 
-                    {{-- Reset Filter Jika Ada Filter Aktif --}}
-                    @if ($selectedProject || $selectedType)
-                        <a
-                            href="{{ route('kanban.index') }}"
-                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
-                        >
-                            Reset
-                        </a>
-                    @endif
-                </form>
+                    {{-- Tombol Reset Filter Instan --}}
+                    <button
+                        type="button"
+                        id="btn-reset-filters"
+                        class="{{ ($selectedProject || ($selectedDeveloper ?? false)) ? '' : 'hidden' }} inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition cursor-pointer"
+                    >
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        <span>Reset Filter</span>
+                    </button>
+                </div>
             </div>
 
             {{-- TOMBOL NAVIGASI CEPAT DI PAPAN KANBAN (Lompat / Fokus Kolom) --}}
@@ -283,6 +284,8 @@
                                     id="card-task-{{ $task->id }}"
                                     data-task-id="{{ $task->id }}"
                                     data-current-status="{{ $task->status }}"
+                                    data-project-id="{{ $task->project_id ?? '' }}"
+                                    data-assigned-to="{{ $task->assigned_to ?? '' }}"
                                 >
                                     {{-- Baris Atas: Badge Proyek, Tipe Tugas & TOMBOL EDIT KARTU --}}
                                     <div class="flex items-center justify-between gap-2 mb-2">
@@ -680,13 +683,19 @@
                 });
             });
 
-            // Refresh Counter Kolom & Navigasi Cepat
+            // Filter Instan (Project & Developer)
+            const filterProject = document.getElementById('filter-project');
+            const filterDeveloper = document.getElementById('filter-developer');
+            const btnResetFilters = document.getElementById('btn-reset-filters');
+
+            // Refresh Counter Kolom & Navigasi Cepat (Hanya Menghitung Kartu yang Terlihat)
             const refreshColumnCounters = () => {
-                let total = 0;
+                let totalVisible = 0;
                 document.querySelectorAll('.kanban-dropzone').forEach(dropzone => {
                     const status = dropzone.getAttribute('data-status');
-                    const cardsCount = dropzone.querySelectorAll('.kanban-card').length;
-                    total += cardsCount;
+                    const visibleCards = dropzone.querySelectorAll('.kanban-card:not(.hidden)');
+                    const cardsCount = visibleCards.length;
+                    totalVisible += cardsCount;
 
                     // Counter di header kolom
                     const columnWrapper = dropzone.closest('[data-column-status]');
@@ -695,15 +704,21 @@
                         if (counter) counter.textContent = cardsCount;
 
                         // Placeholder kosong
-                        if (cardsCount === 0 && !dropzone.querySelector('.empty-placeholder')) {
-                            dropzone.innerHTML = `
-                                <div class="empty-placeholder flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-400">
+                        let placeholder = dropzone.querySelector('.empty-placeholder');
+                        if (cardsCount === 0) {
+                            if (!placeholder) {
+                                const emptyEl = document.createElement('div');
+                                emptyEl.className = 'empty-placeholder flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-400';
+                                emptyEl.innerHTML = `
                                     <svg class="w-8 h-8 mb-2 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 017 3h10a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0119 21z"/>
                                     </svg>
-                                    <p class="text-xs font-medium">Belum ada tugas</p>
-                                </div>
-                            `;
+                                    <p class="text-xs font-medium">Tidak ada tugas</p>
+                                `;
+                                dropzone.appendChild(emptyEl);
+                            }
+                        } else if (placeholder) {
+                            placeholder.remove();
                         }
                     }
 
@@ -714,8 +729,50 @@
 
                 // Update total
                 const totalEl = document.querySelector('.total-task-count');
-                if (totalEl) totalEl.textContent = total;
+                if (totalEl) totalEl.textContent = totalVisible;
             };
+
+            // Terapkan Filter Instan Client-side (< 10ms)
+            const applyInstantFilters = () => {
+                const selectedProj = filterProject ? filterProject.value : '';
+                const selectedDev = filterDeveloper ? filterDeveloper.value : '';
+
+                if (btnResetFilters) {
+                    if (selectedProj || selectedDev) {
+                        btnResetFilters.classList.remove('hidden');
+                    } else {
+                        btnResetFilters.classList.add('hidden');
+                    }
+                }
+
+                document.querySelectorAll('.kanban-card').forEach(card => {
+                    const cardProjId = card.getAttribute('data-project-id') || '';
+                    const cardDevId = card.getAttribute('data-assigned-to') || '';
+
+                    const matchProj = !selectedProj || cardProjId === selectedProj;
+                    const matchDev = !selectedDev || cardDevId === selectedDev;
+
+                    if (matchProj && matchDev) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                refreshColumnCounters();
+            };
+
+            filterProject?.addEventListener('change', applyInstantFilters);
+            filterDeveloper?.addEventListener('change', applyInstantFilters);
+
+            btnResetFilters?.addEventListener('click', () => {
+                if (filterProject) filterProject.value = '';
+                if (filterDeveloper) filterDeveloper.value = '';
+                applyInstantFilters();
+            });
+
+            // Jalankan filter saat halaman dimuat jika ada nilai awal
+            applyInstantFilters();
 
             // MODAL EDIT TUGAS
             const modalEdit = document.getElementById('modal-edit-task');
@@ -909,6 +966,9 @@
                                 btnEdit.setAttribute('data-assigned-to', payload.assigned_to || '');
                             }
 
+                            // Update data attribute assigned-to pada kartu
+                            card.setAttribute('data-assigned-to', payload.assigned_to || '');
+
                             // Pindahkan kartu jika status berubah
                             const currentStatus = card.getAttribute('data-current-status');
                             if (payload.status !== currentStatus) {
@@ -917,7 +977,7 @@
                                     const placeholder = targetDropzone.querySelector('.empty-placeholder');
                                     if (placeholder) placeholder.remove();
 
-                                    targetDropzone.appendChild(card);
+                                    targetDropzone.insertBefore(card, targetDropzone.firstChild);
                                     card.setAttribute('data-current-status', payload.status);
 
                                     const select = card.querySelector('.task-status-select');
@@ -925,7 +985,8 @@
                                 }
                             }
 
-                            refreshColumnCounters();
+                            // Terapkan filter & hitung ulang counter
+                            applyInstantFilters();
                         }
                     } else {
                         editTaskError.classList.remove('hidden');
@@ -941,8 +1002,42 @@
                 }
             });
 
-            // Update status kartu ke server (Quick Select & Drag-Drop)
+            // Update status kartu secara instan (< 0.8 detik, optimistik) & persistensi asinkron ke server
             const updateTaskStatus = async (taskId, newStatus, cardElement) => {
+                if (!taskId || !newStatus || !cardElement) return;
+
+                const oldStatus = cardElement.getAttribute('data-current-status');
+                if (oldStatus === newStatus) return;
+
+                const sourceDropzone = cardElement.closest('.kanban-dropzone');
+                const targetDropzone = document.querySelector(`.kanban-dropzone[data-status="${newStatus}"]`);
+                if (!targetDropzone) return;
+
+                // 1. UPDATE UI SECARA INSTAN (< 10ms - jauh di bawah 0.8 detik)
+                const targetPlaceholder = targetDropzone.querySelector('.empty-placeholder');
+                if (targetPlaceholder) targetPlaceholder.remove();
+
+                // Pindahkan elemen kartu ke kolom tujuan secara instan
+                targetDropzone.insertBefore(cardElement, targetDropzone.firstChild);
+
+                // Perbarui status atribut & kontrol input pada kartu
+                cardElement.setAttribute('data-current-status', newStatus);
+                const select = cardElement.querySelector('.task-status-select');
+                if (select) select.value = newStatus;
+
+                const btnEdit = cardElement.querySelector('.btn-edit-task');
+                if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
+
+                // Efek visual halus untuk konfirmasi perpindahan instan
+                cardElement.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-50/20');
+                setTimeout(() => {
+                    cardElement.classList.remove('ring-2', 'ring-emerald-400', 'bg-emerald-50/20');
+                }, 600);
+
+                // Hitung ulang jumlah kartu di setiap kolom secara langsung
+                refreshColumnCounters();
+
+                // 2. KIRIM PERUBAHAN KE SERVER DI LATAR BELAKANG (ASINKRON)
                 try {
                     const response = await fetch(`/kanban/tasks/${taskId}/status`, {
                         method: 'PATCH',
@@ -957,29 +1052,32 @@
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        const targetDropzone = document.querySelector(`.kanban-dropzone[data-status="${newStatus}"]`);
-                        if (targetDropzone && cardElement) {
-                            const placeholder = targetDropzone.querySelector('.empty-placeholder');
-                            if (placeholder) placeholder.remove();
-
-                            targetDropzone.appendChild(cardElement);
-                            cardElement.setAttribute('data-current-status', newStatus);
-
-                            const select = cardElement.querySelector('.task-status-select');
-                            if (select) select.value = newStatus;
-
-                            const btnEdit = cardElement.querySelector('.btn-edit-task');
-                            if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
-
-                            refreshColumnCounters();
-                            showToast(data.message || 'Status tugas berhasil diperbarui.');
-                        }
+                        showToast(data.message || 'Status tugas berhasil diperbarui.');
                     } else {
-                        showToast(data.message || 'Gagal memperbarui status tugas.', true);
+                        // Rollback jika server mengembalikan error
+                        rollbackTaskMove(cardElement, oldStatus, sourceDropzone);
+                        showToast(data.message || 'Gagal memperbarui status tugas di server.', true);
                     }
                 } catch (error) {
-                    showToast('Terjadi kesalahan koneksi saat memperbarui status.', true);
+                    // Rollback jika koneksi jaringan terputus
+                    rollbackTaskMove(cardElement, oldStatus, sourceDropzone);
+                    showToast('Koneksi terputus, pemindahan status dibatalkan.', true);
                 }
+            };
+
+            // Fungsi Rollback jika AJAX gagal
+            const rollbackTaskMove = (cardElement, previousStatus, originDropzone) => {
+                if (!cardElement || !originDropzone) return;
+                originDropzone.appendChild(cardElement);
+                cardElement.setAttribute('data-current-status', previousStatus);
+
+                const select = cardElement.querySelector('.task-status-select');
+                if (select) select.value = previousStatus;
+
+                const btnEdit = cardElement.querySelector('.btn-edit-task');
+                if (btnEdit) btnEdit.setAttribute('data-status', previousStatus);
+
+                refreshColumnCounters();
             };
 
             // Event listener ganti status via select

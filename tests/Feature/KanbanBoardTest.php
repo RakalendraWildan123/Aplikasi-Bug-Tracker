@@ -213,4 +213,51 @@ class KanbanBoardTest extends TestCase
         $response->assertJsonValidationErrors(['title', 'task_type', 'status']);
         $this->assertSame('Judul Tetap', $task->fresh()->title);
     }
+
+    public function test_kanban_board_renders_instant_dropdown_filters_and_card_data_attributes(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $project = Project::factory()->create(['name' => 'Portal Layanan', 'code' => 'PORTAL']);
+        $dev = \App\Models\Developer::factory()->create(['name' => 'Fulan Pengembang']);
+
+        $task = Task::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $dev->id,
+            'title' => 'Tugas Uji Filter Instan',
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)->get('/kanban');
+
+        $response->assertOk();
+        $response->assertSee('id="filter-project"', false);
+        $response->assertSee('id="filter-developer"', false);
+        $response->assertSee('id="btn-reset-filters"', false);
+        $response->assertSee('data-project-id="' . $project->id . '"', false);
+        $response->assertSee('data-assigned-to="' . $dev->id . '"', false);
+    }
+
+    public function test_kanban_board_filters_by_developer_query_parameter(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $devA = \App\Models\Developer::factory()->create(['name' => 'Developer A']);
+        $devB = \App\Models\Developer::factory()->create(['name' => 'Developer B']);
+
+        $taskA = Task::factory()->create([
+            'assigned_to' => $devA->id,
+            'title' => 'Tugas Milik Dev A',
+            'status' => 'todo',
+        ]);
+
+        $taskB = Task::factory()->create([
+            'assigned_to' => $devB->id,
+            'title' => 'Tugas Milik Dev B',
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)->get('/kanban?developer_id=' . $devA->id);
+        $response->assertOk();
+        $response->assertSee('Tugas Milik Dev A');
+        $response->assertDontSee('Tugas Milik Dev B');
+    }
 }

@@ -15,12 +15,16 @@ class KanbanController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $projectFilter = $request->query('project_id');
+        $developerFilter = $request->query('developer_id') ?? $request->query('assigned_to');
         $typeFilter = $request->query('task_type');
 
         $query = Task::query()
             ->with(['project', 'module', 'assignee'])
             ->when($projectFilter, function ($q, $projectId) {
                 $q->where('project_id', $projectId);
+            })
+            ->when($developerFilter, function ($q, $devId) {
+                $q->where('assigned_to', $devId);
             })
             ->when($typeFilter, function ($q, $taskType) {
                 $q->where('task_type', $taskType);
@@ -86,6 +90,7 @@ class KanbanController extends Controller
             'developers' => $developers,
             'taskTypes' => Task::TYPES,
             'selectedProject' => $projectFilter,
+            'selectedDeveloper' => $developerFilter,
             'selectedType' => $typeFilter,
         ]);
     }
