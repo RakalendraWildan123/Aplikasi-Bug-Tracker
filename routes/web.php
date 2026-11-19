@@ -23,5 +23,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/kanban/tasks/{task}', [\App\Http\Controllers\KanbanController::class, 'update'])->name('kanban.tasks.update');
     Route::patch('/kanban/tasks/{task}/status', [\App\Http\Controllers\KanbanController::class, 'updateStatus'])->name('kanban.tasks.update-status');
 
+    Route::get('/tasks', [\App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [\App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store');
+    Route::put('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
