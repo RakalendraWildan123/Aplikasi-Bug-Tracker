@@ -19,5 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/account/profile', [AccountProfileController::class, 'updateProfile'])->name('account.profile.update');
     Route::put('/account/password', [AccountProfileController::class, 'updatePassword'])->name('account.password.update');
 
+    Route::get('/kanban', [\App\Http\Controllers\KanbanController::class, 'index'])->name('kanban.index');
+    Route::patch('/kanban/tasks/{task}/status', [\App\Http\Controllers\KanbanController::class, 'updateStatus'])->name('kanban.tasks.update-status');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
