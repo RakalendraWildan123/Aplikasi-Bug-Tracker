@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Developer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MyAccountTest extends TestCase
@@ -119,5 +121,83 @@ class MyAccountTest extends TestCase
             'email' => 'owner@bugtracker.test',
             'password' => 'newpass123',
         ])->assertRedirect(route('home'));
+    }
+
+    public function test_account_owner_can_upload_replace_and_delete_profile_photo(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'name' => 'Foto Dev',
+            'email' => 'foto.dev@bugtracker.test',
+            'role' => 'developer',
+        ]);
+        $developer = Developer::factory()->create([
+            'user_id' => $user->id,
+            'name' => 'Foto Dev',
+            'email' => 'foto.dev@bugtracker.test',
+        ]);
+
+        // 1. Upload initial photo
+        $firstPhoto = UploadedFile::fake()->image('avatar-1.jpg', 300, 300);
+        $this->actingAs($user)
+            ->put('/account/profile', [
+                'name' => 'Foto Dev',
+                'email' => 'foto.dev@bugtracker.test',
+                'foto_profil' => $firstPhoto,
+            ])
+            ->assertRedirect(route('account.edit'))
+            ->assertSessionHas('profile_status');
+
+        $firstPath = $user->fresh()->foto_profil;
+        $this->assertNotNull($firstPath);
+        $this->assertSame($firstPath, $developer->fresh()->foto_profil);
+        Storage::disk('public')->assertExists($firstPath);
+
+        // Sidebar displays uploaded photo
+        $this->actingAs($user->fresh())
+            ->withoutVite()
+            ->get('/')
+            ->assertOk()
+            ->assertSee($user->fresh()->foto_profil_url, false);
+
+        // 2. Replace with new photo -> old photo removed
+        $secondPhoto = UploadedFile::fake()->image('avatar-2.png', 300, 300);
+        $this->actingAs($user->fresh())
+            ->put('/account/profile', [
+                'name' => 'Foto Dev',
+                'email' => 'foto.dev@bugtracker.test',
+                'foto_profil' => $secondPhoto,
+            ])
+            ->assertRedirect(route('account.edit'));
+
+        $secondPath = $user->fresh()->foto_profil;
+        $this->assertNotSame($firstPath, $secondPath);
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($secondPath);
+        $this->assertSame($secondPath, $developer->fresh()->foto_profil);
+
+        // 3. Reject non-image file
+        $badFile = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+        $this->actingAs($user->fresh())
+            ->put('/account/profile', [
+                'name' => 'Foto Dev',
+                'email' => 'foto.dev@bugtracker.test',
+                'foto_profil' => $badFile,
+            ])
+            ->assertSessionHasErrors('foto_profil');
+
+        // 4. Delete current photo
+        $this->actingAs($user->fresh())
+            ->put('/account/profile', [
+                'name' => 'Foto Dev',
+                'email' => 'foto.dev@bugtracker.test',
+                'hapus_foto_profil' => '1',
+            ])
+            ->assertRedirect(route('account.edit'));
+
+        $this->assertNull($user->fresh()->foto_profil);
+        $this->assertNull($developer->fresh()->foto_profil);
+        Storage::disk('public')->assertMissing($secondPath);
     }
 }

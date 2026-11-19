@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +32,7 @@ class Developer extends Model
         'role_title',
         'avatar',
         'avatar_bg',
+        'foto_profil',
         'is_active',
     ];
 
@@ -60,6 +62,18 @@ class Developer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the public URL for the developer's profile photo, if set.
+     *
+     * @return Attribute<?string, never>
+     */
+    protected function fotoProfilUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->foto_profil ? '/storage/'.ltrim($this->foto_profil, '/') : null,
+        );
     }
 
     /**

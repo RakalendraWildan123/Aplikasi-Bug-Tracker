@@ -41,6 +41,7 @@ class StoreAccountRequest extends FormRequest
             ],
             'avatar' => ['nullable', 'string', 'max:10'],
             'avatar_bg' => ['nullable', 'string', 'max:50'],
+            'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }

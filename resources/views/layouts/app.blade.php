@@ -106,12 +106,20 @@
                     href="{{ route('account.edit') }}"
                     class="flex items-center gap-3 rounded-lg p-1.5 transition hover:bg-slate-900"
                 >
-                    <span
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-                        style="background-color: {{ $avatarColor }}"
-                    >
-                        {{ $userInitials ?: 'US' }}
-                    </span>
+                    @if ($currentUser->foto_profil_url)
+                        <img
+                            src="{{ $currentUser->foto_profil_url }}"
+                            alt="Foto {{ $currentUser->name }}"
+                            class="h-9 w-9 shrink-0 rounded-lg border border-slate-700 object-cover"
+                        >
+                    @else
+                        <span
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                            style="background-color: {{ $avatarColor }}"
+                        >
+                            {{ $userInitials ?: 'US' }}
+                        </span>
+                    @endif
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-semibold text-white">{{ $currentUser->name }}</p>
                         <p class="truncate text-xs text-slate-400">{{ $currentUser->roleLabel() }}</p>
@@ -137,11 +145,15 @@
                 <span class="text-sm font-bold text-slate-900">@yield('title', 'Dashboard')</span>
                 <a
                     href="{{ route('account.edit') }}"
-                    class="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold text-white"
+                    class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg text-xs font-bold text-white"
                     style="background-color: {{ $avatarColor }}"
                     aria-label="Akun Saya"
                 >
-                    {{ $userInitials ?: 'US' }}
+                    @if ($currentUser->foto_profil_url)
+                        <img src="{{ $currentUser->foto_profil_url }}" alt="Foto {{ $currentUser->name }}" class="h-full w-full object-cover">
+                    @else
+                        {{ $userInitials ?: 'US' }}
+                    @endif
                 </a>
             </header>
 

@@ -31,9 +31,60 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('account.profile.update') }}" class="space-y-5">
+            <form method="POST" action="{{ route('account.profile.update') }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
                 @method('PUT')
+
+                {{-- Foto Profil --}}
+                <div class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center">
+                    <div class="shrink-0">
+                        @php
+                            $previewInitials = $developer?->avatar ?: collect(preg_split('/\s+/', trim((string) $user->name)))
+                                ->filter()
+                                ->take(2)
+                                ->map(fn (string $p) => strtoupper(substr($p, 0, 1)))
+                                ->implode('');
+                            $previewBg = ($developer && str_starts_with((string) $developer->avatar_bg, '#'))
+                                ? $developer->avatar_bg
+                                : '#4F46E5';
+                        @endphp
+                        <img
+                            id="account-photo-preview"
+                            src="{{ $user->foto_profil_url ?? '' }}"
+                            alt="Foto Profil {{ $user->name }}"
+                            class="{{ $user->foto_profil_url ? '' : 'hidden' }} h-16 w-16 rounded-xl border border-slate-200 object-cover"
+                        >
+                        <div
+                            id="account-photo-fallback"
+                            class="{{ $user->foto_profil_url ? 'hidden' : 'flex' }} h-16 w-16 items-center justify-center rounded-xl text-base font-bold text-white"
+                            style="background-color: {{ $previewBg }}"
+                        >
+                            {{ $previewInitials ?: 'US' }}
+                        </div>
+                    </div>
+
+                    <div class="min-w-0 flex-1 space-y-2">
+                        <label for="foto_profil" class="block text-sm font-semibold text-slate-800">Foto Profil</label>
+                        <input
+                            id="foto_profil"
+                            name="foto_profil"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            data-photo-input
+                            data-preview-img="account-photo-preview"
+                            data-preview-fallback="account-photo-fallback"
+                            class="block w-full text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3.5 file:py-2 file:text-xs file:font-semibold file:text-slate-800 hover:file:bg-slate-100"
+                        >
+                        <p class="text-xs text-slate-500">Format JPG, PNG, atau WEBP. Maksimal 2 MB.</p>
+
+                        @if ($user->foto_profil)
+                            <label class="inline-flex cursor-pointer items-center gap-2 pt-1 text-xs font-medium text-rose-700">
+                                <input type="checkbox" name="hapus_foto_profil" value="1" class="rounded border-rose-300 text-rose-600 focus:ring-rose-500">
+                                Hapus foto profil saat ini
+                            </label>
+                        @endif
+                    </div>
+                </div>
 
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>

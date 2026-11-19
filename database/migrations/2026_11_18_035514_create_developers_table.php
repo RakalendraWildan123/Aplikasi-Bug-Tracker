@@ -24,6 +24,7 @@ return new class extends Migration
             $table->enum('role_title', ['Fullstack Lead', 'Backend', 'Frontend', 'Mobile']);
             $table->string('avatar', 10);
             $table->string('avatar_bg', 50);
+            $table->string('foto_profil', 255)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -54,8 +54,36 @@
                     @forelse ($accounts as $account)
                         <tr class="hover:bg-slate-50/70">
                             <td class="px-4 py-3">
-                                <div class="font-semibold text-slate-900">{{ $account->name }}</div>
-                                <div class="text-xs text-slate-500">{{ $account->email }}</div>
+                                <div class="flex items-center gap-3">
+                                    @if ($account->foto_profil_url)
+                                        <img
+                                            src="{{ $account->foto_profil_url }}"
+                                            alt="Foto {{ $account->name }}"
+                                            class="h-9 w-9 shrink-0 rounded-lg border border-slate-200 object-cover"
+                                        >
+                                    @else
+                                        @php
+                                            $rowInitials = $account->developer?->avatar ?: collect(preg_split('/\s+/', trim((string) $account->name)))
+                                                ->filter()
+                                                ->take(2)
+                                                ->map(fn (string $p) => strtoupper(substr($p, 0, 1)))
+                                                ->implode('');
+                                            $rowBg = ($account->developer && str_starts_with((string) $account->developer->avatar_bg, '#'))
+                                                ? $account->developer->avatar_bg
+                                                : '#4F46E5';
+                                        @endphp
+                                        <span
+                                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                                            style="background-color: {{ $rowBg }}"
+                                        >
+                                            {{ $rowInitials ?: 'US' }}
+                                        </span>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <div class="font-semibold text-slate-900">{{ $account->name }}</div>
+                                        <div class="text-xs text-slate-500">{{ $account->email }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ $account->isAdmin() ? 'bg-indigo-100 text-indigo-800' : 'bg-sky-100 text-sky-800' }}">

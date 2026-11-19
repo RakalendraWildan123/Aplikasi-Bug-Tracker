@@ -12,8 +12,39 @@
             <a href="{{ route('admin.accounts.index') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">&larr; Kembali</a>
         </header>
 
-        <form method="POST" action="{{ route('admin.accounts.store') }}" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        <form method="POST" action="{{ route('admin.accounts.store') }}" enctype="multipart/form-data" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
             @csrf
+
+            <div class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center">
+                <div class="shrink-0">
+                    <img
+                        id="create-photo-preview"
+                        src=""
+                        alt="Preview Foto Profil"
+                        class="hidden h-14 w-14 rounded-xl border border-slate-200 object-cover"
+                    >
+                    <div
+                        id="create-photo-fallback"
+                        class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-200 text-xs font-bold text-slate-600"
+                    >
+                        FOTO
+                    </div>
+                </div>
+                <div class="min-w-0 flex-1 space-y-1.5">
+                    <label for="foto_profil" class="block text-sm font-semibold text-slate-800">Foto Profil (opsional)</label>
+                    <input
+                        id="foto_profil"
+                        name="foto_profil"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        data-photo-input
+                        data-preview-img="create-photo-preview"
+                        data-preview-fallback="create-photo-fallback"
+                        class="block w-full text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3.5 file:py-2 file:text-xs file:font-semibold file:text-slate-800 hover:file:bg-slate-100"
+                    >
+                    <p class="text-xs text-slate-500">JPG, PNG, atau WEBP maksimal 2 MB.</p>
+                </div>
+            </div>
 
             <div>
                 <label for="name" class="block text-sm font-semibold text-slate-800">Nama Lengkap</label>

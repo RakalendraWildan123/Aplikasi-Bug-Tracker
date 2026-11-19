@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'foto_profil',
     ];
 
     /**
@@ -81,6 +83,18 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return self::ROLE_LABELS[$this->role] ?? (string) $this->role;
+    }
+
+    /**
+     * Get the public URL for the user's profile photo, if set.
+     *
+     * @return Attribute<?string, never>
+     */
+    protected function fotoProfilUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->foto_profil ? '/storage/'.ltrim($this->foto_profil, '/') : null,
+        );
     }
 
     /**

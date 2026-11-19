@@ -12,9 +12,46 @@
             <a href="{{ route('admin.accounts.index') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">&larr; Kembali</a>
         </header>
 
-        <form method="POST" action="{{ route('admin.accounts.update', $account) }}" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        <form method="POST" action="{{ route('admin.accounts.update', $account) }}" enctype="multipart/form-data" class="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
             @csrf
             @method('PUT')
+
+            <div class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center">
+                <div class="shrink-0">
+                    <img
+                        id="edit-photo-preview"
+                        src="{{ $account->foto_profil_url ?? '' }}"
+                        alt="Foto Profil {{ $account->name }}"
+                        class="{{ $account->foto_profil_url ? '' : 'hidden' }} h-14 w-14 rounded-xl border border-slate-200 object-cover"
+                    >
+                    <div
+                        id="edit-photo-fallback"
+                        class="{{ $account->foto_profil_url ? 'hidden' : 'flex' }} h-14 w-14 items-center justify-center rounded-xl bg-slate-200 text-xs font-bold text-slate-600"
+                    >
+                        {{ $account->developer?->avatar ?: 'FOTO' }}
+                    </div>
+                </div>
+                <div class="min-w-0 flex-1 space-y-1.5">
+                    <label for="foto_profil" class="block text-sm font-semibold text-slate-800">Foto Profil</label>
+                    <input
+                        id="foto_profil"
+                        name="foto_profil"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        data-photo-input
+                        data-preview-img="edit-photo-preview"
+                        data-preview-fallback="edit-photo-fallback"
+                        class="block w-full text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-slate-300 file:bg-white file:px-3.5 file:py-2 file:text-xs file:font-semibold file:text-slate-800 hover:file:bg-slate-100"
+                    >
+                    <p class="text-xs text-slate-500">JPG, PNG, atau WEBP maksimal 2 MB.</p>
+                    @if ($account->foto_profil)
+                        <label class="inline-flex cursor-pointer items-center gap-2 pt-1 text-xs font-medium text-rose-700">
+                            <input type="checkbox" name="hapus_foto_profil" value="1" class="rounded border-rose-300 text-rose-600 focus:ring-rose-500">
+                            Hapus foto profil saat ini
+                        </label>
+                    @endif
+                </div>
+            </div>
 
             <div>
                 <label for="name" class="block text-sm font-semibold text-slate-800">Nama Lengkap</label>

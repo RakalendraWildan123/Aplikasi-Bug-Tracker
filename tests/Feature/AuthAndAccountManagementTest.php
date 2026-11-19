@@ -7,8 +7,10 @@ use App\Models\User;
 use Database\Seeders\AccountSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthAndAccountManagementTest extends TestCase
@@ -17,8 +19,8 @@ class AuthAndAccountManagementTest extends TestCase
 
     public function test_users_and_developers_auth_columns_exist_with_constraints(): void
     {
-        $this->assertTrue(Schema::hasColumns('users', ['role', 'is_active']));
-        $this->assertTrue(Schema::hasColumns('developers', ['user_id']));
+        $this->assertTrue(Schema::hasColumns('users', ['role', 'is_active', 'foto_profil']));
+        $this->assertTrue(Schema::hasColumns('developers', ['user_id', 'foto_profil']));
 
         $user = User::factory()->create();
         $developer = Developer::factory()->create(['user_id' => $user->id]);
@@ -331,6 +333,37 @@ class AuthAndAccountManagementTest extends TestCase
             ->assertSee('id="confirm-modal-app"', false)
             ->assertSee('data-confirm-title="Hapus Akun?"', false)
             ->assertSee('data-confirm-title="Nonaktifkan Akun?"', false);
+    }
+
+    public function test_admin_can_upload_sync_and_cleanup_profile_photo_via_account_crud(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $photo = UploadedFile::fake()->image('dev-photo.png', 200, 200);
+
+        $this->actingAs($admin)->post('/admin/accounts', [
+            'name' => 'Dev Dengan Foto',
+            'email' => 'dev.foto@bugtracker.test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'role' => 'developer',
+            'role_title' => 'Frontend',
+            'foto_profil' => $photo,
+        ])->assertRedirect(route('admin.accounts.index'));
+
+        $created = User::query()->where('email', 'dev.foto@bugtracker.test')->firstOrFail();
+        $photoPath = $created->foto_profil;
+        $this->assertNotNull($photoPath);
+        $this->assertSame($photoPath, $created->developer->foto_profil);
+        Storage::disk('public')->assertExists($photoPath);
+
+        // Deleting account cleans up profile photo file
+        $this->actingAs($admin)
+            ->delete("/admin/accounts/{$created->id}")
+            ->assertRedirect(route('admin.accounts.index'));
+
+        Storage::disk('public')->assertMissing($photoPath);
     }
 
     public function test_full_end_to_end_lifecycle_admin_creates_developer_who_logs_in_then_gets_deactivated(): void

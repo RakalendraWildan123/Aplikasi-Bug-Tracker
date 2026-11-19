@@ -277,3 +277,25 @@ if (confirmModalEl) {
         },
     }).mount(confirmModalEl);
 }
+
+document.querySelectorAll('input[data-photo-input]').forEach((input) => {
+    input.addEventListener('change', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement) || !target.files || !target.files[0]) {
+            return;
+        }
+
+        const previewImg = document.getElementById(target.dataset.previewImg || '');
+        const previewFallback = document.getElementById(target.dataset.previewFallback || '');
+        const objectUrl = URL.createObjectURL(target.files[0]);
+
+        if (previewImg instanceof HTMLImageElement) {
+            previewImg.src = objectUrl;
+            previewImg.classList.remove('hidden');
+        }
+
+        if (previewFallback) {
+            previewFallback.classList.add('hidden');
+        }
+    });
+});

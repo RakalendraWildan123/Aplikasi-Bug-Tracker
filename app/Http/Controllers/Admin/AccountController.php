@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -50,14 +51,18 @@ class AccountController extends Controller
         $validated = $request->validated();
         $isActive = array_key_exists('is_active', $validated) ? (bool) $validated['is_active'] : true;
         $role = $validated['role'];
+        $photoPath = $request->hasFile('foto_profil')
+            ? $request->file('foto_profil')->store('profile-photos', 'public')
+            : null;
 
-        DB::transaction(function () use ($validated, $role, $isActive) {
+        DB::transaction(function () use ($validated, $role, $isActive, $photoPath) {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => $validated['password'],
                 'role' => $role,
                 'is_active' => $isActive,
+                'foto_profil' => $photoPath,
             ]);
 
             if ($role === 'developer') {
@@ -68,7 +73,8 @@ class AccountController extends Controller
                     'password' => $validated['password'],
                     'role_title' => $validated['role_title'],
                     'avatar' => $this->resolveAvatar($validated['avatar'] ?? null, $validated['name']),
-                    'avatar_bg' => $validated['avatar_bg'] ?: '#4F46E5',
+                    'avatar_bg' => ($validated['avatar_bg'] ?? null) ?: '#4F46E5',
+                    'foto_profil' => $photoPath,
                     'is_active' => $isActive,
                 ]);
             }
@@ -110,12 +116,25 @@ class AccountController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $validated, $role, $isActive) {
+        $oldPhoto = $user->foto_profil ?? $user->developer?->foto_profil;
+        $newPhotoPath = $oldPhoto;
+        $shouldDeleteOld = false;
+
+        if ($request->hasFile('foto_profil')) {
+            $newPhotoPath = $request->file('foto_profil')->store('profile-photos', 'public');
+            $shouldDeleteOld = $oldPhoto !== null && $oldPhoto !== $newPhotoPath;
+        } elseif ($request->boolean('hapus_foto_profil')) {
+            $newPhotoPath = null;
+            $shouldDeleteOld = $oldPhoto !== null;
+        }
+
+        DB::transaction(function () use ($user, $validated, $role, $isActive, $newPhotoPath) {
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'role' => $role,
                 'is_active' => $isActive,
+                'foto_profil' => $newPhotoPath,
             ]);
 
             if ($role === 'developer') {
@@ -125,7 +144,8 @@ class AccountController extends Controller
                     'email' => $validated['email'],
                     'role_title' => $validated['role_title'],
                     'avatar' => $this->resolveAvatar($validated['avatar'] ?? null, $validated['name']),
-                    'avatar_bg' => $validated['avatar_bg'] ?: '#4F46E5',
+                    'avatar_bg' => ($validated['avatar_bg'] ?? null) ?: '#4F46E5',
+                    'foto_profil' => $newPhotoPath,
                     'is_active' => $isActive,
                 ];
 
@@ -138,10 +158,15 @@ class AccountController extends Controller
                 $user->developer->update([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
+                    'foto_profil' => $newPhotoPath,
                     'is_active' => $isActive,
                 ]);
             }
         });
+
+        if ($shouldDeleteOld && $oldPhoto) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
 
         return redirect()
             ->route('admin.accounts.index')
@@ -201,8 +226,10 @@ class AccountController extends Controller
         }
 
         $name = $user->name;
+        $photoToDelete = $user->foto_profil;
+        $keepPhotoForDeveloper = false;
 
-        DB::transaction(function () use ($user) {
+        DB::transaction(function () use ($user, &$keepPhotoForDeveloper) {
             $developer = $user->developer;
 
             if ($developer) {
@@ -210,6 +237,7 @@ class AccountController extends Controller
                     || $developer->createdBugs()->exists();
 
                 if ($hasCreatedHistory) {
+                    $keepPhotoForDeveloper = $developer->foto_profil !== null;
                     $developer->update([
                         'user_id' => null,
                         'is_active' => false,
@@ -221,6 +249,10 @@ class AccountController extends Controller
 
             $user->delete();
         });
+
+        if ($photoToDelete && ! $keepPhotoForDeveloper) {
+            Storage::disk('public')->delete($photoToDelete);
+        }
 
         return redirect()
             ->route('admin.accounts.index')

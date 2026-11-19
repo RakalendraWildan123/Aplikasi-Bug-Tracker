@@ -27,6 +27,7 @@ class DeveloperTableTest extends TestCase
             'role_title',
             'avatar',
             'avatar_bg',
+            'foto_profil',
             'is_active',
             'created_at',
             'updated_at',

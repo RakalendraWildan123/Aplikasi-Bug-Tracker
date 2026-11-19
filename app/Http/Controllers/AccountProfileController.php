@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -40,12 +41,27 @@ class AccountProfileController extends Controller
             ],
             'avatar' => ['nullable', 'string', 'max:10'],
             'avatar_bg' => ['nullable', 'string', 'max:50'],
+            'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'hapus_foto_profil' => ['sometimes', 'boolean'],
         ]);
 
-        DB::transaction(function () use ($user, $developer, $validated) {
+        $oldPhoto = $user->foto_profil ?? $developer?->foto_profil;
+        $newPhotoPath = $oldPhoto;
+        $shouldDeleteOld = false;
+
+        if ($request->hasFile('foto_profil')) {
+            $newPhotoPath = $request->file('foto_profil')->store('profile-photos', 'public');
+            $shouldDeleteOld = $oldPhoto !== null && $oldPhoto !== $newPhotoPath;
+        } elseif ($request->boolean('hapus_foto_profil')) {
+            $newPhotoPath = null;
+            $shouldDeleteOld = $oldPhoto !== null;
+        }
+
+        DB::transaction(function () use ($user, $developer, $validated, $newPhotoPath) {
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
+                'foto_profil' => $newPhotoPath,
             ]);
 
             if ($developer) {
@@ -59,9 +75,14 @@ class AccountProfileController extends Controller
                     'email' => $validated['email'],
                     'avatar' => $avatar,
                     'avatar_bg' => ($validated['avatar_bg'] ?? '') !== '' ? $validated['avatar_bg'] : $developer->avatar_bg,
+                    'foto_profil' => $newPhotoPath,
                 ]);
             }
         });
+
+        if ($shouldDeleteOld && $oldPhoto) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
 
         return redirect()
             ->route('account.edit')
