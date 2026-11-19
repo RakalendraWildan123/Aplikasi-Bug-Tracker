@@ -76,7 +76,7 @@ class CompleteApiScenariosTest extends TestCase
 
     public function test_006_guest_can_access_login_info_endpoint(): void
     {
-        $this->get('/login')
+        $this->getJson('/login')
             ->assertOk()
             ->assertJsonStructure(['message']);
     }

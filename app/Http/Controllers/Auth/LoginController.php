@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,11 +14,15 @@ use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
-    public function show(): JsonResponse
+    public function show(Request $request): View|JsonResponse
     {
-        return response()->json([
-            'message' => 'Endpoint autentikasi. Kirimkan HTTP POST dengan payload email dan password.',
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Endpoint autentikasi. Kirimkan HTTP POST dengan payload email dan password.',
+            ]);
+        }
+
+        return view('auth.login');
     }
 
     public function login(Request $request): JsonResponse|RedirectResponse

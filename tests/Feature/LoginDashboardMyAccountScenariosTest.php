@@ -19,9 +19,12 @@ class LoginDashboardMyAccountScenariosTest extends TestCase
 
     public function test_01_guest_can_view_login_page(): void
     {
-        $this->get('/login')
+        $this->withoutVite()
+            ->get('/login')
             ->assertOk()
-            ->assertJsonStructure(['message']);
+            ->assertSee('Login')
+            ->assertSee('name="email"', false)
+            ->assertSee('name="password"', false);
     }
 
     public function test_02_authenticated_user_cannot_open_guest_login_page(): void
