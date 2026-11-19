@@ -373,6 +373,7 @@ class BugUiTest extends TestCase
         $response->assertSee('Solusi:');
         $response->assertSee('Menambahkan index komposit dan cache Redis.');
         $response->assertSee('btn-detail-bug', false);
+        $response->assertSee('Solusi &amp; Detail', false);
     }
 
     public function test_user_can_view_single_bug_detail_via_json(): void

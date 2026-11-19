@@ -512,18 +512,19 @@
 
                                     {{-- 7. Aksi --}}
                                     <td class="py-4 pl-3 pr-5 text-right whitespace-nowrap">
-                                        <div class="flex items-center justify-end gap-1.5">
-                                            {{-- Tombol Lihat Solusi & Detail Riwayat Bug --}}
+                                        <div class="flex items-center justify-end gap-2">
+                                            {{-- Tombol Lihat Solusi & Detail Riwayat Bug (Dengan Teks Jelas) --}}
                                             <button
                                                 type="button"
-                                                class="btn-detail-bug p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+                                                class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs"
                                                 data-bug="{{ json_encode($bugData) }}"
-                                                title="Lihat solusi dan detail riwayat bug"
+                                                title="Lihat solusi penyelesaian dan riwayat lengkap bug"
                                             >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                 </svg>
+                                                <span>Solusi &amp; Detail</span>
                                             </button>
 
                                             {{-- Tombol Edit Bug --}}
