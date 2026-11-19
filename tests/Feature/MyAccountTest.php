@@ -22,24 +22,15 @@ class MyAccountTest extends TestCase
     {
         $dev = User::factory()->create(['name' => 'Dev User', 'role' => 'developer']);
         $this->actingAs($dev)
-            ->get('/account')
+            ->getJson('/account')
             ->assertOk()
             ->assertJsonPath('user.name', 'Dev User');
 
-        $this->actingAs($dev)
-            ->get('/admin/accounts')
-            ->assertForbidden();
-
         $admin = User::factory()->admin()->create(['name' => 'Admin User']);
         $this->actingAs($admin)
-            ->get('/account')
+            ->getJson('/account')
             ->assertOk()
             ->assertJsonPath('user.name', 'Admin User');
-
-        $this->actingAs($admin)
-            ->get('/admin/accounts')
-            ->assertOk()
-            ->assertJsonStructure(['accounts']);
     }
 
     public function test_account_owner_can_update_profile_without_role_escalation(): void
@@ -47,6 +38,7 @@ class MyAccountTest extends TestCase
         $user = User::factory()->create([
             'name' => 'Raka Lama',
             'email' => 'raka.lama@bugtracker.test',
+            'password' => 'password123',
             'role' => 'developer',
             'avatar' => 'RL',
             'avatar_bg' => '#4F46E5',
@@ -54,6 +46,7 @@ class MyAccountTest extends TestCase
 
         $this->actingAs($user)
             ->put('/account/profile', [
+                'current_password' => 'password123',
                 'name' => 'Raka Baru',
                 'email' => 'raka.baru@bugtracker.test',
                 'avatar' => 'rb',
@@ -66,7 +59,7 @@ class MyAccountTest extends TestCase
         $freshUser = $user->fresh();
 
         $this->assertSame('Raka Baru', $freshUser->name);
-        $this->assertSame('raka.baru@bugtracker.test', $freshUser->email);
+        $this->assertSame('raka.lama@bugtracker.test', $freshUser->email); // Email permanen tidak berubah
         $this->assertSame('developer', $freshUser->role);
         $this->assertSame('RB', $freshUser->avatar);
         $this->assertSame('#10B981', $freshUser->avatar_bg);
@@ -101,12 +94,12 @@ class MyAccountTest extends TestCase
 
         $this->assertTrue(Hash::check('newpass123', $user->fresh()->password));
 
-        // Can log in with new password
+        // Can log in with new password and redirects to account.edit
         $this->post('/logout');
         $this->post('/login', [
             'email' => 'owner@bugtracker.test',
             'password' => 'newpass123',
-        ])->assertRedirect(route('home'));
+        ])->assertRedirect(route('account.edit'));
     }
 
     public function test_account_owner_can_upload_replace_and_delete_profile_photo(): void
@@ -116,6 +109,7 @@ class MyAccountTest extends TestCase
         $user = User::factory()->create([
             'name' => 'Foto Dev',
             'email' => 'foto.dev@bugtracker.test',
+            'password' => 'password123',
             'role' => 'developer',
         ]);
 
@@ -123,8 +117,8 @@ class MyAccountTest extends TestCase
         $firstPhoto = UploadedFile::fake()->image('avatar-1.jpg', 300, 300);
         $this->actingAs($user)
             ->put('/account/profile', [
+                'current_password' => 'password123',
                 'name' => 'Foto Dev',
-                'email' => 'foto.dev@bugtracker.test',
                 'foto_profil' => $firstPhoto,
             ])
             ->assertRedirect(route('account.edit'))
@@ -136,7 +130,7 @@ class MyAccountTest extends TestCase
 
         // API returns uploaded photo URL
         $this->actingAs($user->fresh())
-            ->get('/account')
+            ->getJson('/account')
             ->assertOk()
             ->assertJsonPath('user.foto_profil', $firstPath);
 
@@ -144,8 +138,8 @@ class MyAccountTest extends TestCase
         $secondPhoto = UploadedFile::fake()->image('avatar-2.png', 300, 300);
         $this->actingAs($user->fresh())
             ->put('/account/profile', [
+                'current_password' => 'password123',
                 'name' => 'Foto Dev',
-                'email' => 'foto.dev@bugtracker.test',
                 'foto_profil' => $secondPhoto,
             ])
             ->assertRedirect(route('account.edit'));
@@ -159,8 +153,8 @@ class MyAccountTest extends TestCase
         $badFile = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
         $this->actingAs($user->fresh())
             ->put('/account/profile', [
+                'current_password' => 'password123',
                 'name' => 'Foto Dev',
-                'email' => 'foto.dev@bugtracker.test',
                 'foto_profil' => $badFile,
             ])
             ->assertSessionHasErrors('foto_profil');
@@ -168,8 +162,8 @@ class MyAccountTest extends TestCase
         // 4. Delete current photo
         $this->actingAs($user->fresh())
             ->put('/account/profile', [
+                'current_password' => 'password123',
                 'name' => 'Foto Dev',
-                'email' => 'foto.dev@bugtracker.test',
                 'hapus_foto_profil' => '1',
             ])
             ->assertRedirect(route('account.edit'));

@@ -15,6 +15,7 @@ Route::middleware('auth')->group(function () {
     })->name('home');
 
     Route::get('/account', [AccountProfileController::class, 'edit'])->name('account.edit');
+    Route::post('/account/verify-password', [AccountProfileController::class, 'verifyPassword'])->name('account.verify-password');
     Route::put('/account/profile', [AccountProfileController::class, 'updateProfile'])->name('account.profile.update');
     Route::put('/account/password', [AccountProfileController::class, 'updatePassword'])->name('account.password.update');
 
