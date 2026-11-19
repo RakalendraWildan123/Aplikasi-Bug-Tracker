@@ -169,4 +169,49 @@ class TaskController extends Controller
 
         return redirect()->route('tasks.index')->with('success_message', 'Tugas berhasil dihapus.');
     }
+
+    public function takeover(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $currentUser = $request->user();
+        $previousAssignee = $task->assignee;
+        $note = $request->input('note', 'Diambil alih oleh ' . $currentUser->name);
+
+        $logs = $task->handover_logs ?? [];
+        $logs[] = [
+            'from_developer_id' => $previousAssignee?->id,
+            'from_developer_name' => $previousAssignee?->name ?? 'Belum Ditugaskan',
+            'to_developer_id' => $currentUser->id,
+            'to_developer_name' => $currentUser->name,
+            'project_name' => $task->project?->name,
+            'project_code' => $task->project?->code,
+            'note' => $note,
+            'handed_over_at' => now()->toIso8601String(),
+        ];
+
+        $task->update([
+            'assigned_to' => $currentUser->id,
+            'handover_logs' => $logs,
+        ]);
+
+        $freshTask = $task->fresh(['project', 'module', 'assignee']);
+
+        $message = "Tugas '{$freshTask->title}' berhasil Anda ambil alih dari " . ($previousAssignee?->name ?? 'developer sebelumnya') . '.';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $freshTask,
+                'user' => [
+                    'id' => $currentUser->id,
+                    'name' => $currentUser->name,
+                    'avatar' => $currentUser->avatar ?? 'AK',
+                    'avatar_bg' => $currentUser->avatar_bg ?? '#1E293B',
+                    'foto_profil_url' => $currentUser->foto_profil_url,
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success_message', $message);
+    }
 }

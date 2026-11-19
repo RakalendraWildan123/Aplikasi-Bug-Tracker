@@ -86,6 +86,37 @@
                 </a>
             </nav>
         </div>
+
+        {{-- Footer Sidebar: Info Ringkas Pengguna & Tombol Logout --}}
+        <div class="border-t border-slate-800 p-4 space-y-3">
+            <div class="flex items-center gap-3 px-1 py-1">
+                @if ($user->foto_profil_url)
+                    <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0">
+                @else
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                        {{ $user->avatar ?? 'AK' }}
+                    </div>
+                @endif
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-white truncate leading-tight">{{ $user->name }}</p>
+                    <p class="text-xs text-slate-400 truncate">{{ $user->roleLabel() }}</p>
+                </div>
+            </div>
+
+            {{-- Tombol Logout --}}
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button
+                    type="submit"
+                    class="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition cursor-pointer"
+                >
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+                    </svg>
+                    Logout
+                </button>
+            </form>
+        </div>
     </aside>
 
     {{-- Area Konten Utama (Kanan) --}}
@@ -406,21 +437,71 @@
                                         </div>
                                     </div>
 
-                                    {{-- Quick Move Status Selector (Ramah Tablet & Desktop) --}}
+                                    {{-- Quick Move Status Selector & Ambil Alih Tugas (Ramah Tablet & Desktop) --}}
                                     <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-                                        <label for="move-status-{{ $task->id }}" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                                            Status:
-                                        </label>
-                                        <select
-                                            id="move-status-{{ $task->id }}"
-                                            data-task-id="{{ $task->id }}"
-                                            class="task-status-select text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md py-1 pl-2 pr-6 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
-                                        >
-                                            <option value="todo" {{ $task->status === 'todo' ? 'selected' : '' }}>To Do</option>
-                                            <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                            <option value="review" {{ $task->status === 'review' ? 'selected' : '' }}>Review</option>
-                                            <option value="done" {{ $task->status === 'done' ? 'selected' : '' }}>Done</option>
-                                        </select>
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <label for="move-status-{{ $task->id }}" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">
+                                                Status:
+                                            </label>
+                                            <select
+                                                id="move-status-{{ $task->id }}"
+                                                data-task-id="{{ $task->id }}"
+                                                class="task-status-select text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md py-1 pl-2 pr-6 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                                            >
+                                                <option value="todo" {{ $task->status === 'todo' ? 'selected' : '' }}>To Do</option>
+                                                <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                                <option value="review" {{ $task->status === 'review' ? 'selected' : '' }}>Review</option>
+                                                <option value="done" {{ $task->status === 'done' ? 'selected' : '' }}>Done</option>
+                                            </select>
+                                        </div>
+
+                                        {{-- Tombol Ambil Alih / Indikator Pemilik Tugas --}}
+                                        <div class="card-takeover-action shrink-0">
+                                            @if ($task->assigned_to && (int)$task->assigned_to !== (int)$user->id)
+                                                <button
+                                                    type="button"
+                                                    class="btn-takeover-task text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-md px-2 py-1 transition flex items-center gap-1 cursor-pointer"
+                                                    data-task-id="{{ $task->id }}"
+                                                    data-task-title="{{ $task->title }}"
+                                                    data-project-name="{{ $task->project?->name }}"
+                                                    data-project-code="{{ $task->project?->code }}"
+                                                    data-developer-id="{{ $task->assigned_to }}"
+                                                    data-developer-name="{{ $task->assignee?->name ?? 'Belum ditugaskan' }}"
+                                                    data-developer-role="{{ $task->assignee?->role_title ?? $task->assignee?->roleLabel() }}"
+                                                    data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
+                                                    title="Ambil Alih Tugas dari {{ $task->assignee?->name }}"
+                                                >
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                                                    </svg>
+                                                    <span>Ambil Alih</span>
+                                                </button>
+                                            @elseif ($task->assigned_to && (int)$task->assigned_to === (int)$user->id)
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span>Tugas Anda</span>
+                                                </span>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    class="btn-takeover-task text-[11px] font-semibold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md px-2 py-1 transition flex items-center gap-1 cursor-pointer"
+                                                    data-task-id="{{ $task->id }}"
+                                                    data-task-title="{{ $task->title }}"
+                                                    data-project-name="{{ $task->project?->name }}"
+                                                    data-project-code="{{ $task->project?->code }}"
+                                                    data-developer-id=""
+                                                    data-developer-name="Belum Ditugaskan"
+                                                    data-developer-role="Tersedia"
+                                                    data-developer-avatar="--"
+                                                    title="Ambil Tugas Ini"
+                                                >
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                                    </svg>
+                                                    <span>Ambil Tugas</span>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @empty
@@ -609,6 +690,121 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    {{-- MODAL POP-UP KONFIRMASI AMBIL ALIH TUGAS --}}
+    <div
+        id="modal-takeover-task"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden"
+        aria-labelledby="modal-takeover-title"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transition-all transform duration-200">
+            {{-- Header Modal --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-amber-50/60">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="modal-takeover-title" class="text-base font-bold text-slate-900 leading-tight">Konfirmasi Ambil Alih Tugas</h3>
+                        <p class="text-xs text-amber-800 font-medium">Informasi tugas dan pengembang yang sedang bertugas</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    id="btn-close-takeover-modal"
+                    class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
+                    aria-label="Tutup"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Isi Notifikasi Rincian Tugas, Developer & Proyek --}}
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-700 leading-relaxed">
+                    Anda akan mengambil alih tanggung jawab pengerjaan tugas ini dari developer yang sedang bertugas:
+                </p>
+
+                {{-- Kartu Info Notifikasi (Developer Lain & Proyek yang Sedang Dikerjakan) --}}
+                <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+                    {{-- Nama Developer Lain --}}
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5" id="takeover-dev-avatar">
+                            DV
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-amber-900/70">Developer Saat Ini</span>
+                            <span id="takeover-dev-name" class="font-bold text-slate-900 text-sm block truncate">Nama Developer</span>
+                            <span id="takeover-dev-role" class="text-xs text-slate-500">Role / Spesialisasi</span>
+                        </div>
+                    </div>
+
+                    {{-- Proyek yang Sedang Dikerjakan --}}
+                    <div class="pt-2.5 border-t border-amber-200/60 flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121 12v.75m-8.625-12a1.875 1.875 0 00-1.875 1.875v.75h5.625v-.75a1.875 1.875 0 00-1.875-1.875H12.375zM3.75 12h16.5m-16.5 0a2.25 2.25 0 00-2.25 2.25v5.25A2.25 2.25 0 003.75 21h16.5a2.25 2.25 0 002.25-2.25v-5.25a2.25 2.25 0 00-2.25-2.25H3.75z"/>
+                        </svg>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-amber-900/70">Proyek yang Dikerjakan</span>
+                            <span id="takeover-project-name" class="font-semibold text-slate-900 text-xs block">[PRJ] Nama Proyek</span>
+                        </div>
+                    </div>
+
+                    {{-- Tugas yang Diambil Alih --}}
+                    <div class="pt-2.5 border-t border-amber-200/60 flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+                        </svg>
+                        <div class="min-w-0 flex-1">
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-amber-900/70">Judul Tugas</span>
+                            <span id="takeover-task-title" class="font-semibold text-slate-900 text-xs block">Judul Tugas</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Catatan Pengambilalihan (Opsional) --}}
+                <div>
+                    <label for="takeover-note" class="block text-xs font-semibold text-slate-800 mb-1">
+                        Catatan Handover / Alasan Pengambilalihan (Opsional)
+                    </label>
+                    <input
+                        type="text"
+                        id="takeover-note"
+                        placeholder="Contoh: Mengambil alih pengerjaan tugas sprint"
+                        class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-xs sm:text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                    >
+                </div>
+
+                {{-- Tombol Aksi Modal --}}
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200">
+                    <button
+                        type="button"
+                        id="btn-cancel-takeover"
+                        class="px-4 py-2.5 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        id="btn-confirm-takeover"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-700 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white transition cursor-pointer shadow-sm"
+                    >
+                        <span id="confirm-takeover-text">Ya, Ambil Alih Tugas</span>
+                        <svg id="confirm-takeover-spinner" class="hidden w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1149,6 +1345,133 @@
                         }
                     }
                 });
+            });
+
+            // MODAL AMBIL ALIH TUGAS (POP-UP NOTIFIKASI TUGAS DEVELOPER LAIN)
+            const modalTakeover = document.getElementById('modal-takeover-task');
+            const btnCloseTakeover = document.getElementById('btn-close-takeover-modal');
+            const btnCancelTakeover = document.getElementById('btn-cancel-takeover');
+            const btnConfirmTakeover = document.getElementById('btn-confirm-takeover');
+            const takeoverText = document.getElementById('confirm-takeover-text');
+            const takeoverSpinner = document.getElementById('confirm-takeover-spinner');
+
+            const takeoverDevName = document.getElementById('takeover-dev-name');
+            const takeoverDevRole = document.getElementById('takeover-dev-role');
+            const takeoverDevAvatar = document.getElementById('takeover-dev-avatar');
+            const takeoverProjectName = document.getElementById('takeover-project-name');
+            const takeoverTaskTitle = document.getElementById('takeover-task-title');
+            const takeoverNote = document.getElementById('takeover-note');
+
+            let activeTakeoverTaskId = null;
+
+            const closeTakeoverModal = () => {
+                modalTakeover?.classList.add('hidden');
+                activeTakeoverTaskId = null;
+                if (takeoverNote) takeoverNote.value = '';
+            };
+
+            btnCloseTakeover?.addEventListener('click', closeTakeoverModal);
+            btnCancelTakeover?.addEventListener('click', closeTakeoverModal);
+
+            modalTakeover?.addEventListener('click', (e) => {
+                if (e.target === modalTakeover) closeTakeoverModal();
+            });
+
+            // Klik tombol Ambil Alih Tugas pada kartu
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-takeover-task');
+                if (!btn) return;
+
+                activeTakeoverTaskId = btn.getAttribute('data-task-id');
+                const title = btn.getAttribute('data-task-title') || '';
+                const projName = btn.getAttribute('data-project-name') || '';
+                const projCode = btn.getAttribute('data-project-code') || '';
+                const devName = btn.getAttribute('data-developer-name') || 'Belum ditugaskan';
+                const devRole = btn.getAttribute('data-developer-role') || 'Pengembang';
+                const devAvatar = btn.getAttribute('data-developer-avatar') || 'DV';
+
+                takeoverTaskTitle.textContent = title;
+                takeoverProjectName.textContent = projCode ? `[${projCode}] ${projName}` : projName;
+                takeoverDevName.textContent = devName;
+                takeoverDevRole.textContent = devRole;
+                takeoverDevAvatar.textContent = devAvatar;
+
+                modalTakeover?.classList.remove('hidden');
+            });
+
+            // Konfirmasi Ambil Alih Tugas via AJAX
+            btnConfirmTakeover?.addEventListener('click', async () => {
+                if (!activeTakeoverTaskId) return;
+
+                btnConfirmTakeover.disabled = true;
+                takeoverText.textContent = 'Memproses...';
+                takeoverSpinner?.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(`/tasks/${activeTakeoverTaskId}/takeover`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            note: takeoverNote ? takeoverNote.value.trim() : null
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        closeTakeoverModal();
+                        showToast(data.message || 'Tugas berhasil diambil alih.');
+
+                        // Update tampilan kartu di papan Kanban seketika
+                        const card = document.getElementById(`card-task-${activeTakeoverTaskId}`);
+                        if (card) {
+                            card.setAttribute('data-assigned-to', data.user.id);
+
+                            const assigneeContainer = card.querySelector('.card-assignee-container');
+                            if (assigneeContainer) {
+                                assigneeContainer.title = `Ditugaskan kepada: ${data.user.name}`;
+                                assigneeContainer.innerHTML = `
+                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-2xs" style="background-color: ${data.user.avatar_bg || '#1E293B'}">
+                                        ${data.user.avatar || 'AK'}
+                                    </div>
+                                    <span class="card-assignee-name text-[11px] font-semibold text-slate-700 truncate max-w-[80px]">
+                                        ${data.user.name}
+                                    </span>
+                                `;
+                            }
+
+                            const takeoverAction = card.querySelector('.card-takeover-action');
+                            if (takeoverAction) {
+                                takeoverAction.innerHTML = `
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        <span>Tugas Anda</span>
+                                    </span>
+                                `;
+                            }
+
+                            const btnEdit = card.querySelector('.btn-edit-task');
+                            if (btnEdit) btnEdit.setAttribute('data-assigned-to', data.user.id);
+
+                            card.classList.add('ring-2', 'ring-emerald-400');
+                            setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-400'), 800);
+
+                            applyInstantFilters();
+                        }
+                    } else {
+                        showToast(data.message || 'Gagal mengambil alih tugas.', true);
+                    }
+                } catch (err) {
+                    showToast('Terjadi kesalahan koneksi saat mengambil alih tugas.', true);
+                } finally {
+                    btnConfirmTakeover.disabled = false;
+                    takeoverText.textContent = 'Ya, Ambil Alih Tugas';
+                    takeoverSpinner?.classList.add('hidden');
+                }
             });
         });
     </script>

@@ -260,4 +260,40 @@ class KanbanBoardTest extends TestCase
         $response->assertSee('Tugas Milik Dev A');
         $response->assertDontSee('Tugas Milik Dev B');
     }
+
+    public function test_kanban_board_renders_takeover_button_and_modal(): void
+    {
+        $user = User::factory()->create(['name' => 'Saya']);
+        $otherDev = \App\Models\Developer::factory()->create(['name' => 'Developer Lain']);
+
+        $taskOther = Task::factory()->create([
+            'assigned_to' => $otherDev->id,
+            'title' => 'Tugas Ambil Alih Kanban',
+            'status' => 'in_progress',
+        ]);
+
+        $taskOwn = Task::factory()->create([
+            'assigned_to' => $user->id,
+            'title' => 'Tugas Milik Saya Sendiri',
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)->get('/kanban');
+        $response->assertOk();
+        $response->assertSee('id="modal-takeover-task"', false);
+        $response->assertSee('Konfirmasi Ambil Alih Tugas');
+        $response->assertSee('btn-takeover-task', false);
+        $response->assertSee('Ambil Alih');
+        $response->assertSee('Tugas Anda');
+
+        // Test POST /kanban/tasks/{task}/takeover
+        $takeoverResponse = $this->actingAs($user)->postJson("/kanban/tasks/{$taskOther->id}/takeover", [
+            'note' => 'Takeover via Kanban',
+        ]);
+
+        $takeoverResponse->assertOk();
+        $takeoverResponse->assertJson(['success' => true]);
+
+        $this->assertSame($user->id, $taskOther->fresh()->assigned_to);
+    }
 }

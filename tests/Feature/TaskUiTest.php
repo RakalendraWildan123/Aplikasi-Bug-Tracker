@@ -255,4 +255,62 @@ class TaskUiTest extends TestCase
         $response->assertSee('id="modal-delete-task"', false);
         $response->assertSee('Tambah Tugas Baru');
     }
+
+    public function test_user_can_takeover_task_from_another_developer(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer Alpha']);
+        $userB = User::factory()->create(['name' => 'Developer Beta']);
+
+        $task = Task::factory()->create([
+            'title' => 'Tugas Fitur API Alpha',
+            'assigned_to' => $devA->id,
+        ]);
+
+        $response = $this->actingAs($userB)->postJson("/tasks/{$task->id}/takeover", [
+            'note' => 'Diambil alih untuk percepatan release sprint',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        $freshTask = $task->fresh(['assignee']);
+        $this->assertSame($userB->id, $freshTask->assigned_to);
+        $this->assertNotEmpty($freshTask->handover_logs);
+
+        $logs = $freshTask->handover_logs;
+        $lastLog = end($logs);
+        $this->assertSame($devA->id, $lastLog['from_developer_id']);
+        $this->assertSame('Developer Alpha', $lastLog['from_developer_name']);
+        $this->assertSame($userB->id, $lastLog['to_developer_id']);
+        $this->assertSame('Developer Beta', $lastLog['to_developer_name']);
+        $this->assertSame('Diambil alih untuk percepatan release sprint', $lastLog['note']);
+        $this->assertNotNull($lastLog['handed_over_at']);
+    }
+
+    public function test_tasks_page_renders_takeover_button_and_modal(): void
+    {
+        $currentUser = User::factory()->create(['name' => 'Saya']);
+        $otherDev = User::factory()->create(['name' => 'Dev Lain']);
+
+        $taskOther = Task::factory()->create([
+            'title' => 'Tugas Dev Lain',
+            'assigned_to' => $otherDev->id,
+        ]);
+
+        $taskOwn = Task::factory()->create([
+            'title' => 'Tugas Milik Saya',
+            'assigned_to' => $currentUser->id,
+        ]);
+
+        $response = $this->actingAs($currentUser)->get('/tasks');
+
+        $response->assertOk();
+        $response->assertSee('id="modal-takeover-task"', false);
+        $response->assertSee('Konfirmasi Ambil Alih Tugas');
+        $response->assertSee('btn-takeover-task', false);
+        $response->assertSee('Ambil Alih');
+        $response->assertSee('Tugas Anda');
+    }
 }
