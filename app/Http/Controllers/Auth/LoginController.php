@@ -89,16 +89,12 @@ class LoginController extends Controller
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'Login berhasil.',
+                'message' => 'Login Berhasil',
                 'user' => $authenticated,
             ]);
         }
 
-        $defaultRedirect = $authenticated && $authenticated->isAdmin()
-            ? route('admin.accounts.index')
-            : route('home');
-
-        return redirect()->intended($defaultRedirect);
+        return redirect()->route('home');
     }
 
     public function logout(Request $request): JsonResponse|RedirectResponse
