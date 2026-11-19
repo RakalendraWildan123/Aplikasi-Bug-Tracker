@@ -341,20 +341,20 @@ class UiComprehensiveScenariosTest extends TestCase
         $response->assertSee('BS');
     }
 
-    public function test_034_sidebar_contains_user_profile_and_logout_button(): void
+    public function test_034_sidebar_does_not_contain_logout_button(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/account');
         $response->assertOk();
 
-        // Memastikan sidebar id="app-sidebar" memiliki info pengguna dan tombol logout asli
+        // Memastikan sidebar id="app-sidebar" tidak memiliki tombol logout terduplikasi
         $content = $response->getContent();
         $sidebarPos = strpos($content, 'id="app-sidebar"');
         $sidebarEnd = strpos($content, '</aside>', $sidebarPos);
         $sidebarHtml = substr($content, $sidebarPos, $sidebarEnd - $sidebarPos);
 
-        $this->assertStringContainsString('action="' . route('logout') . '"', $sidebarHtml);
-        $this->assertStringContainsString('Logout', $sidebarHtml);
+        $this->assertStringNotContainsString('route(\'logout\')', $sidebarHtml);
+        $this->assertStringNotContainsString('action="' . route('logout') . '"', $sidebarHtml);
     }
 
     public function test_035_layout_is_clean_and_free_of_nested_tabs(): void
@@ -519,9 +519,9 @@ class UiComprehensiveScenariosTest extends TestCase
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/account');
         $response->assertOk();
-        $response->assertSee('bg-rose-500/10', false);
-        $response->assertSee('border-rose-500/30', false);
-        $response->assertSee('text-rose-300', false);
+        $response->assertSee('bg-rose-50', false);
+        $response->assertSee('border-rose-200', false);
+        $response->assertSee('text-rose-700', false);
     }
 
     public function test_053_profile_card_logout_button_text_is_strictly_logout(): void
