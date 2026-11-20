@@ -296,4 +296,40 @@ class KanbanBoardTest extends TestCase
 
         $this->assertSame($user->id, $taskOther->fresh()->assigned_to);
     }
+
+    public function test_kanban_board_renders_status_colored_borders_and_arrow_navigation_buttons(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+
+        $taskTodo = Task::factory()->create(['title' => 'Tugas Status Todo', 'status' => 'todo']);
+        $taskInProgress = Task::factory()->create(['title' => 'Tugas Status In Progress', 'status' => 'in_progress']);
+        $taskReview = Task::factory()->create(['title' => 'Tugas Status Review', 'status' => 'review']);
+        $taskDone = Task::factory()->create(['title' => 'Tugas Status Done', 'status' => 'done']);
+
+        $response = $this->actingAs($user)->get('/kanban');
+
+        $response->assertOk();
+
+        // 1. Verifikasi Garis Warna Status pada Kartu (border-l-4)
+        $response->assertSee('border-l-4 border-l-slate-400');
+        $response->assertSee('border-l-4 border-l-sky-500');
+        $response->assertSee('border-l-4 border-l-amber-500');
+        $response->assertSee('border-l-4 border-l-emerald-500');
+
+        // 2. Verifikasi Tombol Panah Navigasi untuk Klik Perpindahan
+        $response->assertSee('btn-move-prev');
+        $response->assertSee('btn-move-next');
+
+        // 3. Verifikasi target status tombol panah
+        $response->assertSee('data-target-status="in_progress"', false);
+        $response->assertSee('data-target-status="todo"', false);
+        $response->assertSee('data-target-status="review"', false);
+        $response->assertSee('data-target-status="done"', false);
+
+        // 4. Verifikasi teks tooltip / label bantuan
+        $response->assertSee('Pindahkan ke In Progress');
+        $response->assertSee('Pindahkan ke To Do');
+        $response->assertSee('Pindahkan ke Review');
+        $response->assertSee('Pindahkan ke Done');
+    }
 }

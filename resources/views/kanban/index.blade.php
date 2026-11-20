@@ -57,6 +57,17 @@
                         <span class="sr-only">Menu Utama</span>
                     </p>
 
+                    {{-- Fitur Dashboard --}}
+                    <a
+                        href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+
                     {{-- Fitur Papan Kanban (Active State) --}}
                     <a
                         href="{{ route('kanban.index') }}"
@@ -88,6 +99,40 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
                         </svg>
                         <span>Pelacak Bug</span>
+                    </a>
+
+                    {{-- Fitur Riwayat Rilis & Repo Modul --}}
+                    <a
+                        href="{{ route('releases.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.386a10.96 10.96 0 003.882-3.882c.486-.827.313-1.908-.386-2.607L9.762 3.659A2.25 2.25 0 009.568 3z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+                        </svg>
+                        <span>Riwayat Rilis</span>
+                    </a>
+
+                    {{-- Fitur Evaluasi Aplikasi --}}
+                    <a
+                        href="{{ route('evaluations.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Evaluasi Aplikasi</span>
+                    </a>
+
+                    {{-- Fitur Laporan Periodik --}}
+                    <a
+                        href="{{ route('reports.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <span>Laporan Periodik</span>
                     </a>
                 </div>
 
@@ -171,6 +216,21 @@
             </div>
 
             <div class="flex items-center gap-2">
+                {{-- Tombol Buka Pop-up Notifikasi (Tablet & Mobile) --}}
+                <button
+                    type="button"
+                    class="btn-trigger-notifications relative p-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-2xs"
+                    aria-label="Buka Notifikasi Pop-up"
+                    title="Notifikasi"
+                >
+                    <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                    </svg>
+                    <span class="notification-badge-count hidden absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs">
+                        0
+                    </span>
+                </button>
+
                 @if ($user->foto_profil_url)
                     <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
                 @else
@@ -237,6 +297,23 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                         <span>Reset Filter</span>
+                    </button>
+
+                    {{-- Tombol Buka Pop-up Notifikasi (Desktop & Tablet) --}}
+                    <button
+                        type="button"
+                        id="btn-open-notifications-desktop"
+                        class="btn-trigger-notifications relative inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+                        title="Buka Notifikasi Pop-up"
+                        aria-label="Buka Notifikasi Pop-up"
+                    >
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                        </svg>
+                        <span>Notifikasi</span>
+                        <span class="notification-badge-count hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
+                            0
+                        </span>
                     </button>
                 </div>
             </div>
@@ -325,6 +402,14 @@
             </div>
 
             {{-- Papan Kanban (4 Kolom Tegas, Ramah Desktop & Tablet) --}}
+            @php
+                $statusBorderClasses = [
+                    'todo' => 'border-l-slate-400',
+                    'in_progress' => 'border-l-sky-500',
+                    'review' => 'border-l-amber-500',
+                    'done' => 'border-l-emerald-500',
+                ];
+            @endphp
             <div id="kanban-board-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4.5 items-start w-full">
 
                 @foreach ($columns as $colKey => $column)
@@ -353,7 +438,7 @@
                         >
                             @forelse ($column['tasks'] as $task)
                                 <div
-                                    class="kanban-card bg-white border border-slate-200 rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all select-none cursor-grab active:cursor-grabbing relative"
+                                    class="kanban-card bg-white border border-slate-200 border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none cursor-grab active:cursor-grabbing relative"
                                     draggable="true"
                                     id="card-task-{{ $task->id }}"
                                     data-task-id="{{ $task->id }}"
@@ -467,30 +552,64 @@
                                         </div>
                                     </div>
 
-                                    {{-- Quick Move Status Selector & Ambil Alih Tugas (Ramah Tablet & Desktop) --}}
-                                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-                                        <div class="flex items-center gap-1.5 min-w-0">
-                                            <label for="move-status-{{ $task->id }}" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">
-                                                Status:
-                                            </label>
+                                    {{-- Quick Move Status Selector, Tanda Panah Navigasi & Ambil Alih Tugas (Ramah Tablet & Fullscreen Desktop) --}}
+                                    <div class="mt-3 pt-2.5 border-t border-slate-100 space-y-2">
+                                        {{-- Baris Navigasi Status (Panah Kiri, Dropdown Status Responsif, Panah Kanan) --}}
+                                        <div class="flex items-center gap-1.5 w-full">
+                                            {{-- Tombol Panah Kiri: Pindah ke Kolom Sebelumnya --}}
+                                            <button
+                                                type="button"
+                                                draggable="false"
+                                                class="btn-move-prev w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 transition flex items-center justify-center shrink-0 {{ $task->status === 'todo' ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
+                                                {{ $task->status === 'todo' ? 'disabled' : '' }}
+                                                @if ($task->status === 'in_progress') data-target-status="todo" title="Pindahkan ke To Do" aria-label="Pindahkan ke To Do"
+                                                @elseif ($task->status === 'review') data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
+                                                @elseif ($task->status === 'done') data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
+                                                @else title="Sudah di kolom pertama (To Do)" aria-label="Sudah di kolom pertama"
+                                                @endif
+                                            >
+                                                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                                                </svg>
+                                            </button>
+
+                                            {{-- Dropdown Pilihan Status Cepat (Lebar Fleksibel) --}}
                                             <select
                                                 id="move-status-{{ $task->id }}"
                                                 data-task-id="{{ $task->id }}"
-                                                class="task-status-select text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-md py-1 pl-2 pr-6 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                                                class="task-status-select flex-1 min-w-0 text-[11px] font-semibold bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                                                title="Pilih status tugas secara langsung"
                                             >
                                                 <option value="todo" {{ $task->status === 'todo' ? 'selected' : '' }}>To Do</option>
                                                 <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
                                                 <option value="review" {{ $task->status === 'review' ? 'selected' : '' }}>Review</option>
                                                 <option value="done" {{ $task->status === 'done' ? 'selected' : '' }}>Done</option>
                                             </select>
+
+                                            {{-- Tombol Panah Kanan: Pindah ke Kolom Berikutnya --}}
+                                            <button
+                                                type="button"
+                                                draggable="false"
+                                                class="btn-move-next w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 transition flex items-center justify-center shrink-0 {{ $task->status === 'done' ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
+                                                {{ $task->status === 'done' ? 'disabled' : '' }}
+                                                @if ($task->status === 'todo') data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
+                                                @elseif ($task->status === 'in_progress') data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
+                                                @elseif ($task->status === 'review') data-target-status="done" title="Pindahkan ke Done" aria-label="Pindahkan ke Done"
+                                                @else title="Sudah di kolom terakhir (Done)" aria-label="Sudah di kolom terakhir"
+                                                @endif
+                                            >
+                                                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                                                </svg>
+                                            </button>
                                         </div>
 
                                         {{-- Tombol Ambil Alih / Indikator Pemilik Tugas --}}
-                                        <div class="card-takeover-action shrink-0">
+                                        <div class="card-takeover-action w-full">
                                             @if ($task->assigned_to && (int)$task->assigned_to !== (int)$user->id)
                                                 <button
                                                     type="button"
-                                                    class="btn-takeover-task text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-md px-2 py-1 transition flex items-center gap-1 cursor-pointer"
+                                                    class="btn-takeover-task w-full justify-center text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg px-2.5 py-1.5 transition flex items-center gap-1.5 cursor-pointer"
                                                     data-task-id="{{ $task->id }}"
                                                     data-task-title="{{ $task->title }}"
                                                     data-project-name="{{ $task->project?->name }}"
@@ -501,20 +620,20 @@
                                                     data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
                                                     title="Ambil Alih Tugas dari {{ $task->assignee?->name }}"
                                                 >
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
                                                     </svg>
-                                                    <span>Ambil Alih</span>
+                                                    <span>Ambil Alih Tugas</span>
                                                 </button>
                                             @elseif ($task->assigned_to && (int)$task->assigned_to === (int)$user->id)
-                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                                                <div class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-1 px-2">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                                     <span>Tugas Anda</span>
-                                                </span>
+                                                </div>
                                             @else
                                                 <button
                                                     type="button"
-                                                    class="btn-takeover-task text-[11px] font-semibold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md px-2 py-1 transition flex items-center gap-1 cursor-pointer"
+                                                    class="btn-takeover-task w-full justify-center text-[11px] font-semibold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg px-2.5 py-1.5 transition flex items-center gap-1.5 cursor-pointer"
                                                     data-task-id="{{ $task->id }}"
                                                     data-task-title="{{ $task->title }}"
                                                     data-project-name="{{ $task->project?->name }}"
@@ -525,7 +644,7 @@
                                                     data-developer-avatar="--"
                                                     title="Ambil Tugas Ini"
                                                 >
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                                                     </svg>
                                                     <span>Ambil Tugas</span>
@@ -1215,10 +1334,7 @@
                                     if (placeholder) placeholder.remove();
 
                                     targetDropzone.insertBefore(card, targetDropzone.firstChild);
-                                    card.setAttribute('data-current-status', payload.status);
-
-                                    const select = card.querySelector('.task-status-select');
-                                    if (select) select.value = payload.status;
+                                    updateCardStatusElements(card, payload.status);
                                 }
                             }
 
@@ -1239,9 +1355,93 @@
                 }
             });
 
+            // Definisi alur status kolom & garis warna kartu tugas
+            const statusFlow = ['todo', 'in_progress', 'review', 'done'];
+            const statusBorderClasses = {
+                'todo': 'border-l-slate-400',
+                'in_progress': 'border-l-sky-500',
+                'review': 'border-l-amber-500',
+                'done': 'border-l-emerald-500'
+            };
+            const statusLabels = {
+                'todo': 'To Do',
+                'in_progress': 'In Progress',
+                'review': 'Review',
+                'done': 'Done'
+            };
+
+            // Sinkronisasi status elemen kartu: Garis warna status, Select, dan Tombol Panah
+            const updateCardStatusElements = (cardElement, newStatus) => {
+                if (!cardElement || !newStatus) return;
+
+                // 1. Data Attribute
+                cardElement.setAttribute('data-current-status', newStatus);
+
+                // 2. Garis warna border sisi kiri sesuai status
+                Object.values(statusBorderClasses).forEach(cls => cardElement.classList.remove(cls));
+                if (statusBorderClasses[newStatus]) {
+                    cardElement.classList.add(statusBorderClasses[newStatus]);
+                }
+
+                // 3. Dropdown pilihan status
+                const select = cardElement.querySelector('.task-status-select');
+                if (select) select.value = newStatus;
+
+                // 4. Data-status pada tombol edit modal
+                const btnEdit = cardElement.querySelector('.btn-edit-task');
+                if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
+
+                // 5. Tombol Panah Kiri (Prev) & Kanan (Next)
+                const currentIndex = statusFlow.indexOf(newStatus);
+                const prevStatus = currentIndex > 0 ? statusFlow[currentIndex - 1] : null;
+                const nextStatus = (currentIndex >= 0 && currentIndex < statusFlow.length - 1) ? statusFlow[currentIndex + 1] : null;
+
+                const btnPrev = cardElement.querySelector('.btn-move-prev');
+                if (btnPrev) {
+                    if (prevStatus) {
+                        btnPrev.disabled = false;
+                        btnPrev.setAttribute('data-target-status', prevStatus);
+                        btnPrev.title = `Pindahkan ke ${statusLabels[prevStatus]}`;
+                        btnPrev.setAttribute('aria-label', `Pindahkan ke ${statusLabels[prevStatus]}`);
+                        btnPrev.classList.remove('opacity-25', 'cursor-not-allowed');
+                        btnPrev.classList.add('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                    } else {
+                        btnPrev.disabled = true;
+                        btnPrev.removeAttribute('data-target-status');
+                        btnPrev.title = 'Sudah di kolom pertama (To Do)';
+                        btnPrev.setAttribute('aria-label', 'Sudah di kolom pertama');
+                        btnPrev.classList.add('opacity-25', 'cursor-not-allowed');
+                        btnPrev.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                    }
+                }
+
+                const btnNext = cardElement.querySelector('.btn-move-next');
+                if (btnNext) {
+                    if (nextStatus) {
+                        btnNext.disabled = false;
+                        btnNext.setAttribute('data-target-status', nextStatus);
+                        btnNext.title = `Pindahkan ke ${statusLabels[nextStatus]}`;
+                        btnNext.setAttribute('aria-label', `Pindahkan ke ${statusLabels[nextStatus]}`);
+                        btnNext.classList.remove('opacity-25', 'cursor-not-allowed');
+                        btnNext.classList.add('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                    } else {
+                        btnNext.disabled = true;
+                        btnNext.removeAttribute('data-target-status');
+                        btnNext.title = 'Sudah di kolom terakhir (Done)';
+                        btnNext.setAttribute('aria-label', 'Sudah di kolom terakhir');
+                        btnNext.classList.add('opacity-25', 'cursor-not-allowed');
+                        btnNext.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                    }
+                }
+            };
+
             // Update status kartu secara instan (< 0.8 detik, optimistik) & persistensi asinkron ke server
             const updateTaskStatus = async (taskId, newStatus, cardElement) => {
-                if (!taskId || !newStatus || !cardElement) return;
+                if (!taskId || !newStatus) return;
+                if (!cardElement) {
+                    cardElement = document.getElementById(`card-task-${taskId}`);
+                }
+                if (!cardElement) return;
 
                 const oldStatus = cardElement.getAttribute('data-current-status');
                 if (oldStatus === newStatus) return;
@@ -1257,13 +1457,8 @@
                 // Pindahkan elemen kartu ke kolom tujuan secara instan
                 targetDropzone.insertBefore(cardElement, targetDropzone.firstChild);
 
-                // Perbarui status atribut & kontrol input pada kartu
-                cardElement.setAttribute('data-current-status', newStatus);
-                const select = cardElement.querySelector('.task-status-select');
-                if (select) select.value = newStatus;
-
-                const btnEdit = cardElement.querySelector('.btn-edit-task');
-                if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
+                // Perbarui status atribut, garis warna status, select & tombol panah pada kartu
+                updateCardStatusElements(cardElement, newStatus);
 
                 // Efek visual halus untuk konfirmasi perpindahan instan
                 cardElement.classList.add('ring-2', 'ring-emerald-400', 'bg-emerald-50/20');
@@ -1306,14 +1501,7 @@
             const rollbackTaskMove = (cardElement, previousStatus, originDropzone) => {
                 if (!cardElement || !originDropzone) return;
                 originDropzone.appendChild(cardElement);
-                cardElement.setAttribute('data-current-status', previousStatus);
-
-                const select = cardElement.querySelector('.task-status-select');
-                if (select) select.value = previousStatus;
-
-                const btnEdit = cardElement.querySelector('.btn-edit-task');
-                if (btnEdit) btnEdit.setAttribute('data-status', previousStatus);
-
+                updateCardStatusElements(cardElement, previousStatus);
                 refreshColumnCounters();
             };
 
@@ -1327,6 +1515,31 @@
                     if (taskId && newStatus && card) {
                         updateTaskStatus(taskId, newStatus, card);
                     }
+                }
+            });
+
+            // Event listener ganti status via klik tombol panah (Prev / Next)
+            document.addEventListener('click', (e) => {
+                const btnMove = e.target.closest('.btn-move-prev, .btn-move-next');
+                if (!btnMove || btnMove.disabled) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const targetStatus = btnMove.getAttribute('data-target-status');
+                const card = btnMove.closest('.kanban-card');
+                if (!card || !targetStatus) return;
+
+                const taskId = card.getAttribute('data-task-id');
+                if (taskId) {
+                    updateTaskStatus(taskId, targetStatus, card);
+                }
+            });
+
+            // Cegah mousedown pada kontrol kartu memicu dragstart HTML5 pada parent card
+            document.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.btn-move-prev, .btn-move-next, .task-status-select, .btn-edit-task, .btn-takeover-task')) {
+                    e.stopPropagation();
                 }
             });
 
@@ -1505,6 +1718,9 @@
             });
         });
     </script>
+
+    {{-- MODAL POP-UP NOTIFIKASI --}}
+    @include('partials.notification-modal')
 
 </body>
 </html>

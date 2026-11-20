@@ -70,6 +70,8 @@ class AccountVerificationAndModalTest extends TestCase
         $response->assertSee('modal-edit');
         $response->assertSee('step-verification');
         $response->assertSee('step-edit-form');
+        $response->assertSee('Batal Edit');
+        $response->assertSee('btn-cancel-modal');
         $response->assertDontSee('Permanen (Tidak dapat diedit)');
     }
 

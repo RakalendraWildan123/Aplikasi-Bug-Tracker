@@ -4,15 +4,18 @@ use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
+Route::model('release', \App\Models\RepoHistory::class);
+Route::model('evaluation', \App\Models\AppEvaluation::class);
+Route::model('actionItem', \App\Models\ActionItem::class);
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('account.edit');
-    })->name('home');
+    Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('home');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/account', [AccountProfileController::class, 'edit'])->name('account.edit');
     Route::post('/account/verify-password', [AccountProfileController::class, 'verifyPassword'])->name('account.verify-password');
@@ -36,6 +39,35 @@ Route::middleware('auth')->group(function () {
     Route::put('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'update'])->name('bugs.update');
     Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
     Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');
+
+    // Riwayat Rilis & Repo Modul
+    Route::get('/releases', [\App\Http\Controllers\RepoHistoryController::class, 'index'])->name('releases.index');
+    Route::post('/releases', [\App\Http\Controllers\RepoHistoryController::class, 'store'])->name('releases.store');
+    Route::get('/releases/{release}', [\App\Http\Controllers\RepoHistoryController::class, 'show'])->name('releases.show');
+    Route::put('/releases/{release}', [\App\Http\Controllers\RepoHistoryController::class, 'update'])->name('releases.update');
+    Route::delete('/releases/{release}', [\App\Http\Controllers\RepoHistoryController::class, 'destroy'])->name('releases.destroy');
+
+    // Evaluasi Aplikasi & Rencana Tindak Lanjut
+    Route::get('/evaluations', [\App\Http\Controllers\AppEvaluationController::class, 'index'])->name('evaluations.index');
+    Route::post('/evaluations', [\App\Http\Controllers\AppEvaluationController::class, 'store'])->name('evaluations.store');
+    Route::get('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'show'])->name('evaluations.show');
+    Route::put('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'update'])->name('evaluations.update');
+    Route::delete('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'destroy'])->name('evaluations.destroy');
+
+    Route::post('/evaluations/{evaluation}/action-items', [\App\Http\Controllers\AppEvaluationController::class, 'storeActionItem'])->name('evaluations.action-items.store');
+    Route::patch('/evaluations/action-items/{actionItem}/status', [\App\Http\Controllers\AppEvaluationController::class, 'updateActionItemStatus'])->name('evaluations.action-items.update-status');
+    Route::delete('/evaluations/action-items/{actionItem}', [\App\Http\Controllers\AppEvaluationController::class, 'destroyActionItem'])->name('evaluations.action-items.destroy');
+
+    // Laporan Periodik
+    Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export/csv', [\App\Http\Controllers\ReportController::class, 'exportCsv'])->name('reports.export.csv');
+
+    // Notifikasi Pop-up
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications', [\App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
     // Master Proyek / CRUD Proyek
     Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
@@ -71,3 +103,17 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
+
+if (app()->environment('local')) {
+    Route::get('/preview-dashboard', function (\Illuminate\Http\Request $request) {
+        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+        auth()->login($user);
+        return app(\App\Http\Controllers\DashboardController::class)->index($request);
+    });
+
+    Route::get('/preview-kanban', function (\Illuminate\Http\Request $request) {
+        $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+        auth()->login($user);
+        return app(\App\Http\Controllers\KanbanController::class)->index($request);
+    });
+}

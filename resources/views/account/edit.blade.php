@@ -57,6 +57,17 @@
                         <span class="sr-only">Menu Utama</span>
                     </p>
 
+                    {{-- Fitur Dashboard --}}
+                    <a
+                        href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+
                     {{-- Fitur Papan Kanban --}}
                     <a
                         href="{{ route('kanban.index') }}"
@@ -88,6 +99,40 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
                         </svg>
                         <span>Pelacak Bug</span>
+                    </a>
+
+                    {{-- Fitur Riwayat Rilis & Repo Modul --}}
+                    <a
+                        href="{{ route('releases.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.386a10.96 10.96 0 003.882-3.882c.486-.827.313-1.908-.386-2.607L9.762 3.659A2.25 2.25 0 009.568 3z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+                        </svg>
+                        <span>Riwayat Rilis</span>
+                    </a>
+
+                    {{-- Fitur Evaluasi Aplikasi --}}
+                    <a
+                        href="{{ route('evaluations.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Evaluasi Aplikasi</span>
+                    </a>
+
+                    {{-- Fitur Laporan Periodik --}}
+                    <a
+                        href="{{ route('reports.index') }}"
+                        class="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+                    >
+                        <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        <span>Laporan Periodik</span>
                     </a>
                 </div>
 
@@ -358,8 +403,9 @@
                 <button
                     type="button"
                     id="btn-close-modal"
-                    class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
-                    aria-label="Tutup"
+                    class="btn-cancel-modal text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
+                    aria-label="Batal Edit"
+                    title="Batal Edit"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -417,7 +463,7 @@
                             type="button"
                             class="btn-cancel-modal px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                         >
-                            Batal
+                            Batal Edit
                         </button>
                         <button
                             type="button"
@@ -580,7 +626,7 @@
                             type="button"
                             class="btn-cancel-modal px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                         >
-                            Batal
+                            Batal Edit
                         </button>
                         <button
                             type="submit"
@@ -657,19 +703,12 @@
             btnCloseModal?.addEventListener('click', closeModal);
             cancelButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
-            // Tutup modal jika klik backdrop di luar dialog
-            modal?.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            // Tutup modal jika tekan tombol Escape
+            // Pop-up edit akun bersifat statis: klik di luar pop-up (backdrop) maupun tombol Escape
+            // sengaja TIDAK menutup modal agar tidak tertutup tanpa sengaja.
+            // Modal HANYA dapat ditutup dengan menekan tombol Batal Edit.
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    if (!modal.classList.contains('hidden')) {
-                        closeModal();
-                    } else if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
                         closeSidebar();
                     }
                 }
