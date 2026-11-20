@@ -78,7 +78,7 @@ class UiComprehensiveScenariosTest extends TestCase
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/login');
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect('/dashboard');
     }
 
     public function test_008_login_submission_fails_with_empty_inputs(): void
@@ -244,11 +244,13 @@ class UiComprehensiveScenariosTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_022_authenticated_user_accessing_home_redirects_to_account(): void
+    public function test_022_authenticated_user_accessing_home_loads_dashboard(): void
     {
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/');
-        $response->assertRedirect(route('account.edit'));
+        $response->assertOk();
+        $response->assertSee('Dashboard');
+        $response->assertSee('Proyek Aktif');
     }
 
     public function test_023_sidebar_renders_application_title(): void
@@ -1208,7 +1210,7 @@ class UiComprehensiveScenariosTest extends TestCase
     public function test_107_kanban_instant_status_change_via_patch_updates_status(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->create(['status' => 'todo']);
+        $task = Task::factory()->create(['status' => 'todo', 'assigned_to' => $user->id]);
 
         $response = $this->actingAs($user)->patchJson("/kanban/tasks/{$task->id}/status", [
             'status' => 'in_progress',
@@ -1222,7 +1224,7 @@ class UiComprehensiveScenariosTest extends TestCase
     public function test_108_kanban_instant_status_change_to_done_sets_completed_at(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->create(['status' => 'in_progress', 'completed_at' => null]);
+        $task = Task::factory()->create(['status' => 'in_progress', 'completed_at' => null, 'assigned_to' => $user->id]);
 
         $response = $this->actingAs($user)->patchJson("/kanban/tasks/{$task->id}/status", [
             'status' => 'done',
@@ -1236,7 +1238,7 @@ class UiComprehensiveScenariosTest extends TestCase
     public function test_109_kanban_instant_status_change_from_done_clears_completed_at(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->create(['status' => 'done', 'completed_at' => now()]);
+        $task = Task::factory()->create(['status' => 'done', 'completed_at' => now(), 'assigned_to' => $user->id]);
 
         $response = $this->actingAs($user)->patchJson("/kanban/tasks/{$task->id}/status", [
             'status' => 'todo',
@@ -1250,7 +1252,7 @@ class UiComprehensiveScenariosTest extends TestCase
     public function test_110_kanban_instant_status_change_validates_invalid_status(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->create(['status' => 'todo']);
+        $task = Task::factory()->create(['status' => 'todo', 'assigned_to' => $user->id]);
 
         $response = $this->actingAs($user)->patchJson("/kanban/tasks/{$task->id}/status", [
             'status' => 'invalid_status_value',

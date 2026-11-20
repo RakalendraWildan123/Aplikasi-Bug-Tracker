@@ -96,6 +96,7 @@ class KanbanBoardTest extends TestCase
         $user = User::factory()->create(['role' => 'developer']);
 
         $task = Task::factory()->create([
+            'assigned_to' => $user->id,
             'title' => 'Tugas Uji Coba Status',
             'status' => 'todo',
             'completed_at' => null,
@@ -126,10 +127,60 @@ class KanbanBoardTest extends TestCase
         $this->assertNotNull($task->fresh()->completed_at);
     }
 
+    public function test_user_cannot_move_task_assigned_to_another_developer(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+        $anotherDeveloper = User::factory()->create(['name' => 'Budi Santoso', 'role' => 'developer']);
+
+        $task = Task::factory()->create([
+            'assigned_to' => $anotherDeveloper->id,
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->patchJson("/kanban/tasks/{$task->id}/status", [
+                'status' => 'in_progress',
+            ]);
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Hanya orang yang mengerjakan task ini (Budi Santoso) yang dapat memindahkan kartu tugas.',
+        ]);
+
+        $this->assertSame('todo', $task->fresh()->status);
+    }
+
+    public function test_user_cannot_move_unassigned_task_without_taking_over(): void
+    {
+        $user = User::factory()->create(['role' => 'developer']);
+
+        $task = Task::factory()->create([
+            'assigned_to' => null,
+            'status' => 'todo',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->patchJson("/kanban/tasks/{$task->id}/status", [
+                'status' => 'in_progress',
+            ]);
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Tugas ini belum ditugaskan. Ambil alih tugas terlebih dahulu untuk dapat memindahkannya.',
+        ]);
+
+        $this->assertSame('todo', $task->fresh()->status);
+    }
+
     public function test_update_task_status_validates_invalid_status(): void
     {
         $user = User::factory()->create(['role' => 'developer']);
-        $task = Task::factory()->create(['status' => 'todo']);
+        $task = Task::factory()->create([
+            'assigned_to' => $user->id,
+            'status' => 'todo',
+        ]);
 
         $response = $this->actingAs($user)
             ->patchJson("/kanban/tasks/{$task->id}/status", [
@@ -301,10 +352,10 @@ class KanbanBoardTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'developer']);
 
-        $taskTodo = Task::factory()->create(['title' => 'Tugas Status Todo', 'status' => 'todo']);
-        $taskInProgress = Task::factory()->create(['title' => 'Tugas Status In Progress', 'status' => 'in_progress']);
-        $taskReview = Task::factory()->create(['title' => 'Tugas Status Review', 'status' => 'review']);
-        $taskDone = Task::factory()->create(['title' => 'Tugas Status Done', 'status' => 'done']);
+        $taskTodo = Task::factory()->create(['title' => 'Tugas Status Todo', 'status' => 'todo', 'assigned_to' => $user->id]);
+        $taskInProgress = Task::factory()->create(['title' => 'Tugas Status In Progress', 'status' => 'in_progress', 'assigned_to' => $user->id]);
+        $taskReview = Task::factory()->create(['title' => 'Tugas Status Review', 'status' => 'review', 'assigned_to' => $user->id]);
+        $taskDone = Task::factory()->create(['title' => 'Tugas Status Done', 'status' => 'done', 'assigned_to' => $user->id]);
 
         $response = $this->actingAs($user)->get('/kanban');
 

@@ -21,11 +21,42 @@ class ModuleUiTest extends TestCase
         $response->assertRedirect('/login');
     }
 
-    public function test_authenticated_user_can_view_modules_page(): void
+    public function test_developer_cannot_access_modules_page(): void
     {
-        $user = User::factory()->create();
+        $developer = User::factory()->create(['role' => 'developer']);
+        $response = $this->actingAs($developer)->get('/modules');
+        $response->assertForbidden();
+    }
 
-        $response = $this->actingAs($user)->get('/modules');
+    public function test_developer_cannot_create_update_or_delete_module(): void
+    {
+        $developer = User::factory()->create(['role' => 'developer']);
+        $project = Project::factory()->create();
+        $module = Module::factory()->create(['project_id' => $project->id, 'name' => 'Modul Rahasia']);
+
+        // Attempt POST
+        $this->actingAs($developer)->post('/modules', [
+            'project_id' => $project->id,
+            'name' => 'Modul Ilegal',
+        ])->assertForbidden();
+
+        // Attempt PUT
+        $this->actingAs($developer)->put("/modules/{$module->id}", [
+            'project_id' => $project->id,
+            'name' => 'Modul Diubah Ilegal',
+        ])->assertForbidden();
+
+        // Attempt DELETE
+        $this->actingAs($developer)->delete("/modules/{$module->id}")->assertForbidden();
+
+        $this->assertDatabaseHas('modules', ['id' => $module->id]);
+    }
+
+    public function test_admin_user_can_view_modules_page(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
         $response->assertSee('Master Modul');
@@ -54,7 +85,7 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_page_renders_summary_metric_cards(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create();
 
         $moduleA = Module::factory()->create([
@@ -75,7 +106,7 @@ class ModuleUiTest extends TestCase
             'module_id' => $moduleB->id,
         ]);
 
-        $response = $this->actingAs($user)->get('/modules');
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
         $response->assertSee('Total Modul');
@@ -86,13 +117,13 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_page_renders_filter_and_search_bar(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create([
             'name' => 'Portal Vendor Online',
             'code' => 'PVND',
         ]);
 
-        $response = $this->actingAs($user)->get('/modules');
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
         $response->assertSee('placeholder="Cari modul, deskripsi, atau proyek..."', false);
@@ -102,7 +133,7 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_page_renders_table_with_modules_and_counts(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create([
             'name' => 'Aplikasi SDM Internal',
             'code' => 'HRIS',
@@ -124,7 +155,7 @@ class ModuleUiTest extends TestCase
             'module_id' => $module->id,
         ]);
 
-        $response = $this->actingAs($user)->get('/modules');
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
         $response->assertSee('Modul Absensi Karyawan');
@@ -139,7 +170,7 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_filter_by_search_and_project(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $projectA = Project::factory()->create(['name' => 'Proyek Alpha', 'code' => 'ALPHA']);
         $projectB = Project::factory()->create(['name' => 'Proyek Beta', 'code' => 'BETA']);
 
@@ -153,13 +184,13 @@ class ModuleUiTest extends TestCase
         ]);
 
         // Filter pencarian
-        $searchResponse = $this->actingAs($user)->get('/modules?search=Gateway');
+        $searchResponse = $this->actingAs($admin)->get('/modules?search=Gateway');
         $searchResponse->assertOk();
         $searchResponse->assertSee('Integrasi Payment Gateway');
         $searchResponse->assertDontSee('Modul Penagihan Invoice');
 
         // Filter proyek
-        $projectFilterResponse = $this->actingAs($user)->get("/modules?project_id={$projectB->id}");
+        $projectFilterResponse = $this->actingAs($admin)->get("/modules?project_id={$projectB->id}");
         $projectFilterResponse->assertOk();
         $projectFilterResponse->assertSee('Modul Penagihan Invoice');
         $projectFilterResponse->assertDontSee('Integrasi Payment Gateway');
@@ -167,10 +198,10 @@ class ModuleUiTest extends TestCase
 
     public function test_user_can_create_new_module_via_post(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create();
 
-        $response = $this->actingAs($user)->post('/modules', [
+        $response = $this->actingAs($admin)->post('/modules', [
             'project_id' => $project->id,
             'name' => 'Modul Notifikasi Push',
             'description' => 'Layanan pengiriman pesan real-time.',
@@ -188,10 +219,10 @@ class ModuleUiTest extends TestCase
 
     public function test_create_module_via_json_returns_201(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/modules', [
+        $response = $this->actingAs($admin)->postJson('/modules', [
             'project_id' => $project->id,
             'name' => 'Modul Otentikasi Biometrik',
             'description' => 'Login via sidik jari.',
@@ -203,9 +234,9 @@ class ModuleUiTest extends TestCase
 
     public function test_create_module_validates_required_fields(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->post('/modules', [
+        $response = $this->actingAs($admin)->post('/modules', [
             'project_id' => '',
             'name' => '',
         ]);
@@ -215,9 +246,9 @@ class ModuleUiTest extends TestCase
 
     public function test_create_module_validates_invalid_project_id(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->post('/modules', [
+        $response = $this->actingAs($admin)->post('/modules', [
             'project_id' => 999999,
             'name' => 'Modul Dummy',
         ]);
@@ -227,7 +258,7 @@ class ModuleUiTest extends TestCase
 
     public function test_user_can_update_module_via_put(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $projectOld = Project::factory()->create();
         $projectNew = Project::factory()->create();
 
@@ -236,7 +267,7 @@ class ModuleUiTest extends TestCase
             'name' => 'Modul Pelaporan Lama',
         ]);
 
-        $response = $this->actingAs($user)->put("/modules/{$module->id}", [
+        $response = $this->actingAs($admin)->put("/modules/{$module->id}", [
             'project_id' => $projectNew->id,
             'name' => 'Modul Pelaporan Baru',
             'description' => 'Format ekspor Excel dan PDF otomatis.',
@@ -254,14 +285,14 @@ class ModuleUiTest extends TestCase
 
     public function test_user_can_delete_module_via_delete(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create();
         $module = Module::factory()->create([
             'project_id' => $project->id,
             'name' => 'Modul Siap Hapus',
         ]);
 
-        $response = $this->actingAs($user)->delete("/modules/{$module->id}");
+        $response = $this->actingAs($admin)->delete("/modules/{$module->id}");
 
         $response->assertRedirect('/modules');
         $this->assertDatabaseMissing('modules', [
@@ -271,9 +302,9 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_page_renders_create_edit_and_delete_modals(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->get('/modules');
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
         $response->assertSee('id="modal-create-module"', false);
@@ -283,9 +314,9 @@ class ModuleUiTest extends TestCase
 
     public function test_modules_sidebar_does_not_contain_logout_button(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->get('/modules');
+        $response = $this->actingAs($admin)->get('/modules');
 
         $response->assertOk();
 
@@ -300,14 +331,14 @@ class ModuleUiTest extends TestCase
 
     public function test_user_can_view_single_module_via_json(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create(['name' => 'Proyek Tunggal']);
         $module = Module::factory()->create([
             'project_id' => $project->id,
             'name' => 'Modul Tunggal',
         ]);
 
-        $response = $this->actingAs($user)->getJson("/modules/{$module->id}");
+        $response = $this->actingAs($admin)->getJson("/modules/{$module->id}");
 
         $response->assertOk();
         $response->assertJsonPath('module.name', 'Modul Tunggal');

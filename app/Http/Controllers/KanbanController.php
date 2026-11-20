@@ -133,6 +133,25 @@ class KanbanController extends Controller
 
     public function updateStatus(Request $request, Task $task): JsonResponse|RedirectResponse
     {
+        $user = $request->user();
+
+        // Validasi otoritas: hanya orang yang mengerjakan task tersebut (assigned_to) yang dapat memindahkan status kartu
+        if ((int) $task->assigned_to !== (int) $user->id) {
+            $assigneeName = $task->assignee?->name ?? 'pengembang lain';
+            $errorMessage = $task->assigned_to
+                ? "Hanya orang yang mengerjakan task ini ({$assigneeName}) yang dapat memindahkan kartu tugas."
+                : 'Tugas ini belum ditugaskan. Ambil alih tugas terlebih dahulu untuk dapat memindahkannya.';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                ], 403);
+            }
+
+            return redirect()->route('kanban.index')->with('error_message', $errorMessage);
+        }
+
         $validated = $request->validate([
             'status' => ['required', 'string', Rule::in(Task::STATUSES)],
         ]);

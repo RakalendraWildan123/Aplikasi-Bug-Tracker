@@ -136,7 +136,8 @@
                     </a>
                 </div>
 
-                {{-- KATEGORI 2: FITUR MASTER DATA --}}
+                @if ($user->isAdmin())
+                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -175,7 +176,7 @@
                         </a>
                     @endif
                 </div>
-
+                @endif
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Pengaturan</p>

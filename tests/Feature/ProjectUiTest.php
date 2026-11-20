@@ -20,10 +20,44 @@ class ProjectUiTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_user_can_view_projects_page(): void
+    public function test_developer_cannot_access_projects_page(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/projects');
+        $developer = User::factory()->create(['role' => 'developer']);
+        $response = $this->actingAs($developer)->get('/projects');
+        $response->assertForbidden();
+    }
+
+    public function test_developer_cannot_create_update_or_delete_project(): void
+    {
+        $developer = User::factory()->create(['role' => 'developer']);
+        $project = Project::factory()->create(['name' => 'Proyek Rahasia']);
+
+        // Attempt POST
+        $this->actingAs($developer)->post('/projects', [
+            'name' => 'Proyek Ilegal',
+            'code' => 'ILEGAL',
+            'status' => 'active',
+            'color' => '#EF4444',
+        ])->assertForbidden();
+
+        // Attempt PUT
+        $this->actingAs($developer)->put("/projects/{$project->id}", [
+            'name' => 'Proyek Dimodifikasi',
+            'code' => $project->code,
+            'status' => 'active',
+            'color' => '#EF4444',
+        ])->assertForbidden();
+
+        // Attempt DELETE
+        $this->actingAs($developer)->delete("/projects/{$project->id}")->assertForbidden();
+
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+    }
+
+    public function test_admin_user_can_view_projects_page(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('Master Proyek');
@@ -32,8 +66,8 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_page_renders_sidebar_navigation_with_categories(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/projects');
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('Fitur Operasional');
@@ -48,12 +82,12 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_page_renders_summary_metric_cards(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         Project::factory()->create(['status' => 'active']);
         Project::factory()->create(['status' => 'maintenance']);
         Project::factory()->create(['status' => 'archived']);
 
-        $response = $this->actingAs($user)->get('/projects');
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('Total Proyek');
@@ -65,8 +99,8 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_page_renders_filter_and_search_bar(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/projects');
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('id="search-input"', false);
@@ -77,7 +111,7 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_page_renders_table_with_projects_and_counts(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create([
             'name' => 'Sistem Payroll Terpadu',
             'code' => 'PAYROLL',
@@ -97,7 +131,7 @@ class ProjectUiTest extends TestCase
             'module_id' => $moduleA->id,
         ]);
 
-        $response = $this->actingAs($user)->get('/projects');
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('Sistem Payroll Terpadu');
@@ -112,7 +146,7 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_filter_by_search_and_status(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $projectA = Project::factory()->create([
             'name' => 'Aplikasi Logistik Express',
             'code' => 'LOGEX',
@@ -125,21 +159,21 @@ class ProjectUiTest extends TestCase
         ]);
 
         // Search test
-        $resSearch = $this->actingAs($user)->get('/projects?search=Logistik');
+        $resSearch = $this->actingAs($admin)->get('/projects?search=Logistik');
         $resSearch->assertSee('Aplikasi Logistik Express');
         $resSearch->assertDontSee('Portal Vendor Lama');
 
         // Status test
-        $resStatus = $this->actingAs($user)->get('/projects?status=archived');
+        $resStatus = $this->actingAs($admin)->get('/projects?status=archived');
         $resStatus->assertSee('Portal Vendor Lama');
         $resStatus->assertDontSee('Aplikasi Logistik Express');
     }
 
     public function test_user_can_create_new_project_via_post(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->post('/projects', [
+        $response = $this->actingAs($admin)->post('/projects', [
             'name' => 'Inventory System 2026',
             'code' => 'inv-sys',
             'status' => 'active',
@@ -159,9 +193,9 @@ class ProjectUiTest extends TestCase
 
     public function test_create_project_via_json_returns_201(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->postJson('/projects', [
+        $response = $this->actingAs($admin)->postJson('/projects', [
             'name' => 'Mobile App iOS',
             'code' => 'MOB-IOS',
             'status' => 'maintenance',
@@ -175,18 +209,18 @@ class ProjectUiTest extends TestCase
 
     public function test_create_project_validates_required_fields(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)->post('/projects', []);
+        $response = $this->actingAs($admin)->post('/projects', []);
         $response->assertSessionHasErrors(['name', 'code', 'status', 'color']);
     }
 
     public function test_create_project_validates_unique_code(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         Project::factory()->create(['code' => 'PAYROLL']);
 
-        $response = $this->actingAs($user)->post('/projects', [
+        $response = $this->actingAs($admin)->post('/projects', [
             'name' => 'Payroll Baru',
             'code' => 'PAYROLL',
             'status' => 'active',
@@ -198,7 +232,7 @@ class ProjectUiTest extends TestCase
 
     public function test_user_can_update_project_via_put(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create([
             'name' => 'Nama Lama',
             'code' => 'KODE-LAMA',
@@ -206,7 +240,7 @@ class ProjectUiTest extends TestCase
             'color' => '#4F46E5',
         ]);
 
-        $response = $this->actingAs($user)->put("/projects/{$project->id}", [
+        $response = $this->actingAs($admin)->put("/projects/{$project->id}", [
             'name' => 'Nama Baru',
             'code' => 'kode-baru',
             'status' => 'maintenance',
@@ -224,18 +258,18 @@ class ProjectUiTest extends TestCase
 
     public function test_user_can_delete_project_via_delete(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create();
 
-        $response = $this->actingAs($user)->delete("/projects/{$project->id}");
+        $response = $this->actingAs($admin)->delete("/projects/{$project->id}");
         $response->assertRedirect(route('projects.index'));
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
     }
 
     public function test_projects_page_renders_create_edit_and_delete_modals(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/projects');
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $response->assertSee('id="modal-create-project"', false);
@@ -248,8 +282,8 @@ class ProjectUiTest extends TestCase
 
     public function test_projects_sidebar_does_not_contain_logout_button(): void
     {
-        $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/projects');
+        $admin = User::factory()->admin()->create();
+        $response = $this->actingAs($admin)->get('/projects');
 
         $response->assertOk();
         $content = $response->getContent();
@@ -263,10 +297,10 @@ class ProjectUiTest extends TestCase
 
     public function test_user_can_view_single_project_via_json(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->admin()->create();
         $project = Project::factory()->create(['name' => 'Single Project']);
 
-        $response = $this->actingAs($user)->getJson("/projects/{$project->id}");
+        $response = $this->actingAs($admin)->getJson("/projects/{$project->id}");
         $response->assertOk();
         $response->assertJsonPath('project.name', 'Single Project');
     }

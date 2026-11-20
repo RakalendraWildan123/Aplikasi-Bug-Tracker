@@ -69,35 +69,37 @@ Route::middleware('auth')->group(function () {
     Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::delete('/notifications', [\App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
-    // Master Proyek / CRUD Proyek
-    Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
-    Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
-    Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
-    Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
+    // Fitur Master Data (Khusus Atasan / Admin)
+    Route::middleware('role:admin')->group(function () {
+        // Master Proyek / CRUD Proyek
+        Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
+        Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
+        Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+        Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
+        Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
 
-    // Master Modul / CRUD Modul
-    Route::get('/modules', [\App\Http\Controllers\ModuleController::class, 'index'])->name('modules.index');
-    Route::post('/modules', [\App\Http\Controllers\ModuleController::class, 'store'])->name('modules.store');
-    Route::get('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'show'])->name('modules.show');
-    Route::put('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'update'])->name('modules.update');
-    Route::delete('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'destroy'])->name('modules.destroy');
+        // Master Modul / CRUD Modul
+        Route::get('/modules', [\App\Http\Controllers\ModuleController::class, 'index'])->name('modules.index');
+        Route::post('/modules', [\App\Http\Controllers\ModuleController::class, 'store'])->name('modules.store');
+        Route::get('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'show'])->name('modules.show');
+        Route::put('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'update'])->name('modules.update');
+        Route::delete('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'destroy'])->name('modules.destroy');
 
-    // Master Akun / CRUD Akun (Khusus Atasan / Admin)
-    Route::middleware('role:admin')
-        ->prefix('admin/accounts')
-        ->name('admin.accounts.')
-        ->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\AccountController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\Admin\AccountController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\Admin\AccountController::class, 'store'])->name('store');
-            Route::get('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'show'])->name('show');
-            Route::get('/{user}/edit', [\App\Http\Controllers\Admin\AccountController::class, 'edit'])->name('edit');
-            Route::put('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'update'])->name('update');
-            Route::patch('/{user}/toggle-active', [\App\Http\Controllers\Admin\AccountController::class, 'toggleActive'])->name('toggle-active');
-            Route::patch('/{user}/reset-password', [\App\Http\Controllers\Admin\AccountController::class, 'resetPassword'])->name('reset-password');
-            Route::delete('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'destroy'])->name('destroy');
-        });
+        // Master Akun / CRUD Akun (Khusus Atasan / Admin)
+        Route::prefix('admin/accounts')
+            ->name('admin.accounts.')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\AccountController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Admin\AccountController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\AccountController::class, 'store'])->name('store');
+                Route::get('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'show'])->name('show');
+                Route::get('/{user}/edit', [\App\Http\Controllers\Admin\AccountController::class, 'edit'])->name('edit');
+                Route::put('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'update'])->name('update');
+                Route::patch('/{user}/toggle-active', [\App\Http\Controllers\Admin\AccountController::class, 'toggleActive'])->name('toggle-active');
+                Route::patch('/{user}/reset-password', [\App\Http\Controllers\Admin\AccountController::class, 'resetPassword'])->name('reset-password');
+                Route::delete('/{user}', [\App\Http\Controllers\Admin\AccountController::class, 'destroy'])->name('destroy');
+            });
+    });
 
     Route::get('/exports/sample-pdf', [\App\Http\Controllers\ExportController::class, 'samplePdf'])->name('exports.sample-pdf');
 

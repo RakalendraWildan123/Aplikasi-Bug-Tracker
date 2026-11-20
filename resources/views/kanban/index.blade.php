@@ -136,7 +136,8 @@
                     </a>
                 </div>
 
-                {{-- KATEGORI 2: FITUR MASTER DATA --}}
+                @if ($user->isAdmin())
+                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -175,6 +176,7 @@
                         </a>
                     @endif
                 </div>
+                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -437,14 +439,18 @@
                             data-status="{{ $colKey }}"
                         >
                             @forelse ($column['tasks'] as $task)
+                                @php
+                                    $isAssignee = (int)$task->assigned_to === (int)$user->id;
+                                @endphp
                                 <div
-                                    class="kanban-card bg-white border border-slate-200 border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none cursor-grab active:cursor-grabbing relative"
-                                    draggable="true"
+                                    class="kanban-card bg-white border border-slate-200 border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none {{ $isAssignee ? 'cursor-grab active:cursor-grabbing' : 'cursor-default' }} relative"
+                                    draggable="{{ $isAssignee ? 'true' : 'false' }}"
                                     id="card-task-{{ $task->id }}"
                                     data-task-id="{{ $task->id }}"
                                     data-current-status="{{ $task->status }}"
                                     data-project-id="{{ $task->project_id ?? '' }}"
                                     data-assigned-to="{{ $task->assigned_to ?? '' }}"
+                                    data-can-move="{{ $isAssignee ? 'true' : 'false' }}"
                                 >
                                     {{-- Baris Atas: Badge Proyek & Modul, Tipe Tugas & TOMBOL EDIT KARTU --}}
                                     <div class="flex items-center justify-between gap-2 mb-2">
@@ -560,12 +566,19 @@
                                             <button
                                                 type="button"
                                                 draggable="false"
-                                                class="btn-move-prev w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 transition flex items-center justify-center shrink-0 {{ $task->status === 'todo' ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
-                                                {{ $task->status === 'todo' ? 'disabled' : '' }}
-                                                @if ($task->status === 'in_progress') data-target-status="todo" title="Pindahkan ke To Do" aria-label="Pindahkan ke To Do"
-                                                @elseif ($task->status === 'review') data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
-                                                @elseif ($task->status === 'done') data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
-                                                @else title="Sudah di kolom pertama (To Do)" aria-label="Sudah di kolom pertama"
+                                                class="btn-move-prev w-8 h-8 rounded-lg border border-slate-200 transition flex items-center justify-center shrink-0 {{ (! $isAssignee || $task->status === 'todo') ? 'opacity-25 cursor-not-allowed bg-slate-100 text-slate-300' : 'bg-slate-50 cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
+                                                {{ (! $isAssignee || $task->status === 'todo') ? 'disabled' : '' }}
+                                                @if (! $isAssignee)
+                                                    title="Hanya orang yang mengerjakan task ini ({{ $task->assignee?->name ?? 'Belum Ditugaskan' }}) yang dapat memindahkannya"
+                                                    aria-label="Tidak dapat memindahkan tugas orang lain"
+                                                @elseif ($task->status === 'in_progress')
+                                                    data-target-status="todo" title="Pindahkan ke To Do" aria-label="Pindahkan ke To Do"
+                                                @elseif ($task->status === 'review')
+                                                    data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
+                                                @elseif ($task->status === 'done')
+                                                    data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
+                                                @else
+                                                    title="Sudah di kolom pertama (To Do)" aria-label="Sudah di kolom pertama"
                                                 @endif
                                             >
                                                 <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -577,8 +590,9 @@
                                             <select
                                                 id="move-status-{{ $task->id }}"
                                                 data-task-id="{{ $task->id }}"
-                                                class="task-status-select flex-1 min-w-0 text-[11px] font-semibold bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
-                                                title="Pilih status tugas secara langsung"
+                                                class="task-status-select flex-1 min-w-0 text-[11px] font-semibold border border-slate-200 rounded-lg py-1.5 px-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 {{ $isAssignee ? 'bg-slate-50 cursor-pointer' : 'bg-slate-100/80 cursor-not-allowed opacity-60 text-slate-400' }}"
+                                                {{ $isAssignee ? '' : 'disabled' }}
+                                                title="{{ $isAssignee ? 'Pilih status tugas secara langsung' : 'Hanya orang yang mengerjakan task ini (' . ($task->assignee?->name ?? 'Belum Ditugaskan') . ') yang dapat memindahkannya' }}"
                                             >
                                                 <option value="todo" {{ $task->status === 'todo' ? 'selected' : '' }}>To Do</option>
                                                 <option value="in_progress" {{ $task->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
@@ -590,12 +604,19 @@
                                             <button
                                                 type="button"
                                                 draggable="false"
-                                                class="btn-move-next w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 transition flex items-center justify-center shrink-0 {{ $task->status === 'done' ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
-                                                {{ $task->status === 'done' ? 'disabled' : '' }}
-                                                @if ($task->status === 'todo') data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
-                                                @elseif ($task->status === 'in_progress') data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
-                                                @elseif ($task->status === 'review') data-target-status="done" title="Pindahkan ke Done" aria-label="Pindahkan ke Done"
-                                                @else title="Sudah di kolom terakhir (Done)" aria-label="Sudah di kolom terakhir"
+                                                class="btn-move-next w-8 h-8 rounded-lg border border-slate-200 transition flex items-center justify-center shrink-0 {{ (! $isAssignee || $task->status === 'done') ? 'opacity-25 cursor-not-allowed bg-slate-100 text-slate-300' : 'bg-slate-50 cursor-pointer hover:bg-slate-100 hover:text-slate-900 text-slate-600' }}"
+                                                {{ (! $isAssignee || $task->status === 'done') ? 'disabled' : '' }}
+                                                @if (! $isAssignee)
+                                                    title="Hanya orang yang mengerjakan task ini ({{ $task->assignee?->name ?? 'Belum Ditugaskan' }}) yang dapat memindahkannya"
+                                                    aria-label="Tidak dapat memindahkan tugas orang lain"
+                                                @elseif ($task->status === 'todo')
+                                                    data-target-status="in_progress" title="Pindahkan ke In Progress" aria-label="Pindahkan ke In Progress"
+                                                @elseif ($task->status === 'in_progress')
+                                                    data-target-status="review" title="Pindahkan ke Review" aria-label="Pindahkan ke Review"
+                                                @elseif ($task->status === 'review')
+                                                    data-target-status="done" title="Pindahkan ke Done" aria-label="Pindahkan ke Done"
+                                                @else
+                                                    title="Sudah di kolom terakhir (Done)" aria-label="Sudah di kolom terakhir"
                                                 @endif
                                             >
                                                 <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -1325,6 +1346,19 @@
                             // Update data attribute assigned-to pada kartu
                             card.setAttribute('data-assigned-to', payload.assigned_to || '');
 
+                            // Update kemampuan memindahkan tugas jika penugasan berubah
+                            const currentAuthUserId = {{ (int)$user->id }};
+                            const isNowAssignee = parseInt(payload.assigned_to) === currentAuthUserId;
+                            card.setAttribute('data-can-move', isNowAssignee ? 'true' : 'false');
+                            card.setAttribute('draggable', isNowAssignee ? 'true' : 'false');
+                            if (isNowAssignee) {
+                                card.classList.remove('cursor-default');
+                                card.classList.add('cursor-grab', 'active:cursor-grabbing');
+                            } else {
+                                card.classList.remove('cursor-grab', 'active:cursor-grabbing');
+                                card.classList.add('cursor-default');
+                            }
+
                             // Pindahkan kartu jika status berubah
                             const currentStatus = card.getAttribute('data-current-status');
                             if (payload.status !== currentStatus) {
@@ -1391,45 +1425,76 @@
                 const btnEdit = cardElement.querySelector('.btn-edit-task');
                 if (btnEdit) btnEdit.setAttribute('data-status', newStatus);
 
-                // 5. Tombol Panah Kiri (Prev) & Kanan (Next)
+                // 5. Otorisasi memindahkan tugas: hanya orang yang mengerjakan task tersebut
+                const canMove = cardElement.getAttribute('data-can-move') !== 'false';
+                const btnPrev = cardElement.querySelector('.btn-move-prev');
+                const btnNext = cardElement.querySelector('.btn-move-next');
+
+                if (!canMove) {
+                    if (btnPrev) {
+                        btnPrev.disabled = true;
+                        btnPrev.removeAttribute('data-target-status');
+                        btnPrev.classList.add('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
+                        btnPrev.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600', 'bg-slate-50');
+                    }
+                    if (btnNext) {
+                        btnNext.disabled = true;
+                        btnNext.removeAttribute('data-target-status');
+                        btnNext.classList.add('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
+                        btnNext.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600', 'bg-slate-50');
+                    }
+                    if (select) {
+                        select.disabled = true;
+                        select.classList.add('cursor-not-allowed', 'opacity-60', 'text-slate-400', 'bg-slate-100/80');
+                        select.classList.remove('cursor-pointer', 'bg-slate-50');
+                    }
+                    return;
+                }
+
+                // Pulihkan kontrol interaktif jika berhak memindahkan
+                if (select) {
+                    select.disabled = false;
+                    select.classList.remove('cursor-not-allowed', 'opacity-60', 'text-slate-400', 'bg-slate-100/80');
+                    select.classList.add('cursor-pointer', 'bg-slate-50', 'text-slate-700');
+                }
+
+                // 6. Tombol Panah Kiri (Prev) & Kanan (Next) bagi pemilik tugas
                 const currentIndex = statusFlow.indexOf(newStatus);
                 const prevStatus = currentIndex > 0 ? statusFlow[currentIndex - 1] : null;
                 const nextStatus = (currentIndex >= 0 && currentIndex < statusFlow.length - 1) ? statusFlow[currentIndex + 1] : null;
 
-                const btnPrev = cardElement.querySelector('.btn-move-prev');
                 if (btnPrev) {
                     if (prevStatus) {
                         btnPrev.disabled = false;
                         btnPrev.setAttribute('data-target-status', prevStatus);
                         btnPrev.title = `Pindahkan ke ${statusLabels[prevStatus]}`;
                         btnPrev.setAttribute('aria-label', `Pindahkan ke ${statusLabels[prevStatus]}`);
-                        btnPrev.classList.remove('opacity-25', 'cursor-not-allowed');
-                        btnPrev.classList.add('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                        btnPrev.classList.remove('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
+                        btnPrev.classList.add('cursor-pointer', 'bg-slate-50', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
                     } else {
                         btnPrev.disabled = true;
                         btnPrev.removeAttribute('data-target-status');
                         btnPrev.title = 'Sudah di kolom pertama (To Do)';
                         btnPrev.setAttribute('aria-label', 'Sudah di kolom pertama');
-                        btnPrev.classList.add('opacity-25', 'cursor-not-allowed');
+                        btnPrev.classList.add('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
                         btnPrev.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
                     }
                 }
 
-                const btnNext = cardElement.querySelector('.btn-move-next');
                 if (btnNext) {
                     if (nextStatus) {
                         btnNext.disabled = false;
                         btnNext.setAttribute('data-target-status', nextStatus);
                         btnNext.title = `Pindahkan ke ${statusLabels[nextStatus]}`;
                         btnNext.setAttribute('aria-label', `Pindahkan ke ${statusLabels[nextStatus]}`);
-                        btnNext.classList.remove('opacity-25', 'cursor-not-allowed');
-                        btnNext.classList.add('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
+                        btnNext.classList.remove('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
+                        btnNext.classList.add('cursor-pointer', 'bg-slate-50', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
                     } else {
                         btnNext.disabled = true;
                         btnNext.removeAttribute('data-target-status');
                         btnNext.title = 'Sudah di kolom terakhir (Done)';
                         btnNext.setAttribute('aria-label', 'Sudah di kolom terakhir');
-                        btnNext.classList.add('opacity-25', 'cursor-not-allowed');
+                        btnNext.classList.add('opacity-25', 'cursor-not-allowed', 'bg-slate-100', 'text-slate-300');
                         btnNext.classList.remove('cursor-pointer', 'hover:bg-slate-100', 'hover:text-slate-900', 'text-slate-600');
                     }
                 }
@@ -1442,6 +1507,12 @@
                     cardElement = document.getElementById(`card-task-${taskId}`);
                 }
                 if (!cardElement) return;
+
+                // Validasi sisi klien: hanya orang yang mengerjakan task yang dapat memindahkan kartu
+                if (cardElement.getAttribute('data-can-move') === 'false') {
+                    showToast('Hanya orang yang mengerjakan task ini yang dapat memindahkannya.', true);
+                    return;
+                }
 
                 const oldStatus = cardElement.getAttribute('data-current-status');
                 if (oldStatus === newStatus) return;
@@ -1486,7 +1557,7 @@
                     if (response.ok && data.success) {
                         showToast(data.message || 'Status tugas berhasil diperbarui.');
                     } else {
-                        // Rollback jika server mengembalikan error
+                        // Rollback jika server mengembalikan error (misal 403 Forbidden)
                         rollbackTaskMove(cardElement, oldStatus, sourceDropzone);
                         showToast(data.message || 'Gagal memperbarui status tugas di server.', true);
                     }
@@ -1509,9 +1580,14 @@
             document.addEventListener('change', (e) => {
                 if (e.target && e.target.classList.contains('task-status-select')) {
                     const select = e.target;
+                    const card = select.closest('.kanban-card');
+                    if (card && card.getAttribute('data-can-move') === 'false') {
+                        showToast('Hanya orang yang mengerjakan task ini yang dapat memindahkannya.', true);
+                        select.value = card.getAttribute('data-current-status');
+                        return;
+                    }
                     const taskId = select.getAttribute('data-task-id');
                     const newStatus = select.value;
-                    const card = select.closest('.kanban-card');
                     if (taskId && newStatus && card) {
                         updateTaskStatus(taskId, newStatus, card);
                     }
@@ -1521,13 +1597,22 @@
             // Event listener ganti status via klik tombol panah (Prev / Next)
             document.addEventListener('click', (e) => {
                 const btnMove = e.target.closest('.btn-move-prev, .btn-move-next');
-                if (!btnMove || btnMove.disabled) return;
+                if (!btnMove) return;
+
+                const card = btnMove.closest('.kanban-card');
+                if (card && card.getAttribute('data-can-move') === 'false') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showToast('Hanya orang yang mengerjakan task ini yang dapat memindahkannya.', true);
+                    return;
+                }
+
+                if (btnMove.disabled) return;
 
                 e.preventDefault();
                 e.stopPropagation();
 
                 const targetStatus = btnMove.getAttribute('data-target-status');
-                const card = btnMove.closest('.kanban-card');
                 if (!card || !targetStatus) return;
 
                 const taskId = card.getAttribute('data-task-id');
@@ -1548,6 +1633,11 @@
 
             document.querySelectorAll('.kanban-card').forEach(card => {
                 card.addEventListener('dragstart', (e) => {
+                    if (card.getAttribute('data-can-move') === 'false' || card.getAttribute('draggable') === 'false') {
+                        e.preventDefault();
+                        showToast('Hanya orang yang mengerjakan task ini yang dapat memindahkannya.', true);
+                        return false;
+                    }
                     draggedCard = card;
                     card.classList.add('opacity-50', 'ring-2', 'ring-slate-900');
                     e.dataTransfer.effectAllowed = 'move';
@@ -1581,6 +1671,11 @@
                     dropzone.classList.remove('bg-indigo-50/70', 'border-indigo-300');
                     const targetStatus = dropzone.getAttribute('data-status');
                     if (draggedCard) {
+                        if (draggedCard.getAttribute('data-can-move') === 'false') {
+                            showToast('Hanya orang yang mengerjakan task ini yang dapat memindahkannya.', true);
+                            draggedCard = null;
+                            return;
+                        }
                         const taskId = draggedCard.getAttribute('data-task-id');
                         const currentStatus = draggedCard.getAttribute('data-current-status');
                         if (targetStatus && targetStatus !== currentStatus) {
@@ -1699,6 +1794,16 @@
 
                             const btnEdit = card.querySelector('.btn-edit-task');
                             if (btnEdit) btnEdit.setAttribute('data-assigned-to', data.user.id);
+
+                            // Aktifkan izin memindahkan kartu tugas untuk pengguna yang baru mengambil alih
+                            card.setAttribute('data-can-move', 'true');
+                            card.setAttribute('draggable', 'true');
+                            card.classList.remove('cursor-default');
+                            card.classList.add('cursor-grab', 'active:cursor-grabbing');
+
+                            // Sinkronkan status kontrol tombol panah dan dropdown
+                            const currentStatus = card.getAttribute('data-current-status');
+                            updateCardStatusElements(card, currentStatus);
 
                             card.classList.add('ring-2', 'ring-emerald-400');
                             setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-400'), 800);

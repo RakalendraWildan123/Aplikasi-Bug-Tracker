@@ -1,34 +1,96 @@
 # Aplikasi Monitoring & Manajemen IT Developer
 
-Aplikasi web terpadu untuk memonitor siklus pengembangan perangkat lunak, memfasilitasi kolaborasi tugas harian tim pengembang, melacak temuan bug, mengelola repositori rilis, mengevaluasi performa sistem, serta menyajikan laporan periodik kinerja tim.
+Aplikasi web terpadu untuk memonitor siklus hidup pengembangan perangkat lunak, memfasilitasi kolaborasi tugas harian tim pengembang, melacak temuan bug, mencatat repositori rilis kode, mengevaluasi kesehatan sistem pasca-rilis, serta menyajikan laporan periodik kinerja tim.
 
-Antarmuka pengguna (*User Interface*) dibangun dengan prinsip:
-- **Tegas dan Bersih**: Hierarki visual terstruktur tanpa dekorasi berlebihan.
-- **Tanpa Tab Bersarang (*No Nested Tabs*)**: Menggunakan modal interaktif mandiri untuk seluruh aksi formulir dan manipulasi data.
-- **Ramah Desktop & Tablet**: Tata letak fleksibel dengan dukungan *collapsible sidebar drawer* dan tabel responsif.
-- **Keamanan Sesi Terpusat**: Tombol **Logout** dilindungi dan hanya dapat diakses melalui kartu profil pada halaman **Akun Saya**, menjaga sidebar tetap bersih dan mencegah keluar sesi secara tidak sengaja.
+Aplikasi ini dibangun dengan prinsip antarmuka:
+- **Tegas dan Bersih**: Hierarki visual terstruktur, warna status informatif, serta tipografi proporsional tanpa dekorasi berlebihan.
+- **Tanpa Tab Bersarang (*No Nested Tabs*)**: Seluruh aksi formulir, peninjauan rincian, dan konfirmasi menggunakan pop-up modal mandiri sehingga alur pengguna tetap lugas dan fokus.
+- **Ramah Desktop & Tablet**: Tata letak fleksibel dengan drawer sidebar responsif, panel grid adaptif, dan tabel data yang ramah sentuhan.
+- **Keamanan Sesi Terpusat**: Tombol **Keluar Sesi (Logout)** dilindungi token CSRF dan hanya ditempatkan di dalam kartu profil pada halaman **Akun Saya**, menjaga sidebar tetap bersih dan mencegah keluar sesi secara tidak sengaja.
 
 ---
 
-## 1. Peran Pengguna & Kredensial Demo
+## 1. Tools & Teknologi yang Digunakan
 
-Sistem menyediakan 2 tingkatan peran (*roles*) dengan akun bawaan seeder:
+Aplikasi ini memanfaatkan tumpukan teknologi modern untuk menghasilkan performa tinggi, keamanan andal, dan pengalaman pengguna yang responsif:
+
+### A. Backend & Server
+- **PHP 8.2+**: Bahasa pemrograman utama yang cepat, bertipe kuat (*strict types*), dan efisien.
+- **Laravel 12.x Framework**: Kerangka kerja PHP modern berbasis MVC (*Model-View-Controller*):
+  - *Routing & Middleware*: Pengaturan rute terisolasi dengan filter autentikasi sesi dan otorisasi peran (`EnsureUserHasRole`).
+  - *Eloquent ORM*: Pengelolaan entitas database relasional dengan relasi integritas tinggi (*Project*, *Module*, *Task*, *Bug*, *RepoHistory*, *AppEvaluation*, *ActionItem*, *Notification*, *User*).
+  - *Blade Templating Engine*: Mesin template komponen server-side yang ringan dan aman dari serangan XSS.
+  - *Form Validation & CSRF Protection*: Validasi input ketat di sisi server serta proteksi token anti-CSRF pada setiap permintaan pengubahan data.
+- **Laravel Snappy / Wkhtmltopdf**: Pustaka ekspor dokumen untuk konversi laporan ke format cetak PDF berpresisi tinggi.
+
+### B. Frontend & Tampilan
+- **Tailwind CSS 4.x**: Kerangka kerja styling berbasis utility-first modern dengan `@tailwindcss/vite` untuk kompilasi CSS instan dan ukuran aset produksi yang sangat optimal.
+- **Vite 6.x**: Alat bundling aset modern generasi terbaru untuk kompilasi frontend kilat dan *Hot Module Replacement* (HMR).
+- **Vanilla JavaScript (ES6+)**:
+  - Menggunakan API peramban modern (*Fetch API*) untuk interaksi asinkron tanpa memuat ulang seluruh halaman (*Optimistic UI update* di bawah 0.8 detik).
+  - *Native HTML5 Drag and Drop API*: Digunakan pada Papan Kanban untuk memindahkan kartu tugas antar kolom status secara natural.
+  - Bebas dari ketergantungan library monolitik berat, menjaga halaman tetap ringan dan cepat dimuat.
+- **Heroicons / SVG Icons**: Ikonografi vektor yang tajam pada semua resolusi layar tanpa membebani bandwidth.
+
+### C. Basis Data & Penyimpanan
+- **MySQL / MariaDB / SQLite**: Sistem manajemen basis data relasional dengan integritas foreign key cascade/set-null yang terjamin.
+- **Laravel Migrations & Seeders**: Pengelolaan skema database terkontrol versi (*version-controlled*) dan penyedia data demo siap pakai.
+- **Laravel File Storage**: Penyimpanan berkas foto profil pengguna di direktori publik terlindungi.
+
+### D. Pengujian & Kualitas Kode (*Quality Assurance*)
+- **PHPUnit 11.x**: Suite pengujian otomatis komprehensif mencakup *Feature Tests* dan *Unit Tests* (lebih dari 600 skenario pengujian sukses).
+- **Artisan CLI**: Manajemen perintah pengujian (`php artisan test`), migrasi, dan pengelolaan antrean background.
+- **Git & GitHub**: Sistem kontrol versi untuk pelacakan cabang (*branching*), peninjauan kode, dan riwayat commit.
+
+---
+
+## 2. Gambaran Umum Cara Kerja Aplikasi
+
+Aplikasi menghubungkan seluruh siklus operasional tim pengembang teknologi informasi dalam satu alur yang terintegrasi:
+
+1. **Inisialisasi Data Master (Admin Only)**:
+   - Administrator mendaftarkan proyek baru dan kode uniknya (misal: `PAYROLL`, `HRIS`).
+   - Administrator memecah proyek ke dalam modul-modul fungsional (misal: *Modul Presensi*, *Modul Autentikasi*).
+   - Administrator mengelola akun pengembang, memberikan kredensial, dan mengatur status keaktifan akun.
+2. **Perencanaan & Distribusi Tugas**:
+   - Tim mendefinisikan tugas pengembangan (fitur, peningkatan, refaktor, atau maintenance) yang dikaitkan ke proyek dan modul terkait.
+   - Tugas ditugaskan ke salah satu pengembang penanggung jawab (*Assignee*).
+3. **Pelaksanaan Kerja pada Papan Kanban**:
+   - Pengembang memantau dan menggeser tugas dari *To Do*, *In Progress*, *Review*, hingga *Done*.
+   - **Aturan Otorisasi Kanban**: Hanya pengembang yang ditugaskan pada tugas tersebut yang berhak memindahkan kartu tugas. Pengembang lain dapat menggunakan tombol *Ambil Alih Tugas* jika ingin mengambil tanggung jawab pengerjaan tugas tersebut.
+4. **Pelacakan Bug & Dokumentasi Solusi**:
+   - Masalah atau cacat sistem dilaporkan dengan modul dan tingkat keparahan (*Low*, *Medium*, *High*, *Critical*).
+   - Pengembang yang menangani bug mendokumentasikan analisis akar masalah teknis (*root cause*) dan langkah solusi pada modal khusus.
+5. **Pencatatan Riwayat Rilis Kode**:
+   - Setiap publikasi versi aplikasi ke lingkungan staging atau production dicatat lengkap dengan tag versi, nama branch, dan hash commit Git.
+   - Riwayat rilis bersifat *immutable* (tidak dapat diubah atau dihapus) guna menjamin keaslian audit trail rekayasa perangkat lunak.
+6. **Evaluasi Pasca-Rilis & Rencana Tindak Lanjut**:
+   - Tim melakukan tinjauan berkala atas stabilitas sistem pasca-rilis.
+   - Rencana aksi perbaikan (*action items*) dibuat dan dipantau hingga selesai atau dikonversi kembali menjadi tugas Kanban baru.
+7. **Monitoring Terpadu & Pelaporan Kinerja**:
+   - **Dashboard**: Menyajikan 4 metrik ringkasan tercepat, peringatan kendala blocker, temuan bug kritis, dan rilis terbaru.
+   - **Laporan Periodik**: Menghasilkan metrik rasio penyelesaian tugas, resolusi bug, rekapitulasi performa per proyek, serta ekspor data ke format CSV dan cetak PDF.
+   - **Pop-up Notifikasi**: Menampilkan pembaruan terkini secara instan saat terdapat tugas baru, kendala blocker, atau bug kritis.
+
+---
+
+## 3. Peran Pengguna & Kredensial Demo
 
 | Peran (*Role*) | Email | Kata Sandi | Deskripsi Hak Akses |
 | :--- | :--- | :--- | :--- |
-| **Administrator (Atasan IT / PM)** | `admin@bugtracker.test` | `password` | Akses penuh: manajemen akun seluruh pengguna, master data, seluruh fitur operasional, serta hak *takeover* tugas/bug. |
-| **Developer (Fullstack Lead)** | `raka.pratama@bugtracker.test` | `password` | Mengelola tugas, melacak bug & solusi, mencatat rilis repositori, menginput evaluasi aplikasi, dan memfilter laporan periodik. |
-| **Developer (Backend)** | `dina.kusuma@bugtracker.test` | `password` | Menangani tugas backend, analisis akar masalah bug (*root cause*), dan tindak lanjut evaluasi sistem. |
+| **Administrator (Atasan IT / PM)** | `admin@bugtracker.test` | `password` | Akses penuh ke seluruh fitur: manajemen akun pengguna, master proyek, master modul, seluruh fitur operasional, dan hak ambil alih tugas/bug. |
+| **Developer (Fullstack Lead)** | `raka.pratama@bugtracker.test` | `password` | Akses operasional: mengelola tugas yang ditugaskan, memindahkan kartu tugas Kanban miliknya, menangani bug & solusi, mencatat rilis, input evaluasi, dan melihat laporan. |
+| **Developer (Backend)** | `dina.kusuma@bugtracker.test` | `password` | Akses operasional developer: menangani tugas backend, debugging isu teknis, dan memperbarui rencana tindak lanjut evaluasi. |
 
 ---
 
-## 2. Struktur Menu & Hierarki Navigasi
+## 4. Struktur Menu Navigasi
 
-Navigasi sidebar dikelompokkan secara terstruktur ke dalam 3 kategori:
+Navigasi sidebar dirancang bersih, tegas, dan adaptif terhadap peran pengguna:
 
 ```
-[Sidebar Navigasi]
-|-- 1. FITUR OPERASIONAL
+[Sidebar Navigasi Aplikasi]
+|-- 1. FITUR OPERASIONAL (Dapat diakses oleh Admin & Developer)
 |   |-- Dashboard             (/dashboard atau /)
 |   |-- Papan Kanban          (/kanban)
 |   |-- Daftar Tugas          (/tasks)
@@ -36,202 +98,220 @@ Navigasi sidebar dikelompokkan secara terstruktur ke dalam 3 kategori:
 |   |-- Riwayat Rilis         (/releases)
 |   |-- Evaluasi Aplikasi     (/evaluations)
 |   |-- Laporan Periodik      (/reports)
-|   `-- Pop-up Notifikasi     (Header / Topbar Lonceng)
+|   `-- Pop-up Notifikasi     (Ikon Lonceng di Topbar / Header)
 |
-|-- 2. FITUR MASTER DATA
+|-- 2. FITUR MASTER DATA (Khusus Administrator - Tersembunyi untuk Developer)
 |   |-- Master Proyek         (/projects)
 |   |-- Master Modul          (/modules)
-|   `-- Master Akun           (/admin/accounts) -> Khusus Administrator
+|   `-- Master Akun           (/admin/accounts)
 |
 `-- 3. PENGATURAN
-    `-- Akun Saya             (/account) -> Pusat Profil, Password, & Logout
+    `-- Akun Saya             (/account - Pusat Profil, Password, & Tombol Logout)
 ```
 
 ---
 
-## 3. Cara Kerja & Alur Operasional dari Setiap Fitur
+## 5. Cara Kerja Rinci dari Setiap Fitur
 
-### 3.1. Fitur Master Data
+### 5.1. Fitur Master Data (Khusus Administrator)
 
 #### A. Master Proyek (`/projects`)
-- **Tujuan**: Mengelola data induk payung proyek sistem yang dikembangkan oleh tim IT.
+- **Tujuan**: Mengelola payung aplikasi atau sistem yang sedang dibangun dan dipelihara.
 - **Cara Kerja**:
-  1. Klik tombol **Tambah Proyek** pada header halaman untuk membuka modal form.
-  2. Masukkan **Nama Proyek**, **Kode Proyek** (otomatis diubah menjadi huruf kapital, misal: `HRIS`, `KEU`), warna badge identitas, status siklus proyek (*Aktif*, *Pemeliharaan*, atau *Diarsipkan*), serta URL repositori Git.
-  3. Tabel utama menampilkan rekapitulasi jumlah modul yang terhubung, tugas aktif, dan temuan bug per proyek secara otomatis.
-  4. Pengguna dapat memperbarui rincian proyek melalui tombol **Edit** atau menghapus proyek melalui tombol **Hapus** dengan dialog konfirmasi aman.
+  1. Halaman hanya dapat diakses oleh peran Admin. Pengembang yang mencoba mengakses URL ini akan menerima status HTTP 403 Forbidden.
+  2. Tombol **Tambah Proyek** membuka modal form untuk menginput nama proyek, kode unik (otomatis huruf kapital, misal: `PAYROLL`), warna identitas, repositori Git, dan status (*Aktif*, *Pemeliharaan*, atau *Diarsipkan*).
+  3. Tabel utama menampilkan rekapitulasi jumlah modul yang terhubung, tugas aktif, dan temuan bug per proyek.
+  4. Pengeditan dan penghapusan proyek dilakukan melalui modal pop-up konfirmasi tanpa berpindah halaman.
 
 #### B. Master Modul (`/modules`)
-- **Tujuan**: Memecah proyek menjadi komponen fitur fungsional yang spesifik (misal: *Autentikasi & SSO*, *Laporan Keuangan*, *Presensi GPS*).
+- **Tujuan**: Membagi proyek menjadi unit-unit fitur spesifik (misal: *Modul Pembayaran*, *Modul Notifikasi Push*).
 - **Cara Kerja**:
-  1. Klik tombol **Tambah Modul**.
-  2. Pilih proyek induk terkait, beri nama modul, dan tulis deskripsi cakupan teknis modul.
-  3. Modul yang terdaftar menjadi referensi wajib saat tim developer membuat tugas pengembangan baru maupun saat tim QA melaporkan bug.
-  4. Halaman dilengkapi filter instan berdasarkan **Proyek Induk** dan bilah pencarian untuk memudahkan inventarisasi modul per aplikasi.
+  1. Halaman dilindungi middleware khusus Admin.
+  2. Tombol **Tambah Modul** membuka modal untuk memilih proyek induk terkait, mengisi nama modul, serta deskripsi ruang lingkup fungsional.
+  3. Menyediakan bilah pencarian dan filter cepat per proyek induk untuk memudahkan pengecekan modul tertentu.
+  4. Modul yang terdaftar menjadi pilihan wajib saat pengembang membuat tugas atau melaporkan temuan bug.
 
-#### C. Master Akun (`/admin/accounts` — Khusus Administrator)
-- **Tujuan**: Pengelolaan identitas pengguna aplikasi, penetapan peran, dan kontrol akses secara terpusat oleh Atasan IT.
+#### C. Master Akun Pengguna (`/admin/accounts`)
+- **Tujuan**: Manajemen akun tim pengembang dan kontrol hak akses terpusat oleh Atasan IT.
 - **Cara Kerja**:
-  1. Admin dapat mendaftarkan akun baru (Developer atau Admin) melalui tombol **Tambah Pengguna Baru**.
-  2. **Ubah Status Aktif (*Toggle Active*)**: Admin dapat mengaktifkan atau menonaktifkan akun dengan satu klik. Akun yang dinonaktifkan akan langsung ditolak saat mencoba masuk ke sistem.
-  3. **Reset Kata Sandi (*Reset Password*)**: Admin dapat mengatur ulang kata sandi pengguna langsung melalui modal konfirmasi tanpa perlu mengetahui kata sandi lama pengguna.
-  4. **Proteksi Akun Sendiri**: Sistem secara otomatis mencegah Admin untuk menonaktifkan atau menghapus akun miliknya sendiri guna menghindari insiden penguncian akses (*lockout*).
+  1. Admin dapat mendaftarkan akun baru (Admin atau Developer) melalui tombol **Tambah Pengguna Baru**.
+  2. **Ubah Status Aktif (*Toggle Active*)**: Admin dapat menonaktifkan akun dengan satu klik tombol toggle. Akun yang nonaktif langsung ditolak saat mencoba masuk ke sistem.
+  3. **Reset Kata Sandi (*Reset Password*)**: Admin dapat mengatur ulang password pengguna langsung melalui modal konfirmasi tanpa perlu mengetahui password lama.
+  4. **Proteksi Akun Sendiri**: Sistem secara otomatis mencegah Admin untuk menonaktifkan atau menghapus akun yang sedang digunakannya sendiri (*anti-lockout guard*).
 
 ---
 
-### 3.2. Fitur Operasional
+### 5.2. Fitur Operasional (Admin & Developer)
 
 #### A. Dashboard Utama Terpadu (`/dashboard` atau `/`)
-- **Tujuan**: Menyajikan ringkasan metrik kesehatan proyek, status tugas berjalan, temuan bug mendesak, serta versi rilis terkini dalam satu layar komprehensif tanpa tab bersarang.
+- **Tujuan**: Menyajikan ringkasan visual kesehatan proyek, status tugas, temuan bug mendesak, dan versi rilis terbaru dalam satu pandangan tanpa tab bersarang.
 - **Cara Kerja**:
-  1. **Ringkasan 4 Kartu Metrik Utama**:
-     - *Proyek Aktif*: Jumlah proyek yang sedang berjalan dari total proyek yang terdaftar.
-     - *Tugas Berjalan*: Total tugas berstatus *In Progress* dengan rincian jumlah tugas *To Do* dan *Review*.
-     - *Bug Perlu Ditangani*: Total bug berstatus *Open* atau *In Progress*, disertai penanda merah jika terdapat bug dengan tingkat keparahan kritis (*Critical*).
-     - *Rilis Kode Terkini*: Versi tag rilis terbaru yang telah dipublikasikan beserta nama proyek dan tanggal rilisnya.
-  2. **Banner Peringatan Kendala (*Blocker Alert*)**: Menampilkan daftar tugas yang mengalami kendala teknis secara langsung dengan kutipan catatan blocker dan tautan instan ke Papan Kanban.
-  3. **Aktivitas Tugas Terkini**: Daftar 5 tugas aktif terbaru lengkap dengan kode proyek, tingkat prioritas, status tahapan, dan pengembang yang ditugaskan (*PIC*).
-  4. **Pintasan Cepat Operasional**: Akses satu klik langsung ke Papan Kanban, Daftar Tugas, Pelacak Bug, dan Laporan Periodik.
-  5. **Temuan Bug Mendesak & Evaluasi**: Pemetaan bug kritis/tinggi teratas dan rencana tindak lanjut perbaikan (*action items*) yang masih aktif.
+  1. **4 Kartu Metrik Ringkas**:
+     - *Proyek Aktif*: Jumlah proyek aktif dari seluruh proyek terdaftar.
+     - *Tugas Berjalan*: Jumlah tugas yang sedang berada di tahap *In Progress*, *To Do*, dan *Review*.
+     - *Bug Perlu Ditangani*: Total bug berstatus aktif dengan penanda khusus jika ada tingkat keparahan *Critical*.
+     - *Rilis Kode Terkini*: Tag versi rilis terbaru beserta nama proyek dan tanggal deployment.
+  2. **Peringatan Kendala (*Blocker Alert*)**: Menampilkan daftar tugas yang mengalami hambatan teknis secara mencolok dengan kutipan kendala dan tombol pintas ke Papan Kanban.
+  3. **Daftar Tugas Terkini**: Tabel 5 tugas aktif terbaru lengkap dengan prioritas, penanggung jawab, dan status pengerjaan.
+  4. **Pintasan Cepat Operasional**: Tombol akses satu klik ke fitur Kanban, Tugas, Bug, dan Laporan.
+  5. **Tautan Khusus Admin**: Tautan *Kelola Proyek* pada kartu metrik hanya ditampilkan jika pengguna yang masuk berstatus Admin.
 
-#### B. Papan Kanban (`/kanban`)
-- **Tujuan**: Visualisasi alur pengerjaan tugas tim pengembang secara interaktif dan real-time.
-- **Cara Kerja**:
-  1. Kartu tugas terdistribusi ke dalam 4 kolom tahapan:
-     - **To Do**: Tugas baru yang telah didefinisikan dan siap dikerjakan.
-     - **In Progress**: Tugas yang sedang aktif dikerjakan oleh developer penanggung jawab.
-     - **Review**: Tugas yang menunggu evaluasi kode (*code review*) atau pengujian QA.
-     - **Done**: Tugas yang telah selesai dan memenuhi kriteria penerimaan.
-  2. **Pemindahan Status**: Perubahan status tugas dapat dilakukan melalui drag-and-drop antar kolom atau menggunakan dropdown aksi cepat pada kartu tugas.
-  3. **Pemberitahuan Kendala (*Blocker Alert*)**: Jika tugas memiliki catatan kendala teknis, kartu akan menampilkan lencana peringatan merah mencolok (*Blocker Notes*).
-  4. **Ambil Alih (*Takeover*)**: Anggota tim dapat mengambil alih tugas dari rekan lain melalui modal konfirmasi, yang secara otomatis mencatat riwayat serah terima (*handover logs*).
-  5. **Filter Cepat**: Pengguna dapat menyaring kartu berdasarkan **Proyek** atau **Developer** tanpa memuat ulang seluruh halaman.
+#### B. Papan Kanban Interaktif (`/kanban`)
+- **Tujuan**: Mengelola alur pengerjaan tugas secara visual dan real-time melalui 4 kolom tahapan (*To Do*, *In Progress*, *Review*, *Done*).
+- **Cara Kerja & Aturan Otorisasi**:
+  1. **Pembatasan Hak Pemindahan Kartu**:
+     - **Tugas yang Sedang Dikerjakan Sendiri**: Kartu memiliki kursor grab, drag-and-drop aktif, tombol panah navigasi kiri/kanan aktif, dan dropdown status cepat aktif.
+     - **Tugas Milik Rekan Lain / Belum Ditugaskan**: Drag-and-drop dinonaktifkan (`draggable="false"`), tombol panah navigasi dinonaktifkan (`disabled`), dan dropdown status dinonaktifkan dengan tooltip keterangan.
+     - **Validasi Backend (403 Forbidden)**: Endpoint `/kanban/tasks/{task}/status` memvalidasi otorisasi pengguna secara ketat di sisi server. Jika pengguna yang bukan pemilik tugas mencoba mengubah status, server menolak permintaan dengan status 403.
+  2. **Tombol Ambil Alih Tugas (*Takeover*)**:
+     - Pada kartu tugas milik orang lain atau tugas yang belum ditugaskan, tersedia tombol **Ambil Alih Tugas**.
+     - Setelah konfirmasi pada modal pop-up, penugasan tugas berpindah ke pengguna tersebut dan kontrol pemindahan kartu langsung aktif seketika tanpa perlu reload halaman.
+  3. **Garis Indikator Warna Status**: Sisi kiri setiap kartu tugas memiliki garis warna tegas sesuai kolom statusnya (Abu-abu untuk To Do, Biru untuk In Progress, Kuning untuk Review, Hijau untuk Done).
+  4. **Navigasi Cepat Kolom**: Tombol navigasi cepat di bagian atas memungkinkan pengguna melompat atau menyorot kolom tertentu (sangat membantu pada layar tablet dan desktop).
+  5. **Filter Instan Client-side**: Filter instan berdasarkan Proyek dan Developer menyaring kartu dalam waktu kurang dari 10 milidetik.
+  6. **Modal Edit Tugas Tanpa Reload**: Klik tombol pensil pada kartu membuka modal pop-up untuk mengedit judul, deskripsi, deadline, penugasan, dan catatan kendala blocker.
 
-#### B. Daftar Tugas (`/tasks`)
-- **Tujuan**: Penyajian seluruh inventaris tugas pengembangan dalam bentuk tabel tabular untuk monitoring kuantitatif.
+#### C. Daftar Tugas Tabular (`/tasks`)
+- **Tujuan**: Inventarisasi seluruh tugas pengembangan dalam bentuk tabel data untuk monitoring kuantitatif.
 - **Cara Kerja**:
-  1. Menampilkan ringkasan metrik: Total Tugas, Tugas Selesai, Dalam Pengerjaan, dan Tugas Tertunda.
-  2. Bilah pencarian dan filter multi-kriteria: pencarian judul tugas, filter proyek, filter status, dan filter tipe tugas (*Feature*, *Bugfix*, *Refactor*, *Documentation*).
-  3. Form modal tambah dan edit tugas memungkinkan penentuan target tanggal penyelesaian (*deadline*) dan deskripsi tugas secara komprehensif.
+  1. Menyajikan ringkasan metrik total tugas, tugas selesai, dalam pengerjaan, dan tugas tertunda.
+  2. Filter pencarian multi-kriteria: pencarian nama tugas, filter proyek, filter status, dan filter tipe tugas (*Feature*, *Enhancement*, *Refactor*, *Maintenance*).
+  3. Form tambah dan edit tugas memungkinkan penentuan target tanggal penyelesaian (*deadline*) dan deskripsi secara mendalam.
 
-#### C. Pelacak Bug (`/bugs`)
-- **Tujuan**: Dokumentasi temuan masalah sistem, pemetaan tingkat bahaya, dan pencatatan riwayat penyelesaian bug.
+#### D. Pelacak Bug (`/bugs`)
+- **Tujuan**: Mencatat temuan cacat sistem, mengukur tingkat keparahan, dan mendokumentasikan analisis perbaikan.
 - **Cara Kerja**:
-  1. **Pemisahan Aksi Modal yang Tegas**:
-     - Tombol **Detail**: Meninjau deskripsi temuan, pelapor, tanggal pelaporan, modul terkait, dan tingkat keparahan (*Low*, *Medium*, *High*, *Critical*).
-     - Tombol **Solusi**: Modal khusus untuk mencatat analisis akar masalah teknis (*root cause*) serta langkah perbaikan yang diterapkan (*solution notes*).
-     - Tombol **Ambil Alih (*Takeover*)**: Mengalihkan penanganan bug ke developer lain yang sedang aktif melakukan debugging.
-  2. **Indikator Solusi Visual**: Baris data bug secara otomatis menampilkan badge status solusi (*Sudah Ada Solusi* atau *Menunggu Analisis*) agar tim mengetahui prioritas penanganan.
+  1. **Modal Terpisah yang Tegas**:
+     - **Detail**: Memeriksa deskripsi bug, modul terkait, pelapor, dan tingkat keparahan (*Low*, *Medium*, *High*, *Critical*).
+     - **Solusi**: Modal khusus untuk mencatat analisis akar penyebab (*root cause*) serta langkah perbaikan yang diterapkan (*solution notes*).
+     - **Ambil Alih Bug (*Takeover*)**: Mengalihkan penanganan bug ke pengembang yang sedang aktif melakukan perbaikan.
+  2. **Lencana Status Solusi**: Kolom solusi secara otomatis menampilkan badge informatif (*Sudah Ada Solusi* atau *Menunggu Analisis*).
 
-#### D. Riwayat Rilis & Repo Modul (`/releases`)
-- **Tujuan**: Buku log audit (*audit trail*) deployment kode sistem dan tag repositori proyek.
+#### E. Riwayat Rilis & Modul Repo (`/releases`)
+- **Tujuan**: Buku log audit trail atas setiap deployment kode sistem dan penandaan tag repositori Git.
 - **Cara Kerja**:
-  1. Tim mencatat rilis baru dengan mengisi proyek terkait, tag versi (misal: `v1.2.0`), branch repositori (misal: `main` atau `release/1.2`), commit hash Git (7-40 karakter), dan rangkuman perubahan (*summary changes*).
-  2. Jika proyek memiliki tautan repositori Git, commit hash akan otomatis dapat diklik untuk membuka tautan commit langsung pada remote repository (GitHub/GitLab).
+  1. Pengembang mencatat rilis baru dengan mengisi proyek, tag versi (misal: `v2.1.0`), branch repositori (misal: `main`), commit hash Git (7-40 karakter), dan rangkuman perubahan.
+  2. Commit hash otomatis menjadi tautan langsung menuju halaman commit di repositori Git terkait (GitHub/GitLab).
   3. **Prinsip Imutabilitas Data (*Immutable / Append-Only*)**:
-     - Sesuai tata kelola software audit trail, riwayat rilis **tidak menyediakan tombol edit maupun hapus**.
-     - Controller memproteksi aksi `PUT` dan `DELETE` dengan `abort(403)` guna memastikan riwayat rilis bersifat permanen dan tidak dapat dimanipulasi setelah dicatat.
+     - Untuk memenuhi standar audit kepatuhan IT, data rilis yang sudah tercatat **tidak dapat diedit maupun dihapus**.
+     - Rute controller memproteksi aksi `PUT` dan `DELETE` dengan status `403 Forbidden` sehingga catatan rilis bersifat permanen.
 
-#### E. Evaluasi Aplikasi (`/evaluations`)
-- **Tujuan**: Evaluasi performa sistem pasca-rilis secara berkala untuk memetakan kendala operasional dan rencana tindak lanjut perbaikan.
+#### F. Evaluasi Aplikasi & Rencana Tindak Lanjut (`/evaluations`)
+- **Tujuan**: Evaluasi berkala atas performa dan kestabilan sistem pasca-rilis untuk mendeteksi kendala operasional secara proaktif.
 - **Cara Kerja**:
-  1. **Pencatatan Evaluasi**: Pengguna mencatat evaluasi berkala dengan memilih proyek, periode review (misal: `Q4 2026` atau `Sprint 24`), tanggal evaluasi, kendala operasional pasca-rilis, dan masukan pengguna/klien.
+  1. Pengguna mencatat evaluasi dengan memilih proyek, periode review (misal: `Sprint 18` atau `Q1 2026`), tanggal evaluasi, ringkasan kendala operasional, dan masukan pengguna.
   2. **Rencana Tindak Lanjut (*Action Items*)**:
-     - Setiap evaluasi dapat memiliki beberapa rencana perbaikan (*action items*).
-     - Pengguna dapat membuka modal **Detail & Tindak Lanjut** untuk meninjau isu dan menambahkan *action plan* baru lengkap dengan PIC pengembang dan target tanggal selesai.
-     - Status tindak lanjut dipantau melalui 3 tahapan: *Direncanakan (Planned)*, *Dikonversi ke Tugas (Converted to Task)*, dan *Selesai (Completed)*.
+     - Setiap tinjauan evaluasi dapat memiliki beberapa item rencana tindak lanjut.
+     - Melalui modal *Detail & Tindak Lanjut*, tim dapat menambahkan rencana aksi baru lengkap dengan PIC pengembang dan target selesai.
+     - Status rencana aksi dipantau melalui 3 tahapan: *Planned*, *Converted to Task*, dan *Completed*.
 
-#### F. Laporan Periodik (`/reports`)
-- **Tujuan**: Laporan rekapitulasi komprehensif atas seluruh aktivitas pengembangan dalam rentang waktu tertentu.
+#### G. Laporan Periodik Komprehensif (`/reports`)
+- **Tujuan**: Laporan rekapitulasi produktivitas dan kinerja pengembangan dalam rentang waktu yang ditentukan.
 - **Cara Kerja**:
-  1. **Preset Pilihan Periode Cepat**: Pengguna dapat memilih preset instan: *Semua Data*, *7 Hari Terakhir*, *30 Hari Terakhir*, *Bulan Ini*, *Kuartal Ini*, atau *Tahun Ini*.
-  2. **Filter Rentang Tanggal Kustom**: Menyediakan input tanggal mulai dan tanggal selesai, serta opsi filter per proyek dan per developer.
+  1. **Pilihan Periode Instan**: Tombol cepat untuk rentang waktu *Semua Data*, *7 Hari Terakhir*, *30 Hari Terakhir*, *Bulan Ini*, *Kuartal Ini*, dan *Tahun Ini*.
+  2. **Filter Rentang Kustom**: Menyediakan input tanggal mulai, tanggal selesai, filter proyek, dan filter pengembang penanggung jawab.
   3. **Kartu Metrik Kinerja Periode**:
-     - Rasio penyelesaian tugas (% *Task Completion Rate*).
-     - Rasio resolusi bug (% *Bug Resolution Rate*).
-     - Jumlah rilis kode pada periode terpilih.
-     - Progres tindak lanjut evaluasi aplikasi yang telah selesai.
-  4. **Tabel Rekapitulasi Proyek**: Membandingkan produktivitas tugas, tingkat penyelesaian bug, dan rilis antar proyek dalam bentuk visual progress bar.
-  5. **Ekspor Data & Cetak**:
-     - **Ekspor CSV**: Mengunduh rekapitulasi data periodik instan dalam format CSV (UTF-8 BOM).
-     - **Cetak / Simpan PDF**: Dilengkapi stylesheet `@media print` khusus yang secara otomatis menyembunyikan sidebar dan kontrol navigasi, menghasilkan tampilan laporan bersih siap cetak atau simpan ke PDF.
+     - Persentase rasio penyelesaian tugas (*Task Completion Rate*).
+     - Persentase rasio resolusi bug (*Bug Resolution Rate*).
+     - Total rilis kode yang dipublikasikan pada periode terkait.
+     - Progres penyelesaian rencana tindak lanjut evaluasi sistem.
+  4. **Tabel Rekapitulasi Produktivitas**: Menampilkan progres tugas, bug, dan rilis per proyek secara komparatif.
+  5. **Ekspor CSV & Format Siap Cetak**:
+     - Tombol *Ekspor CSV* mengunduh rekapitulasi data tabel secara instan.
+     - Tombol *Cetak / Simpan PDF* memanfaatkan stylesheet cetak khusus `@media print` yang menyembunyikan sidebar dan tombol navigasi untuk menghasilkan lembar laporan bersih siap cetak atau simpan ke PDF.
 
-#### G. Pop-up Notifikasi Terpadu (`/notifications`)
-- **Tujuan**: Memberikan pembaruan instan atas aktivitas operasional penting (tugas baru/kendala, temuan bug kritis/tinggi, serta publikasi rilis) secara ringkas tanpa mengganggu alur kerja.
+#### H. Pop-up Notifikasi Terpadu (`/notifications`)
+- **Tujuan**: Memberikan pembaruan cepat atas kejadian penting (tugas baru, kendala blocker, temuan bug kritis, dan rilis kode baru).
 - **Cara Kerja**:
-  1. **Akses Cepat (Lonceng Notifikasi)**: Tombol pemicu notifikasi tersedia di header desktop maupun topbar tablet/mobile dilengkapi badge jumlah notifikasi yang belum dibaca (*unread counter badge*).
-  2. **Tampilan Bersih & Tanpa Tab Bersarang**: Modal pop-up dirancang ringkas satu layar tanpa tab bersarang, hanya menggunakan tombol filter datar (*Semua* dan *Belum Dibaca*) serta opsi *Hapus Semua*.
-  3. **Aksi Cepat & Navigasi**:
-     - **Tandai Semua Dibaca**: Mengubah seluruh status notifikasi menjadi terbaca secara instan.
-     - **Tandai Dibaca Satuan**: Tombol centang pada kartu notifikasi untuk menandai telah ditinjau.
-     - **Hapus Satuan**: Menghapus item notifikasi tertentu dari daftar tampilan.
-     - **Tautan Langsung**: Tautan langsung pada setiap item untuk langsung menuju fitur terkait (Papan Kanban, Pelacak Bug, atau Riwayat Rilis).
+  1. Diakses melalui ikon lonceng pada topbar/header dengan badge counter yang menampilkan jumlah notifikasi yang belum dibaca.
+  2. Pop-up modal dirancang datar satu layar tanpa tab bersarang, dilengkapi tombol filter cepat (*Semua* dan *Belum Dibaca*).
+  3. Fitur interaksi instan:
+     - *Tandai Semua Dibaca*: Mengubah seluruh notifikasi menjadi terbaca dalam satu klik.
+     - *Tandai Satuan*: Menandai notifikasi tertentu telah ditinjau.
+     - *Hapus Satuan / Bersihkan Semua*: Menghapus notifikasi dari daftar tampilan.
+     - *Tautan Langsung*: Mengklik kartu notifikasi mengarahkan pengguna langsung ke modul terkait (Kanban, Bug, atau Rilis).
 
 ---
 
-### 3.3. Pengaturan & Keamanan Akun
+### 5.3. Pengaturan Profil & Keamanan Akun
 
 #### Akun Saya (`/account`)
-- **Tujuan**: Manajemen profil pribadi dan autentikasi bagi pengguna yang sedang aktif.
+- **Tujuan**: Manajemen identitas diri, foto profil, dan kata sandi bagi pengguna yang sedang aktif.
 - **Cara Kerja**:
-  1. **Tampilan Aman Read-Only**: Informasi profil (nama, email, peran, dan foto profil) disajikan secara bersih untuk menghindari pengeditan yang tidak disengaja.
-  2. **Modal Edit Profil Terverifikasi**: Untuk mengubah nama, email, atau foto profil, pengguna wajib memasukkan kata sandi saat ini (*current password*) sebagai lapisan verifikasi keamanan.
-  3. **Form Ubah Kata Sandi Mandiri**: Formulir pergantian password terpisah dengan validasi minimal 8 karakter dan konfirmasi kata sandi baru.
-  4. **Pusat Tombol Logout Aman**: Tombol keluar sesi (*Logout*) terintegrasi khusus pada kartu ringkasan profil sisi kiri halaman ini (dilindungi token CSRF). Tombol logout tidak diletakkan pada sidebar global untuk mencegah insiden sesi keluar tidak sengaja.
+  1. **Tampilan Utama Read-Only**: Informasi profil (nama, email, peran, status akun, dan foto profil) disajikan dalam format kartu ringkasan bersih untuk mencegah salah klik edit.
+  2. **Modal Ubah Profil Terverifikasi**:
+     - Mengubah nama, email, atau mengunggah foto profil baru wajib memasukkan kata sandi saat ini (*current password*) sebagai lapis verifikasi keamanan.
+     - Modal pop-up tidak akan tertutup saat mengklik area luar modal (backdrop), mencegah kehilangan input yang belum tersimpan secara tidak sengaja.
+  3. **Modal Ubah Kata Sandi**:
+     - Formulir pergantian password mandiri dengan validasi kecocokan konfirmasi dan minimal 8 karakter.
+  4. **Pusat Tombol Logout Terproteksi**:
+     - Tombol **Keluar Sesi (Logout)** ditempatkan secara eksklusif pada kartu ringkasan profil di halaman ini dan dilindungi token CSRF.
+     - Tombol logout sengaja tidak diletakkan di sidebar global guna mematuhi standar desain minimalis dan menghindari insiden sesi terputus secara tidak disengaja.
 
 ---
 
-## 4. Panduan Menjalankan Aplikasi di Lokal
+## 6. Panduan Instalasi & Menjalankan Aplikasi di Lokal
 
-### Prasyarat:
+### Prasyarat Sistem:
 - PHP >= 8.2 & Composer
 - Node.js >= 20 & npm
 - MySQL / MariaDB Server
 
 ### Langkah Menjalankan:
-1. **Instal dependensi backend & frontend**:
+1. **Clone repositori dan masuk ke direktori proyek**:
+   ```bash
+   cd "c:/PKL/Aplikasi Monitoring & Manajemen IT Developer"
+   ```
+2. **Instal dependensi backend PHP**:
    ```bash
    composer install
+   ```
+3. **Instal dependensi frontend Node.js**:
+   ```bash
    npm install
    ```
-2. **Setup Environment**:
+4. **Konfigurasi Environment**:
+   Salin file konfigurasi environment dan buat encryption key aplikasi:
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
-3. **Migrasi Database & Seeder**:
+   *Pastikan pengaturan database pada file `.env` telah disesuaikan dengan konfigurasi MySQL/MariaDB lokal Anda.*
+5. **Jalankan Migrasi Database & Seeder Data Demo**:
    ```bash
    php artisan migrate:fresh --seed
    ```
-4. **Build Aset Frontend**:
+6. **Kompilasi Aset Frontend dengan Vite**:
    ```bash
    npm run build
    ```
-5. **Jalankan Server Lokal**:
+7. **Jalankan Server Pengembangan Lokal**:
    ```bash
    php artisan serve --port=8000
    ```
-6. Buka peramban di [http://localhost:8000/login](http://localhost:8000/login).
+8. **Buka Aplikasi pada Peramban Web**:
+   Kunjungi [http://localhost:8000/login](http://localhost:8000/login) dan masuk menggunakan kredensial demo (misal: `admin@bugtracker.test` atau `raka.pratama@bugtracker.test` dengan password `password`).
 
 ---
 
-## 5. Pengujian Otomatis (*Automated Testing*)
+## 7. Pengujian Otomatis (*Automated Testing*)
 
-Aplikasi dilengkapi suite pengujian otomatis komprehensif menggunakan PHPUnit:
+Aplikasi dilengkapi suite pengujian otomatis komprehensif menggunakan PHPUnit untuk memastikan seluruh fungsi bisnis, otorisasi peran, dan antarmuka berjalan sempurna:
 
 ```bash
 php artisan test
 ```
 
-### Cakupan Pengujian Fitur UI Utama:
-- `DashboardUiTest.php` (Dashboard utama terpadu, 4 metrik ringkas, blocker alert, bebas tab bersarang)
-- `PeriodicReportUiTest.php` (Laporan Periodik, filter waktu, rekap proyek, ekspor CSV)
-- `AppEvaluationUiTest.php` (Evaluasi Aplikasi, kendala operasional, action items)
-- `ReleaseHistoryUiTest.php` (Riwayat Rilis, audit trail, imutabilitas data tanpa edit/delete)
-- `ModuleUiTest.php` (Master Modul & relasi proyek)
-- `ProjectUiTest.php` (Master Proyek, status siklus, kode unik)
-- `AdminAccountUiTest.php` (Master Akun Admin, toggle status, reset password)
-- `BugUiTest.php` (Pelacakan bug, solusi terpisah, takeover)
-- `TaskUiTest.php` & `KanbanBoardTest.php` (Manajemen tugas, Papan Kanban, handover logs)
-- `NotificationUiTest.php` (Pop-up notifikasi, filter flat Semua/Belum Dibaca, aksi mark read/delete)
-- `UiComprehensiveScenariosTest.php` & `UiFeaturesUnitTest.php` (Validasi UI, navigasi bebas tab bersarang, proteksi tombol logout)
+### Rangkuman File Pengujian Fitur Utama:
+- `KanbanBoardTest.php` (Pengujian Papan Kanban, otorisasi pemindahan kartu khusus pemilik tugas, penolakan 403 untuk non-assignee, navigasi panah, dan alur ambil alih tugas).
+- `ProjectUiTest.php` (Pengujian Master Proyek, proteksi 403 untuk peran pengembang, dan CRUD penuh untuk administrator).
+- `ModuleUiTest.php` (Pengujian Master Modul, proteksi 403 untuk peran pengembang, dan pemetaan relasi proyek).
+- `DashboardUiTest.php` (Pengujian metrik utama, peringatan kendala blocker, temuan bug kritis, dan rilis terbaru).
+- `PeriodicReportUiTest.php` (Pengujian Laporan Periodik, filter rentang waktu instan, rekap proyek, dan ekspor CSV).
+- `AppEvaluationUiTest.php` (Pengujian evaluasi aplikasi berkala dan rencana tindak lanjut action items).
+- `ReleaseHistoryUiTest.php` (Pengujian riwayat rilis, audit trail deployment kode, dan imutabilitas tanpa edit/delete).
+- `AdminAccountUiTest.php` (Pengujian Master Akun Admin, aktivasi toggle akun, dan reset password).
+- `BugUiTest.php` (Pengujian pelacak bug, pemisahan modal solusi teknis, dan serah terima bug).
+- `TaskUiTest.php` (Pengujian inventaris tugas tabular dan filter multi-kriteria).
+- `NotificationUiTest.php` (Pengujian pop-up notifikasi terpadu, aksi tandai dibaca, dan penghapusan).
+- `UiComprehensiveScenariosTest.php` (Pengujian terpadu 110 skenario antarmuka, tata letak bebas tab bersarang, dan lokasi tombol logout).

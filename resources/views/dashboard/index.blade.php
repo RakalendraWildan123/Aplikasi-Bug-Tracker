@@ -137,7 +137,8 @@
                     </a>
                 </div>
 
-                {{-- KATEGORI 2: FITUR MASTER DATA --}}
+                @if ($user->isAdmin())
+                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -176,6 +177,7 @@
                         </a>
                     @endif
                 </div>
+                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -300,11 +302,13 @@
                         <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900">{{ $metrics['active_projects'] }}</span>
                         <span class="text-xs text-slate-500 mt-0.5 block">dari {{ $metrics['total_projects'] }} total proyek terdaftar</span>
                     </div>
+                    @if ($user->isAdmin())
                     <div class="mt-3 pt-2.5 border-t border-slate-100">
                         <a href="{{ route('projects.index') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition">
                             Kelola Proyek
                         </a>
                     </div>
+                    @endif
                 </div>
 
                 {{-- 2. Tugas Berjalan (In Progress) --}}
