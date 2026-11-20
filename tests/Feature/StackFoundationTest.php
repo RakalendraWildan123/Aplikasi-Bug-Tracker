@@ -18,7 +18,7 @@ class StackFoundationTest extends TestCase
     public function test_homepage_renders_api_status_response(): void
     {
         $user = User::factory()->create();
-        $response = $this->actingAs($user)->get('/');
+        $response = $this->actingAs($user)->getJson('/');
 
         $response->assertOk();
         $response->assertJson([

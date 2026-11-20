@@ -51,7 +51,7 @@ class AuthAndAccountManagementTest extends TestCase
         $this->post('/login', [
             'email' => 'boss@bugtracker.test',
             'password' => 'secret123',
-        ])->assertRedirect(route('admin.accounts.index'));
+        ])->assertRedirect(route('account.edit'));
 
         $this->assertAuthenticatedAs($admin);
 
@@ -67,7 +67,7 @@ class AuthAndAccountManagementTest extends TestCase
         $this->post('/login', [
             'email' => 'dev@bugtracker.test',
             'password' => 'secret123',
-        ])->assertRedirect(route('home'));
+        ])->assertRedirect(route('account.edit'));
 
         $this->assertAuthenticatedAs($dev);
     }
@@ -311,7 +311,7 @@ class AuthAndAccountManagementTest extends TestCase
         $other = User::factory()->create(['name' => 'Target PopUp']);
 
         $this->actingAs($admin)
-            ->get('/admin/accounts')
+            ->getJson('/admin/accounts')
             ->assertOk()
             ->assertJsonStructure(['accounts', 'role_labels', 'role_filter', 'status_filter']);
     }
@@ -358,7 +358,7 @@ class AuthAndAccountManagementTest extends TestCase
         $this->post('/login', [
             'email' => 'atasan@bugtracker.test',
             'password' => 'adminpass123',
-        ])->assertRedirect(route('admin.accounts.index'));
+        ])->assertRedirect(route('account.edit'));
 
         $this->post('/admin/accounts', [
             'name' => 'Nadia Putri',
@@ -376,9 +376,9 @@ class AuthAndAccountManagementTest extends TestCase
         $this->post('/login', [
             'email' => 'nadia@bugtracker.test',
             'password' => 'devpass123',
-        ])->assertRedirect(route('home'));
+        ])->assertRedirect(route('account.edit'));
 
-        $this->get('/account')
+        $this->getJson('/account')
             ->assertOk()
             ->assertJsonPath('user.name', 'Nadia Putri');
 

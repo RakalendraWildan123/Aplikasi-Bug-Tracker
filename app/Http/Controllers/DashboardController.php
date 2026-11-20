@@ -86,6 +86,7 @@ class DashboardController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'status' => 'online',
+                'name' => config('app.name', 'Aplikasi Bug Tracker'),
                 'metrics' => $metrics,
                 'latest_release' => $latestRelease,
                 'recent_tasks' => $recentTasks,
