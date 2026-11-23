@@ -148,4 +148,31 @@ class AppEvaluationAutomationTest extends TestCase
             'period_review' => 'Q4 2026',
         ]);
     }
+
+    public function test_parent_projects_are_unified_without_duplicate_rows(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['name' => 'Sistem Tunggal Terpadu', 'code' => 'STT']);
+
+        // Buat 2 evaluasi berbeda periode untuk proyek yang sama
+        AppEvaluation::create([
+            'project_id' => $project->id,
+            'evaluation_date' => '2026-08-01',
+            'period_review' => 'Q3 2026',
+            'operational_issues' => 'Isu lama Q3',
+        ]);
+        AppEvaluation::create([
+            'project_id' => $project->id,
+            'evaluation_date' => '2026-11-20',
+            'period_review' => 'Q4 2026',
+            'operational_issues' => 'Isu baru Q4',
+        ]);
+
+        $response = $this->actingAs($user)->get('/evaluations');
+
+        $response->assertOk();
+        // Pastikan hanya evaluasi terbaru yang ditampilkan dan proyek tidak duplikat
+        $response->assertSee('Isu baru Q4');
+        $response->assertDontSee('Isu lama Q3');
+    }
 }

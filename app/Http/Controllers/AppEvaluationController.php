@@ -49,6 +49,14 @@ class AppEvaluationController extends Controller
             })
             ->when($period !== '', function ($q) use ($period) {
                 $q->where('period_review', $period);
+            }, function ($q) {
+                // Satukan evaluasi per proyek induk jika tidak memfilter periode spesifik
+                $latestIds = AppEvaluation::query()
+                    ->selectRaw('MAX(id) as id')
+                    ->groupBy('project_id')
+                    ->pluck('id');
+
+                $q->whereIn('id', $latestIds);
             })
             ->orderByDesc('evaluation_date')
             ->orderByDesc('id');
@@ -59,10 +67,14 @@ class AppEvaluationController extends Controller
         $periods = AppEvaluation::query()->select('period_review')->distinct()->orderBy('period_review')->pluck('period_review');
 
         $metrics = [
-            'total' => AppEvaluation::query()->count(),
+            'total' => AppEvaluation::query()->distinct('project_id')->count('project_id'),
             'projects_evaluated' => AppEvaluation::query()->distinct('project_id')->count('project_id'),
             'total_action_items' => ActionItem::query()->count(),
-            'issues_recorded' => AppEvaluation::query()->whereNotNull('operational_issues')->where('operational_issues', '!=', '')->count(),
+            'issues_recorded' => AppEvaluation::query()
+                ->whereIn('id', AppEvaluation::query()->selectRaw('MAX(id)')->groupBy('project_id'))
+                ->whereNotNull('operational_issues')
+                ->where('operational_issues', '!=', '')
+                ->count(),
         ];
 
         if ($request->wantsJson() || $request->ajax()) {

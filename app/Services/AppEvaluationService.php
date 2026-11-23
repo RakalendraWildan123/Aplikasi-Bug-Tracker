@@ -175,7 +175,33 @@ class AppEvaluationService
         // 7. Otomatisasi Rencana Tindak Lanjut (Action Items)
         $this->syncActionItems($evaluation, $severeBugs, $blockedTasks, $project);
 
+        // 8. Satukan evaluasi lama pada proyek induk ini agar tidak ada duplikasi proyek
+        $this->consolidateProjectEvaluations($project->id, $evaluation->id);
+
         return $evaluation;
+    }
+
+    /**
+     * Satukan seluruh evaluasi lama pada proyek induk ini ke evaluasi aktif terbaru.
+     */
+    public function consolidateProjectEvaluations(int $projectId, int $activeEvaluationId): void
+    {
+        $oldEvaluationIds = AppEvaluation::query()
+            ->where('project_id', $projectId)
+            ->where('id', '!=', $activeEvaluationId)
+            ->pluck('id');
+
+        if ($oldEvaluationIds->isNotEmpty()) {
+            // Pindahkan action items dari evaluasi lama ke evaluasi aktif
+            ActionItem::query()
+                ->whereIn('evaluation_id', $oldEvaluationIds)
+                ->update(['evaluation_id' => $activeEvaluationId]);
+
+            // Hapus rekaman evaluasi lama agar proyek induk tidak terduplikasi
+            AppEvaluation::query()
+                ->whereIn('id', $oldEvaluationIds)
+                ->delete();
+        }
     }
 
     /**
