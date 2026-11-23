@@ -797,18 +797,18 @@
                     </div>
 
                     <div>
-                        <label for="edit-task-assigned-to" class="block text-xs font-semibold text-slate-800 mb-1">
-                            Ditugaskan Kepada
+                        <label class="block text-xs font-semibold text-slate-800 mb-1">
+                            Penanggung Jawab
                         </label>
-                        <select
-                            id="edit-task-assigned-to"
-                            class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
-                        >
-                            <option value="">Belum Ditugaskan</option>
-                            @foreach ($developers as $dev)
-                                <option value="{{ $dev->id }}">{{ $dev->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                </svg>
+                                <span id="display-kanban-assigned-name" class="font-semibold text-slate-900">Belum ditugaskan</span>
+                            </div>
+                            <span class="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">Tetap</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1150,7 +1150,7 @@
             const editTaskType = document.getElementById('edit-task-type');
             const editTaskStatus = document.getElementById('edit-task-status');
             const editTaskTargetDate = document.getElementById('edit-task-target-date');
-            const editTaskAssignedTo = document.getElementById('edit-task-assigned-to');
+            const displayKanbanAssignedName = document.getElementById('display-kanban-assigned-name');
             const editTaskBlocker = document.getElementById('edit-task-blocker');
             const modalTaskProject = document.getElementById('modal-task-project');
 
@@ -1200,13 +1200,15 @@
                 const projCode = btnEdit.getAttribute('data-project-code') || '';
                 const projName = btnEdit.getAttribute('data-project-name') || '';
 
+                const devName = btnEdit.getAttribute('data-developer-name') || 'Belum ditugaskan';
+
                 editTaskId.value = taskId;
                 editTaskTitle.value = title;
                 editTaskDesc.value = desc;
                 editTaskType.value = taskType;
                 editTaskStatus.value = status;
                 editTaskTargetDate.value = targetDate;
-                editTaskAssignedTo.value = assignedTo;
+                if (displayKanbanAssignedName) displayKanbanAssignedName.textContent = devName;
                 editTaskBlocker.value = blocker;
                 modalTaskProject.textContent = projCode ? `[${projCode}] ${projName}` : 'Tugas';
 
@@ -1228,7 +1230,6 @@
                     task_type: editTaskType.value,
                     status: editTaskStatus.value,
                     target_date: editTaskTargetDate.value || null,
-                    assigned_to: editTaskAssignedTo.value || null,
                     blocker_notes: editTaskBlocker.value.trim() || null,
                 };
 
@@ -1312,13 +1313,6 @@
                                 targetDateEl.textContent = payload.target_date || 'Tanpa batas';
                             }
 
-                            // Update Assignee Name
-                            const assigneeNameEl = card.querySelector('.card-assignee-name');
-                            if (assigneeNameEl) {
-                                const selectedOption = editTaskAssignedTo.options[editTaskAssignedTo.selectedIndex];
-                                assigneeNameEl.textContent = payload.assigned_to && selectedOption ? selectedOption.text : 'Belum ditugaskan';
-                            }
-
                             // Update Data Attributes pada tombol edit
                             const btnEdit = card.querySelector('.btn-edit-task');
                             if (btnEdit) {
@@ -1328,23 +1322,6 @@
                                 btnEdit.setAttribute('data-status', payload.status);
                                 btnEdit.setAttribute('data-target-date', payload.target_date || '');
                                 btnEdit.setAttribute('data-blocker-notes', payload.blocker_notes || '');
-                                btnEdit.setAttribute('data-assigned-to', payload.assigned_to || '');
-                            }
-
-                            // Update data attribute assigned-to pada kartu
-                            card.setAttribute('data-assigned-to', payload.assigned_to || '');
-
-                            // Update kemampuan memindahkan tugas jika penugasan berubah
-                            const currentAuthUserId = {{ (int)$user->id }};
-                            const isNowAssignee = parseInt(payload.assigned_to) === currentAuthUserId;
-                            card.setAttribute('data-can-move', isNowAssignee ? 'true' : 'false');
-                            card.setAttribute('draggable', isNowAssignee ? 'true' : 'false');
-                            if (isNowAssignee) {
-                                card.classList.remove('cursor-default');
-                                card.classList.add('cursor-grab', 'active:cursor-grabbing');
-                            } else {
-                                card.classList.remove('cursor-grab', 'active:cursor-grabbing');
-                                card.classList.add('cursor-default');
                             }
 
                             // Pindahkan kartu jika status berubah

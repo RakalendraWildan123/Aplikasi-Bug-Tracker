@@ -185,6 +185,7 @@ class TaskUiTest extends TestCase
         ]);
 
         $response->assertStatus(201);
+        $this->assertSame($user->id, Task::where('title', 'Tugas Baru via AJAX Modal')->first()->assigned_to);
         $response->assertJson([
             'success' => true,
             'message' => 'Tugas baru berhasil ditambahkan.',
@@ -214,6 +215,7 @@ class TaskUiTest extends TestCase
         ]);
 
         $response->assertStatus(201);
+        $this->assertSame($user->id, Task::where('title', 'Tugas Perbaikan Masalah Bug')->first()->assigned_to);
         $this->assertDatabaseHas('tasks', [
             'title' => 'Tugas Perbaikan Masalah Bug',
             'task_type' => 'maintenance',
@@ -399,5 +401,43 @@ class TaskUiTest extends TestCase
         $resTasks = $this->actingAs($user)->get('/tasks');
         $resTasks->assertOk();
         $resTasks->assertDontSee('Crash saat upload avatar PNG 4K');
+    }
+
+    public function test_developer_b_creating_task_is_assigned_to_developer_b_even_when_based_on_developer_a_bug(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer A']);
+        $devB = User::factory()->create(['name' => 'Developer B']);
+        $project = Project::factory()->create();
+
+        // 1. Developer A mencatat bug -> otomatis ditugaskan ke Developer A
+        $resBug = $this->actingAs($devA)->post('/bugs', [
+            'project_id' => $project->id,
+            'title' => 'Bug Validasi Login Multi-Device',
+            'severity' => 'high',
+            'status' => 'open',
+            'description' => 'Sesi tidak otomatis logout pada perangkat kedua',
+        ]);
+        $resBug->assertRedirect(route('bugs.index'));
+
+        $bug = Bug::where('title', 'Bug Validasi Login Multi-Device')->firstOrFail();
+        $this->assertSame($devA->id, $bug->created_by);
+        $this->assertSame($devA->id, $bug->assigned_to);
+
+        // 2. Developer B membuat tugas berdasarkan bug tersebut -> tugas otomatis milik Developer B
+        $resTask = $this->actingAs($devB)->post('/tasks', [
+            'project_id' => $project->id,
+            'title' => 'Perbaiki Bug Validasi Login Multi-Device',
+            'description' => 'Implementasi invalidate token sesi multi-tab & multi-device',
+            'task_type' => 'maintenance',
+            'status' => 'todo',
+        ]);
+        $resTask->assertRedirect(route('tasks.index'));
+
+        $task = Task::where('title', 'Perbaiki Bug Validasi Login Multi-Device')->firstOrFail();
+        $this->assertSame($devB->id, $task->created_by);
+        $this->assertSame($devB->id, $task->assigned_to);
+
+        // Kepemilikan bug tetap milik Developer A, sedangkan task milik Developer B
+        $this->assertNotSame($bug->assigned_to, $task->assigned_to);
     }
 }

@@ -986,15 +986,18 @@
                     </div>
                 </div>
 
-                {{-- Penanggung Jawab --}}
+                {{-- Penanggung Jawab (Otomatis Sesuai Pelapor/Pembuat Bug) --}}
                 <div>
-                    <label for="detail-edit-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
-                    <select id="detail-edit-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                        <option value="">Belum Ditugaskan</option>
-                        @foreach ($developers as $dev)
-                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
+                    <div class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm font-semibold text-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                            </svg>
+                            <span id="detail-assigned-name">Belum Ditugaskan</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 bg-slate-200/70 border border-slate-300 px-2 py-0.5 rounded-full">Pelapor Bug</span>
+                    </div>
                 </div>
 
                 {{-- Deskripsi Permasalahan --}}
@@ -1208,14 +1211,19 @@
                     </div>
                 </div>
 
+                {{-- Penanggung Jawab Otomatis (Ditugaskan ke Pelapor) --}}
                 <div>
-                    <label for="create-bug-assigned" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
-                    <select id="create-bug-assigned" name="assigned_to" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer">
-                        <option value="">Belum Ditugaskan</option>
-                        @foreach ($developers as $dev)
-                            <option value="{{ $dev->id }}">{{ $dev->name }}</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
+                    <div class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                            </svg>
+                            <span class="font-semibold text-slate-900">{{ $user->name }}</span>
+                            <span class="text-xs text-slate-500 font-normal">(Anda)</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
+                    </div>
                 </div>
 
                 <div>
@@ -1314,7 +1322,7 @@
                 document.getElementById('detail-edit-status').value = data.status || 'open';
                 document.getElementById('detail-edit-reported-by').value = data.reported_by && data.reported_by !== '-' ? data.reported_by : '';
                 document.getElementById('detail-edit-reported-date').value = data.reported_date_raw || '';
-                document.getElementById('detail-edit-assigned').value = data.assigned_to || '';
+                document.getElementById('detail-assigned-name').textContent = data.assignee_name || 'Belum Ditugaskan';
                 document.getElementById('detail-edit-description').value = data.description || '';
 
                 // Render Timeline Riwayat & Handover

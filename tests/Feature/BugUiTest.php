@@ -184,6 +184,7 @@ class BugUiTest extends TestCase
             'severity' => 'high',
             'status' => 'open',
             'created_by' => $user->id,
+            'assigned_to' => $user->id,
         ]);
     }
 
@@ -200,6 +201,7 @@ class BugUiTest extends TestCase
         ]);
 
         $response->assertStatus(201);
+        $this->assertSame($user->id, Bug::where('title', 'Bug Baru via AJAX Modal')->first()->assigned_to);
         $response->assertJson([
             'success' => true,
             'message' => 'Laporan bug baru berhasil ditambahkan.',
@@ -414,5 +416,24 @@ class BugUiTest extends TestCase
                 'status' => 'resolved',
             ],
         ]);
+    }
+
+    public function test_developer_who_records_bug_is_automatically_assigned_to_it(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer A']);
+        $project = Project::factory()->create();
+
+        $response = $this->actingAs($devA)->post('/bugs', [
+            'project_id' => $project->id,
+            'title' => 'Bug Dicatat Developer A',
+            'severity' => 'medium',
+            'status' => 'open',
+            'description' => 'Bug ini dicatat Developer A tanpa memilih assigned_to secara manual',
+        ]);
+
+        $response->assertRedirect(route('bugs.index'));
+        $createdBug = Bug::where('title', 'Bug Dicatat Developer A')->firstOrFail();
+        $this->assertSame($devA->id, $createdBug->created_by);
+        $this->assertSame($devA->id, $createdBug->assigned_to);
     }
 }

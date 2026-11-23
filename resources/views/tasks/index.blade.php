@@ -675,6 +675,7 @@
                                     data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
                                     data-blocker-notes="{{ $task->blocker_notes }}"
                                     data-assigned-to="{{ $task->assigned_to }}"
+                                    data-assignee-name="{{ $task->assignee?->name ?? 'Belum Ditugaskan' }}"
                                 >
                                     <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
@@ -881,6 +882,7 @@
                                                 data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
                                                 data-blocker-notes="{{ $task->blocker_notes }}"
                                                 data-assigned-to="{{ $task->assigned_to }}"
+                                                data-assignee-name="{{ $task->assignee?->name ?? 'Belum Ditugaskan' }}"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
@@ -1080,19 +1082,18 @@
                     </div>
 
                     <div>
-                        <label for="input-task-assigned-to" class="block text-xs font-semibold text-slate-800 mb-1">
-                            Ditugaskan Kepada
+                        <label class="block text-xs font-semibold text-slate-800 mb-1">
+                            Penanggung Jawab
                         </label>
-                        <select
-                            id="input-task-assigned-to"
-                            name="assigned_to"
-                            class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
-                        >
-                            <option value="">Belum Ditugaskan</option>
-                            @foreach ($developers as $dev)
-                                <option value="{{ $dev->id }}">{{ $dev->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                </svg>
+                                <span id="display-task-assigned-name" class="font-semibold text-slate-900">{{ $user->name }}</span>
+                            </div>
+                            <span id="display-task-assigned-badge" class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1373,7 +1374,8 @@
             const typeInput = document.getElementById('input-task-type');
             const statusInput = document.getElementById('input-task-status');
             const targetDateInput = document.getElementById('input-task-target-date');
-            const assignedToInput = document.getElementById('input-task-assigned-to');
+            const displayAssignedName = document.getElementById('display-task-assigned-name');
+            const displayAssignedBadge = document.getElementById('display-task-assigned-badge');
             const blockerInput = document.getElementById('input-task-blocker');
             const descriptionInput = document.getElementById('input-task-description');
 
@@ -1395,6 +1397,11 @@
                 submitText.textContent = 'Tambah Tugas';
                 formAction.reset();
                 taskIdInput.value = '';
+                if (displayAssignedName) displayAssignedName.textContent = '{{ $user->name }} (Anda)';
+                if (displayAssignedBadge) {
+                    displayAssignedBadge.textContent = 'Otomatis';
+                    displayAssignedBadge.className = 'text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full';
+                }
                 formError.classList.add('hidden');
                 modalForm.classList.remove('hidden');
                 setTimeout(() => titleInput.focus(), 100);
@@ -1417,7 +1424,7 @@
                 const status = btnEdit.getAttribute('data-status') || 'todo';
                 const targetDate = btnEdit.getAttribute('data-target-date') || '';
                 const blocker = btnEdit.getAttribute('data-blocker-notes') || '';
-                const assignedTo = btnEdit.getAttribute('data-assigned-to') || '';
+                const assigneeName = btnEdit.getAttribute('data-assignee-name') || 'Belum Ditugaskan';
 
                 taskIdInput.value = taskId;
                 titleInput.value = title;
@@ -1426,7 +1433,11 @@
                 typeInput.value = type;
                 statusInput.value = status;
                 targetDateInput.value = targetDate;
-                assignedToInput.value = assignedTo;
+                if (displayAssignedName) displayAssignedName.textContent = assigneeName;
+                if (displayAssignedBadge) {
+                    displayAssignedBadge.textContent = 'Tetap';
+                    displayAssignedBadge.className = 'text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full';
+                }
                 blockerInput.value = blocker;
                 descriptionInput.value = desc;
 
@@ -1477,7 +1488,6 @@
                     task_type: typeInput.value,
                     status: statusInput.value,
                     target_date: targetDateInput.value || null,
-                    assigned_to: assignedToInput.value || null,
                     blocker_notes: blockerInput.value.trim() || null,
                     description: descriptionInput.value.trim() || null,
                 };

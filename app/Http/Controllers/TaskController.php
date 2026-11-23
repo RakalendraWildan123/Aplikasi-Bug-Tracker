@@ -127,6 +127,9 @@ class TaskController extends Controller
         ]);
 
         $validated['created_by'] = $request->user()?->id ?? Auth::id();
+        if (empty($validated['assigned_to'])) {
+            $validated['assigned_to'] = $validated['created_by'];
+        }
 
         if ($validated['status'] === 'done') {
             $validated['completed_at'] = now();
@@ -176,6 +179,10 @@ class TaskController extends Controller
             'start_date.date' => 'Format tanggal mulai tidak valid.',
             'target_date.date' => 'Format target deadline tidak valid.',
         ]);
+
+        if (! $request->has('assigned_to') || is_null($request->input('assigned_to'))) {
+            unset($validated['assigned_to']);
+        }
 
         if ($validated['status'] === 'done' && ! $task->completed_at) {
             $validated['completed_at'] = now();

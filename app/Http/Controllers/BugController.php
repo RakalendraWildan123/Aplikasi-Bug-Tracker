@@ -102,6 +102,9 @@ class BugController extends Controller
         ]);
 
         $validated['created_by'] = $request->user()->id;
+        if (empty($validated['assigned_to'])) {
+            $validated['assigned_to'] = $validated['created_by'];
+        }
 
         if (empty($validated['reported_date'])) {
             $validated['reported_date'] = now()->toDateString();
@@ -156,6 +159,10 @@ class BugController extends Controller
             'severity.required' => 'Tingkat keparahan (severity) wajib dipilih.',
             'status.required' => 'Status bug wajib dipilih.',
         ]);
+
+        if (! $request->has('assigned_to') || is_null($request->input('assigned_to'))) {
+            unset($validated['assigned_to']);
+        }
 
         if (isset($validated['status'])) {
             if ($validated['status'] === 'resolved' && ! $bug->resolved_at) {
