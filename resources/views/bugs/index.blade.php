@@ -6,6 +6,25 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Pelacak Bug &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Tampilan Responsif Pelacak Bug: Kartu (Setengah Layar & Mobile < 1024px) vs Tabel (Fullscreen Desktop >= 1024px) */
+        @media (max-width: 1023px) {
+            .bug-card-view-mobile {
+                display: block !important;
+            }
+            .bug-table-view-desktop {
+                display: none !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .bug-card-view-mobile {
+                display: none !important;
+            }
+            .bug-table-view-desktop {
+                display: block !important;
+            }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans flex flex-col lg:flex-row">
 
@@ -445,9 +464,230 @@
                 </form>
             </div>
 
-            {{-- Tabel Pelacak Bug (Bersih, Tegas, Ramah Desktop & Tablet) --}}
+            {{-- Tabel & Kartu Pelacak Bug (Ramah Desktop, Tablet, & Mode Setengah Layar / Mobile) --}}
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                <div class="overflow-x-auto w-full relative">
+                @php
+                    $severityBadges = [
+                        'critical' => 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+                        'high' => 'bg-orange-100 text-orange-800 border-orange-300 font-semibold',
+                        'medium' => 'bg-amber-100 text-amber-800 border-amber-300 font-medium',
+                        'low' => 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
+                    ];
+                    $severityLabels = [
+                        'critical' => 'Kritis',
+                        'high' => 'Tinggi',
+                        'medium' => 'Sedang',
+                        'low' => 'Rendah',
+                    ];
+                    $statusBadges = [
+                        'open' => 'bg-rose-50 text-rose-700 border-rose-200',
+                        'in_progress' => 'bg-sky-50 text-sky-700 border-sky-200',
+                        'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    ];
+                    $statusDots = [
+                        'open' => 'bg-rose-500',
+                        'in_progress' => 'bg-sky-500',
+                        'resolved' => 'bg-emerald-500',
+                    ];
+                    $statusLabels = [
+                        'open' => 'Open',
+                        'in_progress' => 'In Progress',
+                        'resolved' => 'Resolved',
+                    ];
+                @endphp
+
+                {{-- TAMPILAN 1: MODE MOBILE & SETENGAH LAYAR (KARTU RESPONSIF, TANPA SCROLL SAMPING, AKSI BERSATU) --}}
+                <div class="bug-card-view-mobile lg:hidden divide-y divide-slate-100 bg-white">
+                    @forelse ($bugs as $bug)
+                        @php
+                            $bugData = [
+                                'id' => $bug->id,
+                                'title' => $bug->title,
+                                'project_id' => $bug->project_id,
+                                'project_code' => $bug->project?->code ?? 'UMUM',
+                                'project_name' => $bug->project?->name ?? 'Proyek Tanpa Nama',
+                                'project_color' => $bug->project?->color ?? '#4F46E5',
+                                'module_id' => $bug->module_id,
+                                'module_name' => $bug->module?->name ?? 'Umum / Tanpa Modul',
+                                'assigned_to' => $bug->assigned_to,
+                                'assignee_name' => $bug->assignee?->name ?? 'Belum Ditugaskan',
+                                'assignee_avatar' => $bug->assignee?->avatar ?? 'AK',
+                                'assignee_avatar_bg' => $bug->assignee?->avatar_bg ?? '#1E293B',
+                                'creator_name' => $bug->creator?->name ?? 'Sistem',
+                                'severity' => $bug->severity,
+                                'severity_label' => $severityLabels[$bug->severity] ?? $bug->severity,
+                                'status' => $bug->status,
+                                'status_label' => $statusLabels[$bug->status] ?? $bug->status,
+                                'reported_by' => $bug->reported_by ?: '-',
+                                'reported_date' => $bug->reported_date ? $bug->reported_date->format('d M Y') : '-',
+                                'reported_date_raw' => $bug->reported_date ? $bug->reported_date->format('Y-m-d') : '',
+                                'description' => $bug->description,
+                                'root_cause' => $bug->root_cause,
+                                'solution_notes' => $bug->solution_notes,
+                                'resolved_at' => $bug->resolved_at ? $bug->resolved_at->format('d M Y, H:i') : null,
+                                'created_at' => $bug->created_at ? $bug->created_at->format('d M Y, H:i') : '-',
+                                'handover_logs' => $bug->handover_logs ?? [],
+                            ];
+                        @endphp
+                        <div class="p-4 hover:bg-slate-50/60 transition-colors" id="card-bug-{{ $bug->id }}">
+                            {{-- Header Kartu: Judul Bug & Badge Status/Keparahan --}}
+                            <div class="flex items-start justify-between gap-2.5">
+                                <div class="min-w-0 flex-1">
+                                    <button
+                                        type="button"
+                                        class="btn-detail-bug text-left font-bold text-sm text-slate-900 hover:text-indigo-600 transition cursor-pointer leading-snug group flex items-start gap-1"
+                                        data-bug="{{ json_encode($bugData) }}"
+                                        title="Klik untuk melihat dan mengedit detail bug"
+                                    >
+                                        <span class="break-words">{{ $bug->title }}</span>
+                                        <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 mt-0.5 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                        </svg>
+                                    </button>
+
+                                    {{-- Proyek & Modul --}}
+                                    <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                        @if ($bug->project)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $bug->project->color ?? '#4F46E5' }}"></span>
+                                                <span>{{ $bug->project->code }}</span>
+                                            </span>
+                                        @endif
+                                        @if ($bug->module)
+                                            <span class="text-xs text-slate-600 font-medium">
+                                                {{ $bug->module->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Keparahan & Status --}}
+                                <div class="flex flex-col items-end gap-1 shrink-0">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $severityBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                        {{ $severityLabels[$bug->severity] ?? $bug->severity }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ $statusBadges[$bug->status] ?? 'bg-slate-50 text-slate-700 border-slate-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $statusDots[$bug->status] ?? 'bg-slate-400' }}"></span>
+                                        <span>{{ $statusLabels[$bug->status] ?? $bug->status }}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            @if ($bug->description)
+                                <p class="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                                    {{ \Illuminate\Support\Str::limit($bug->description, 130) }}
+                                </p>
+                            @endif
+
+                            {{-- Badge Solusi & Akar Masalah --}}
+                            @if ($bug->solution_notes || $bug->root_cause)
+                                <div class="mt-2 flex flex-wrap gap-1.5">
+                                    @if ($bug->solution_notes)
+                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            <svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                            </svg>
+                                            <span>Solusi:</span>
+                                            <span class="truncate max-w-[200px]" title="{{ $bug->solution_notes }}">{{ $bug->solution_notes }}</span>
+                                        </div>
+                                    @endif
+                                    @if ($bug->root_cause)
+                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <span>Akar Masalah:</span>
+                                            <span class="truncate max-w-[200px]" title="{{ $bug->root_cause }}">{{ $bug->root_cause }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Info Pelapor & Penanggung Jawab --}}
+                            <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div class="flex items-center gap-1.5 text-slate-600">
+                                    <span class="text-[11px] text-slate-400">Ditugaskan:</span>
+                                    @if ($bug->assignee)
+                                        <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+                                            @if ($bug->assignee->foto_profil_url)
+                                                <img src="{{ $bug->assignee->foto_profil_url }}" alt="{{ $bug->assignee->name }}" class="w-5 h-5 rounded-full object-cover border border-slate-200">
+                                            @else
+                                                <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-2xs" style="background-color: {{ $bug->assignee->avatar_bg ?? '#1E293B' }}">
+                                                    {{ $bug->assignee->avatar ?? 'AK' }}
+                                                </div>
+                                            @endif
+                                            <span>{{ $bug->assignee->name }}</span>
+                                            @if ((int)$bug->assigned_to === (int)$user->id)
+                                                <span class="text-[10px] font-bold text-indigo-600">(Anda)</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-slate-400 italic">Belum Ditugaskan</span>
+                                    @endif
+                                </div>
+                                <div class="text-[11px] text-slate-400">
+                                    {{ $bug->reported_by ?: '-' }} • {{ $bug->reported_date ? $bug->reported_date->format('d M Y') : '-' }}
+                                </div>
+                            </div>
+
+                            {{-- Tombol Aksi di Kartu: Bersatu, Tanpa Terpisah Garis, Langsung Terlihat --}}
+                            <div class="mt-3 pt-2 flex flex-wrap items-center justify-end gap-1.5">
+                                {{-- Tombol Detail / Edit --}}
+                                <button
+                                    type="button"
+                                    class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer shadow-2xs shrink-0"
+                                    data-bug="{{ json_encode($bugData) }}"
+                                    title="Lihat riwayat dan edit detail bug"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                                    </svg>
+                                    <span>Detail</span>
+                                </button>
+
+                                {{-- Tombol Solusi --}}
+                                <button
+                                    type="button"
+                                    class="btn-solution-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border {{ $bug->solution_notes ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100' }} text-xs font-semibold transition cursor-pointer shadow-2xs shrink-0"
+                                    data-bug="{{ json_encode($bugData) }}"
+                                    title="Kelola dan lihat solusi penyelesaian bug"
+                                >
+                                    <svg class="w-3.5 h-3.5 {{ $bug->solution_notes ? 'text-emerald-600' : 'text-amber-600' }} shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Solusi</span>
+                                </button>
+
+                                {{-- Tombol Hapus Bug --}}
+                                <button
+                                    type="button"
+                                    class="btn-delete-bug p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0"
+                                    data-bug-id="{{ $bug->id }}"
+                                    data-bug-title="{{ $bug->title }}"
+                                    data-delete-url="{{ route('bugs.destroy', $bug) }}"
+                                    title="Hapus laporan bug"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-12 text-center px-4">
+                            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900">Belum Ada Laporan Bug</h3>
+                            <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                                Tidak ada data bug yang sesuai dengan kriteria filter saat ini. Silakan buat laporan bug baru atau sesuaikan filter.
+                            </p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- TAMPILAN 2: MODE DESKTOP LENGKAP (TABEL DENGAN AKSI BERSATU, TANPA GARIS PEMISAH MENCOLOK) --}}
+                <div class="bug-table-view-desktop hidden lg:block overflow-x-auto w-full relative">
                     <table class="w-full text-left text-sm border-separate border-spacing-0">
                         <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
                             <tr>
@@ -457,40 +697,10 @@
                                 <th scope="col" class="py-3 px-1.5 border-b border-slate-200">Status</th>
                                 <th scope="col" class="py-3 px-2 border-b border-slate-200">Pelapor &amp; Tanggal</th>
                                 <th scope="col" class="py-3 px-2 border-b border-slate-200">Ditugaskan</th>
-                                <th scope="col" class="py-3 pl-2.5 pr-4 text-right sticky right-0 bg-slate-50 z-20 border-b border-slate-200 border-l border-slate-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)]">Aksi</th>
+                                <th scope="col" class="py-3 pl-2.5 pr-4 text-right sticky right-0 bg-slate-50 z-20 border-b border-slate-200">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white">
-                            @php
-                                $severityBadges = [
-                                    'critical' => 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
-                                    'high' => 'bg-orange-100 text-orange-800 border-orange-300 font-semibold',
-                                    'medium' => 'bg-amber-100 text-amber-800 border-amber-300 font-medium',
-                                    'low' => 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
-                                ];
-                                $severityLabels = [
-                                    'critical' => 'Kritis',
-                                    'high' => 'Tinggi',
-                                    'medium' => 'Sedang',
-                                    'low' => 'Rendah',
-                                ];
-                                $statusBadges = [
-                                    'open' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                    'in_progress' => 'bg-sky-50 text-sky-700 border-sky-200',
-                                    'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                ];
-                                $statusDots = [
-                                    'open' => 'bg-rose-500',
-                                    'in_progress' => 'bg-sky-500',
-                                    'resolved' => 'bg-emerald-500',
-                                ];
-                                $statusLabels = [
-                                    'open' => 'Open',
-                                    'in_progress' => 'In Progress',
-                                    'resolved' => 'Resolved',
-                                ];
-                            @endphp
-
                             @forelse ($bugs as $bug)
                                 @php
                                     $bugData = [
@@ -606,7 +816,7 @@
                                         </div>
                                     </td>
 
-                                    {{-- 6. Ditugaskan & Tombol Ambil Alih --}}
+                                    {{-- 6. Ditugaskan Kepada --}}
                                     <td class="py-3 px-2 whitespace-nowrap border-b border-slate-100">
                                         <div class="flex items-center gap-1.5">
                                             @if ($bug->assignee)
@@ -617,36 +827,20 @@
                                                         {{ $bug->assignee->avatar ?? 'AK' }}
                                                     </div>
                                                 @endif
-                                                <span class="text-xs font-semibold text-slate-800 truncate max-w-[95px]" title="{{ $bug->assignee->name }}">
+                                                <span class="text-xs font-semibold text-slate-800 truncate max-w-[110px]" title="{{ $bug->assignee->name }}">
                                                     {{ $bug->assignee->name }}
                                                 </span>
+                                                @if ((int)$bug->assigned_to === (int)$user->id)
+                                                    <span class="text-[10px] font-bold text-indigo-600">(Anda)</span>
+                                                @endif
                                             @else
                                                 <span class="text-xs text-slate-400 italic">Belum Ditugaskan</span>
-                                            @endif
-
-                                            @if (!$bug->assigned_to || $bug->assigned_to !== $user->id)
-                                                <button
-                                                    type="button"
-                                                    class="btn-takeover-bug inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs shrink-0"
-                                                    data-bug-id="{{ $bug->id }}"
-                                                    data-bug-title="{{ $bug->title }}"
-                                                    data-project-code="{{ $bug->project?->code ?? 'Umum' }}"
-                                                    data-project-name="{{ $bug->project?->name ?? 'Proyek Tanpa Nama' }}"
-                                                    data-previous-assignee="{{ $bug->assignee?->name ?? 'Belum Ditugaskan' }}"
-                                                    data-takeover-url="{{ route('bugs.takeover', $bug) }}"
-                                                    title="Ambil alih penanganan bug ini"
-                                                >
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                                                    </svg>
-                                                    <span>Ambil</span>
-                                                </button>
                                             @endif
                                         </div>
                                     </td>
 
-                                    {{-- 7. Aksi: Terpisah Jelas (Detail Saja, Solusi Saja, Hapus) - Selalu Tampil Penuh & Sticky --}}
-                                    <td class="py-3 pl-2.5 pr-4 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-b border-slate-100 border-l border-slate-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)]">
+                                    {{-- 7. Aksi (Bersatu Tanpa Garis Pemisah: Detail, Solusi, Hapus) --}}
+                                    <td class="py-3 pl-2.5 pr-4 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-b border-slate-100">
                                         <div class="flex items-center justify-end gap-1.5 shrink-0">
                                             {{-- 1. Tombol Detail (Bisa Melihat & Mengedit Detail Bug) --}}
                                             <button
@@ -1091,53 +1285,6 @@
         </div>
     </div>
 
-    {{-- ========================================================================= --}}
-    {{-- MODAL AMBIL ALIH BUG                                                      --}}
-    {{-- ========================================================================= --}}
-    <div id="modal-takeover-bug" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs p-4 sm:p-6 flex items-center justify-center">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 relative">
-            <div class="flex items-center gap-3.5 mb-4">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 shrink-0">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-slate-900">Konfirmasi Ambil Alih Bug</h3>
-                    <p class="text-xs text-slate-500">Penanganan bug akan dialihkan kepada Anda.</p>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 mb-4 space-y-2 text-xs">
-                <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                    <span class="text-slate-500">Judul Bug:</span>
-                    <span id="takeover-bug-title" class="font-bold text-slate-900 truncate max-w-[220px]"></span>
-                </div>
-                <div class="flex justify-between items-center py-1 border-b border-slate-200/60">
-                    <span class="text-slate-500">Proyek:</span>
-                    <span id="takeover-project-name" class="font-semibold text-slate-800"></span>
-                </div>
-                <div class="flex justify-between items-center py-1">
-                    <span class="text-slate-500">Penanggung Jawab Sebelumnya:</span>
-                    <span id="takeover-previous-assignee" class="font-semibold text-rose-600"></span>
-                </div>
-            </div>
-
-            <form method="POST" id="form-takeover-bug" class="space-y-4">
-                @csrf
-                <div>
-                    <label for="takeover-note" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Catatan Handover (Opsional)</label>
-                    <input type="text" id="takeover-note" name="note" placeholder="Alasan atau konteks pengalihan bug..." class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900">
-                </div>
-
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer">Batal</button>
-                    <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-700 transition cursor-pointer shadow-xs">Konfirmasi Ambil Alih</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     {{-- Script Interaksi Bug Tracker --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -1296,23 +1443,6 @@
                 });
             });
 
-            // 4. KONTROL MODAL AMBIL ALIH BUG
-            const modalTakeover = document.getElementById('modal-takeover-bug');
-            const formTakeover = document.getElementById('form-takeover-bug');
-            const takeoverTitle = document.getElementById('takeover-bug-title');
-            const takeoverProject = document.getElementById('takeover-project-name');
-            const takeoverAssignee = document.getElementById('takeover-previous-assignee');
-            document.querySelectorAll('.btn-takeover-bug').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    formTakeover.action = btn.dataset.takeoverUrl;
-                    takeoverTitle.textContent = btn.dataset.bugTitle;
-                    takeoverProject.textContent = `[${btn.dataset.projectCode}] ${btn.dataset.projectName}`;
-                    takeoverAssignee.textContent = btn.dataset.previousAssignee;
-                    modalTakeover.classList.remove('hidden');
-                });
-            });
-
             // Tombol Tutup Semua Modal
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -1320,7 +1450,6 @@
                     modalSolution?.classList.add('hidden');
                     modalCreate?.classList.add('hidden');
                     modalDelete?.classList.add('hidden');
-                    modalTakeover?.classList.add('hidden');
                 });
             });
         });

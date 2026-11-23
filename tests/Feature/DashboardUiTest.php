@@ -67,9 +67,10 @@ class DashboardUiTest extends TestCase
 
         // 1. Stat cards
         $response->assertSee('Proyek Aktif');
-        $response->assertSee('Tugas Berjalan');
+        $response->assertSee('Tugas Telah Diselesaikan');
         $response->assertSee('Bug Perlu Ditangani');
-        $response->assertSee('Rilis Terkini');
+        $response->assertSee('Jumlah Bug');
+        $response->assertSee('Kritis');
         $response->assertSee('v2.1.0');
 
         // 2. Konten tugas & bug

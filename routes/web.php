@@ -50,6 +50,8 @@ Route::middleware(['auth', 'role'])->group(function () {
     // Evaluasi Aplikasi & Rencana Tindak Lanjut
     Route::get('/evaluations', [\App\Http\Controllers\AppEvaluationController::class, 'index'])->name('evaluations.index');
     Route::post('/evaluations', [\App\Http\Controllers\AppEvaluationController::class, 'store'])->name('evaluations.store');
+    Route::post('/evaluations/auto-sync', [\App\Http\Controllers\AppEvaluationController::class, 'autoSync'])->name('evaluations.auto-sync');
+    Route::post('/evaluations/{evaluation}/sync', [\App\Http\Controllers\AppEvaluationController::class, 'syncSingle'])->name('evaluations.sync');
     Route::get('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'show'])->name('evaluations.show');
     Route::put('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'update'])->name('evaluations.update');
     Route::delete('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'destroy'])->name('evaluations.destroy');

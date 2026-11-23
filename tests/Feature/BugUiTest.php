@@ -309,7 +309,7 @@ class BugUiTest extends TestCase
         $this->assertNotNull($lastLog['handed_over_at']);
     }
 
-    public function test_bugs_page_renders_takeover_button_and_modal(): void
+    public function test_bugs_page_does_not_render_takeover_button_nor_modal(): void
     {
         $currentUser = User::factory()->create(['name' => 'Saya']);
         $otherDev = User::factory()->create(['name' => 'Dev Lain']);
@@ -327,9 +327,9 @@ class BugUiTest extends TestCase
         $response = $this->actingAs($currentUser)->get('/bugs');
 
         $response->assertOk();
-        $response->assertSee('id="modal-takeover-bug"', false);
-        $response->assertSee('Konfirmasi Ambil Alih Bug');
-        $response->assertSee('btn-takeover-bug', false);
+        $response->assertDontSee('id="modal-takeover-bug"', false);
+        $response->assertDontSee('Konfirmasi Ambil Alih Bug');
+        $response->assertDontSee('btn-takeover-bug', false);
     }
 
     public function test_bugs_sidebar_does_not_contain_logout_button(): void

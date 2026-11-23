@@ -308,22 +308,22 @@
                     </div>
                 </div>
 
-                {{-- 2. Tugas Berjalan (In Progress) --}}
+                {{-- 2. Tugas yang Telah Diselesaikan --}}
                 <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tugas Berjalan</span>
-                        <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tugas Telah Diselesaikan</span>
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900">{{ $metrics['tasks_in_progress'] }}</span>
-                        <span class="text-xs text-slate-500 mt-0.5 block">{{ $metrics['tasks_todo'] }} To Do &bull; {{ $metrics['tasks_review'] }} Review</span>
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900">{{ $metrics['tasks_done'] }}</span>
+                        <span class="text-xs text-slate-500 mt-0.5 block">{{ $metrics['tasks_in_progress'] }} Sedang Berjalan &bull; {{ $metrics['tasks_todo'] }} To Do</span>
                     </div>
                     <div class="mt-3 pt-2.5 border-t border-slate-100">
-                        <a href="{{ route('kanban.index') }}" class="text-xs font-semibold text-sky-600 hover:text-sky-800 transition">
+                        <a href="{{ route('kanban.index') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800 transition">
                             Buka Papan Kanban
                         </a>
                     </div>
@@ -356,29 +356,27 @@
                     </div>
                 </div>
 
-                {{-- 4. Rilis Kode Terkini --}}
+                {{-- 4. Jumlah Bug & Ancaman Bug --}}
                 <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex flex-col justify-between">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Rilis Terkini</span>
-                        <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Jumlah Bug</span>
+                        <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.386a10.96 10.96 0 003.882-3.882c.486-.827.313-1.908-.386-2.607L9.762 3.659A2.25 2.25 0 009.568 3z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                             </svg>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="block text-xl sm:text-2xl font-extrabold text-slate-900 truncate">
-                            {{ $latestRelease->release_tags ?? 'v1.0' }}
-                        </span>
-                        <span class="text-xs text-slate-500 mt-0.5 block truncate">
-                            {{ $latestRelease->project?->code ?? 'SISTEM' }} &bull;
-                            {{ $latestRelease && $latestRelease->release_date ? $latestRelease->release_date->format('d M Y') : 'Belum ada rilis' }}
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900">{{ $metrics['total_bugs'] }}</span>
+                        <span class="text-xs mt-0.5 block truncate" title="Ancaman Bug: {{ $metrics['critical_bugs'] }} Kritis, {{ $metrics['high_bugs'] }} Tinggi, {{ $metrics['medium_bugs'] }} Sedang">
+                            <span class="font-bold text-rose-600">{{ $metrics['critical_bugs'] }} Kritis</span> &bull;
+                            <span class="font-semibold text-amber-600">{{ $metrics['high_bugs'] }} Tinggi</span> &bull;
+                            <span class="text-slate-500">{{ $metrics['medium_bugs'] }} Sedang</span>
                         </span>
                     </div>
                     <div class="mt-3 pt-2.5 border-t border-slate-100">
-                        <a href="{{ route('releases.index') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800 transition">
-                            Riwayat Rilis
+                        <a href="{{ route('bugs.index') }}" class="text-xs font-semibold text-rose-600 hover:text-rose-800 transition">
+                            Lihat Detail Bug
                         </a>
                     </div>
                 </div>

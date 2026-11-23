@@ -1812,6 +1812,9 @@
 
                             applyInstantFilters();
                         }
+
+                        // Otomatis refresh halaman agar seluruh data langsung berubah tanpa refresh manual
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         showToast(data.message || 'Gagal mengambil alih tugas.', true);
                     }

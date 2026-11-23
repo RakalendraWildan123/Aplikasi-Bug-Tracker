@@ -6,6 +6,7 @@ use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
 use App\Models\Project;
+use App\Services\AppEvaluationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -14,8 +15,14 @@ use Illuminate\Validation\Rule;
 
 class AppEvaluationController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request, AppEvaluationService $evaluationService): View|JsonResponse
     {
+        // Otomatis sinkronkan jika ada proyek yang belum memiliki evaluasi di periode saat ini
+        $currentPeriod = AppEvaluationService::currentPeriod();
+        if ($request->boolean('auto_sync') || (! app()->runningUnitTests() && Project::query()->whereDoesntHave('appEvaluations', fn ($q) => $q->where('period_review', $currentPeriod))->exists())) {
+            $evaluationService->syncMissingEvaluations($currentPeriod);
+        }
+
         $search = $request->string('search')->toString();
         $projectId = $request->string('project_id')->toString();
         $period = $request->string('period')->toString();
@@ -282,5 +289,54 @@ class AppEvaluationController extends Controller
         return redirect()
             ->route('evaluations.index')
             ->with('status', 'Rencana tindak lanjut berhasil dihapus.');
+    }
+
+    /**
+     * Sinkronkan evaluasi otomatis untuk semua proyek.
+     */
+    public function autoSync(Request $request, AppEvaluationService $evaluationService): JsonResponse|RedirectResponse
+    {
+        $period = $request->input('period') ?: AppEvaluationService::currentPeriod();
+        $count = $evaluationService->generateAll($period);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => "Evaluasi aplikasi berhasil disinkronkan secara otomatis untuk seluruh proyek ({$count} proyek).",
+                'synced_count' => $count,
+                'period' => $period,
+            ]);
+        }
+
+        return redirect()
+            ->route('evaluations.index')
+            ->with('status', "Evaluasi aplikasi berhasil disinkronkan secara otomatis dari data proyek, tugas, dan bug terkini ({$count} proyek).");
+    }
+
+    /**
+     * Sinkronkan ulang evaluasi untuk proyek tertentu dari data terkini.
+     */
+    public function syncSingle(Request $request, AppEvaluation $evaluation, AppEvaluationService $evaluationService): JsonResponse|RedirectResponse
+    {
+        $project = $evaluation->project;
+        if (! $project) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Proyek tidak ditemukan.'], 404);
+            }
+
+            return redirect()->route('evaluations.index')->withErrors(['Proyek evaluasi tidak ditemukan.']);
+        }
+
+        $updated = $evaluationService->generateForProject($project, $evaluation->period_review);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => "Evaluasi proyek [{$project->code}] {$project->name} berhasil diperbarui dari data real-time.",
+                'evaluation' => $updated->load(['project', 'actionItems.assignee']),
+            ]);
+        }
+
+        return redirect()
+            ->route('evaluations.index')
+            ->with('status', "Evaluasi proyek [{$project->code}] {$project->name} berhasil disinkronkan dari data real-time.");
     }
 }

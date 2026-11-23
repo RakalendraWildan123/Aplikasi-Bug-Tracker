@@ -6,6 +6,25 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Daftar Tugas &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Tampilan Responsif Daftar Tugas: Kartu (Setengah Layar & Mobile < 1024px) vs Tabel (Fullscreen Desktop >= 1024px) */
+        @media (max-width: 1023px) {
+            .task-card-view-mobile {
+                display: block !important;
+            }
+            .task-table-view-desktop {
+                display: none !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .task-card-view-mobile {
+                display: none !important;
+            }
+            .task-table-view-desktop {
+                display: block !important;
+            }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans flex flex-col lg:flex-row">
 
@@ -481,9 +500,232 @@
                 </form>
             </div>
 
-            {{-- Tabel Daftar Tugas (Bersih, Tegas, Ramah Desktop & Tablet) --}}
+            {{-- Tabel & Kartu Daftar Tugas (Ramah Desktop, Tablet, & Mode Setengah Layar / Mobile) --}}
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                <div class="overflow-x-auto min-w-full">
+                @php
+                    $typeBadges = [
+                        'feature' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                        'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
+                        'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
+                        'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
+                        'bug' => 'bg-rose-50 text-rose-700 border-rose-200',
+                    ];
+                    $typeLabels = [
+                        'feature' => 'Fitur',
+                        'enhancement' => 'Peningkatan',
+                        'refactor' => 'Refaktor',
+                        'maintenance' => 'Maintenance',
+                        'bug' => 'Bug',
+                    ];
+                    $statusBadges = [
+                        'todo' => 'bg-slate-100 text-slate-700 border-slate-200 dot-slate-500',
+                        'in_progress' => 'bg-sky-50 text-sky-700 border-sky-200 dot-sky-500',
+                        'review' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500',
+                        'done' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dot-emerald-500',
+                    ];
+                    $statusDots = [
+                        'todo' => 'bg-slate-400',
+                        'in_progress' => 'bg-sky-500',
+                        'review' => 'bg-amber-500',
+                        'done' => 'bg-emerald-500',
+                    ];
+                    $statusLabels = [
+                        'todo' => 'To Do',
+                        'in_progress' => 'In Progress',
+                        'review' => 'Review',
+                        'done' => 'Done',
+                    ];
+                @endphp
+
+                {{-- TAMPILAN 1: MODE MOBILE & SETENGAH LAYAR (KARTU RESPONSIF, AMBIL ALIH LANGSUNG TERLIHAT TANPA SCROLL) --}}
+                <div class="task-card-view-mobile lg:hidden divide-y divide-slate-100 bg-white">
+                    @forelse ($tasks as $task)
+                        <div class="p-4 hover:bg-slate-50/60 transition-colors" id="card-task-list-{{ $task->id }}">
+                            {{-- Baris 1: Judul Tugas & Badge Tipe/Status --}}
+                            <div class="flex items-start justify-between gap-2.5">
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-sm text-slate-900 leading-snug break-words">
+                                        {{ $task->title }}
+                                    </div>
+                                    {{-- Proyek & Modul --}}
+                                    <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                        @if ($task->project)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $task->project->color ?? '#4F46E5' }}"></span>
+                                                <span>{{ $task->project->code }}</span>
+                                            </span>
+                                        @endif
+                                        @if ($task->module)
+                                            <span class="text-xs text-slate-600 font-medium">
+                                                {{ $task->module->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Tipe & Status --}}
+                                <div class="flex flex-col items-end gap-1 shrink-0">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $typeBadges[$task->task_type] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                        {{ $typeLabels[$task->task_type] ?? $task->task_type }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ $statusBadges[$task->status] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $statusDots[$task->status] ?? 'bg-slate-400' }}"></span>
+                                        <span>{{ $statusLabels[$task->status] ?? $task->status }}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Deskripsi (Jika ada) --}}
+                            @if ($task->description)
+                                <p class="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed" title="{{ $task->description }}">
+                                    {{ \Illuminate\Support\Str::limit($task->description, 130) }}
+                                </p>
+                            @endif
+
+                            {{-- Kendala (Jika ada) --}}
+                            @if ($task->blocker_notes)
+                                <div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span>Kendala:</span>
+                                    <span class="truncate max-w-[240px]">{{ $task->blocker_notes }}</span>
+                                </div>
+                            @endif
+
+                            {{-- Info Target Selesai & Ditugaskan --}}
+                            <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div class="cell-assignee flex items-center gap-1.5 text-slate-600">
+                                    <span class="text-[11px] text-slate-400">Ditugaskan:</span>
+                                    @if ($task->assignee)
+                                        <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+                                            @if ($task->assignee->foto_profil_url)
+                                                <img src="{{ $task->assignee->foto_profil_url }}" alt="{{ $task->assignee->name }}" class="w-5 h-5 rounded-full object-cover border border-slate-200">
+                                            @else
+                                                <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-2xs" style="background-color: {{ $task->assignee->avatar_bg ?? '#1E293B' }}">
+                                                    {{ $task->assignee->avatar ?? 'DV' }}
+                                                </div>
+                                            @endif
+                                            <span>{{ $task->assignee->name }}</span>
+                                            @if ((int)$task->assigned_to === (int)$user->id)
+                                                <span class="text-[10px] font-bold text-indigo-600">(Anda)</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-slate-400 italic">Belum ditugaskan</span>
+                                    @endif
+                                </div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
+                                    </svg>
+                                    <span>{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}</span>
+                                </div>
+                            </div>
+
+                            {{-- Tombol Aksi di Kartu: Ambil Alih Langsung Terlihat Tanpa Scroll ke Kanan --}}
+                            <div class="mt-3 pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100">
+                                {{-- Fitur Ambil Alih Tugas --}}
+                                <div class="table-takeover-action inline-flex items-center">
+                                    @if ($task->assigned_to && (int)$task->assigned_to !== (int)$user->id)
+                                        <button
+                                            type="button"
+                                            class="btn-takeover-task px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                            title="Ambil Alih Tugas dari {{ $task->assignee?->name ?? 'Developer lain' }}"
+                                            aria-label="Ambil Alih Tugas {{ $task->title }}"
+                                            data-task-id="{{ $task->id }}"
+                                            data-task-title="{{ $task->title }}"
+                                            data-project-name="{{ $task->project?->name }}"
+                                            data-project-code="{{ $task->project?->code }}"
+                                            data-developer-id="{{ $task->assigned_to }}"
+                                            data-developer-name="{{ $task->assignee?->name ?? 'Belum Ditugaskan' }}"
+                                            data-developer-role="{{ $task->assignee?->role ?? 'Developer' }}"
+                                            data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                                            </svg>
+                                            <span>Ambil Alih</span>
+                                        </button>
+                                    @elseif ($task->assigned_to && (int)$task->assigned_to === (int)$user->id)
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Tugas Anda</span>
+                                        </span>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="btn-takeover-task px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                            title="Ambil Tugas Ini"
+                                            aria-label="Ambil Tugas Ini"
+                                            data-task-id="{{ $task->id }}"
+                                            data-task-title="{{ $task->title }}"
+                                            data-project-name="{{ $task->project?->name }}"
+                                            data-project-code="{{ $task->project?->code }}"
+                                            data-developer-id=""
+                                            data-developer-name="Belum Ditugaskan"
+                                            data-developer-role="Tugas Terbuka"
+                                            data-developer-avatar="--"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                            </svg>
+                                            <span>Ambil Tugas</span>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                {{-- Tombol Edit --}}
+                                <button
+                                    type="button"
+                                    class="btn-edit-task inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer shadow-2xs"
+                                    title="Edit Tugas: {{ $task->title }}"
+                                    aria-label="Edit Tugas {{ $task->title }}"
+                                    data-task-id="{{ $task->id }}"
+                                    data-project-id="{{ $task->project_id }}"
+                                    data-module-id="{{ $task->module_id }}"
+                                    data-title="{{ $task->title }}"
+                                    data-description="{{ $task->description }}"
+                                    data-task-type="{{ $task->task_type }}"
+                                    data-status="{{ $task->status }}"
+                                    data-start-date="{{ $task->start_date ? \Carbon\Carbon::parse($task->start_date)->format('Y-m-d') : '' }}"
+                                    data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
+                                    data-blocker-notes="{{ $task->blocker_notes }}"
+                                    data-assigned-to="{{ $task->assigned_to }}"
+                                >
+                                    <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                                    </svg>
+                                    <span>Edit</span>
+                                </button>
+
+                                {{-- Tombol Hapus --}}
+                                <button
+                                    type="button"
+                                    class="btn-delete-task p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer"
+                                    title="Hapus Tugas: {{ $task->title }}"
+                                    aria-label="Hapus Tugas {{ $task->title }}"
+                                    data-task-id="{{ $task->id }}"
+                                    data-title="{{ $task->title }}"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-12 px-4 text-center">
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <svg class="w-10 h-10 mb-2.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 017 3h10a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0119 21z"/>
+                                </svg>
+                                <p class="text-sm font-semibold text-slate-600">Belum ada tugas ditemukan</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Coba sesuaikan filter atau tambahkan tugas baru melalui tombol di atas.</p>
+                            </div>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- TAMPILAN 2: MODE DESKTOP LENGKAP (TABEL DENGAN FORMAT LEBAR) --}}
+                <div class="task-table-view-desktop hidden lg:block overflow-x-auto min-w-full">
                     <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
                         <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none">
                             <tr>
@@ -498,40 +740,6 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
                             @forelse ($tasks as $task)
-                                @php
-                                    $typeBadges = [
-                                        'feature' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                        'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                        'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
-                                        'bug' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                    ];
-                                    $typeLabels = [
-                                        'feature' => 'Fitur',
-                                        'enhancement' => 'Peningkatan',
-                                        'refactor' => 'Refaktor',
-                                        'maintenance' => 'Maintenance',
-                                        'bug' => 'Bug',
-                                    ];
-                                    $statusBadges = [
-                                        'todo' => 'bg-slate-100 text-slate-700 border-slate-200 dot-slate-500',
-                                        'in_progress' => 'bg-sky-50 text-sky-700 border-sky-200 dot-sky-500',
-                                        'review' => 'bg-amber-50 text-amber-700 border-amber-200 dot-amber-500',
-                                        'done' => 'bg-emerald-50 text-emerald-700 border-emerald-200 dot-emerald-500',
-                                    ];
-                                    $statusDots = [
-                                        'todo' => 'bg-slate-400',
-                                        'in_progress' => 'bg-sky-500',
-                                        'review' => 'bg-amber-500',
-                                        'done' => 'bg-emerald-500',
-                                    ];
-                                    $statusLabels = [
-                                        'todo' => 'To Do',
-                                        'in_progress' => 'In Progress',
-                                        'review' => 'Review',
-                                        'done' => 'Done',
-                                    ];
-                                @endphp
                                 <tr class="hover:bg-slate-50/70 transition-colors" id="row-task-{{ $task->id }}">
                                     {{-- 1. Judul & Deskripsi Tugas (Satu atau Dua Kalimat Inti) --}}
                                     <td class="py-4 pl-5 pr-3 max-w-xs sm:max-w-sm">
@@ -1383,6 +1591,8 @@
                         showToast(data.message);
                         const row = document.getElementById(`row-task-${taskToDeleteId}`);
                         if (row) row.remove();
+                        const card = document.getElementById(`card-task-list-${taskToDeleteId}`);
+                        if (card) card.remove();
                         setTimeout(() => window.location.reload(), 400);
                     } else {
                         showToast(data.message || 'Gagal menghapus tugas.', true);
@@ -1505,6 +1715,43 @@
                             row.classList.add('bg-emerald-50/80');
                             setTimeout(() => row.classList.remove('bg-emerald-50/80'), 1200);
                         }
+
+                        // Update tampilan kartu mobile secara instan (Mobile / Setengah Layar)
+                        const card = document.getElementById(`card-task-list-${activeTakeoverTaskId}`);
+                        if (card) {
+                            const assigneeCell = card.querySelector('.cell-assignee');
+                            if (assigneeCell) {
+                                assigneeCell.innerHTML = `
+                                    <span class="text-[11px] text-slate-400">Ditugaskan:</span>
+                                    <div class="flex items-center gap-1.5 font-semibold text-slate-800">
+                                        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-2xs" style="background-color: ${data.user.avatar_bg || '#1E293B'}">
+                                            ${data.user.avatar || 'AK'}
+                                        </div>
+                                        <span>${data.user.name}</span>
+                                        <span class="text-[10px] font-bold text-indigo-600">(Anda)</span>
+                                    </div>
+                                `;
+                            }
+
+                            const takeoverAction = card.querySelector('.table-takeover-action');
+                            if (takeoverAction) {
+                                takeoverAction.innerHTML = `
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        <span>Tugas Anda</span>
+                                    </span>
+                                `;
+                            }
+
+                            const btnEdit = card.querySelector('.btn-edit-task');
+                            if (btnEdit) btnEdit.setAttribute('data-assigned-to', data.user.id);
+
+                            card.classList.add('bg-emerald-50/80');
+                            setTimeout(() => card.classList.remove('bg-emerald-50/80'), 1200);
+                        }
+
+                        // Otomatis refresh halaman agar seluruh data langsung berubah tanpa refresh manual
+                        setTimeout(() => window.location.reload(), 500);
                     } else {
                         showToast(data.message || 'Gagal mengambil alih tugas.', true);
                     }
