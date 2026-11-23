@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Akun Saya &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.speed-meta')
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans flex flex-col lg:flex-row">
 

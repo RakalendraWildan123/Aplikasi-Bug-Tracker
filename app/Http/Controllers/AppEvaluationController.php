@@ -19,8 +19,14 @@ class AppEvaluationController extends Controller
     {
         $currentPeriod = AppEvaluationService::currentPeriod();
 
-        // Langsung catat dan perbarui evaluasi seluruh proyek secara otomatis setiap kali halaman diakses (tanpa perlu tombol)
-        if (! app()->runningUnitTests() || $request->boolean('auto_sync')) {
+        // Sinkronkan evaluasi proyek otomatis (dibatasi interval 15 detik agar performa GET request instan < 0.1s)
+        if (! app()->runningUnitTests()) {
+            $cacheKey = "auto_eval_sync_{$currentPeriod}";
+            if (! cache()->has($cacheKey) || $request->boolean('auto_sync')) {
+                $evaluationService->generateAll($currentPeriod);
+                cache()->put($cacheKey, true, now()->addSeconds(15));
+            }
+        } elseif ($request->boolean('auto_sync')) {
             $evaluationService->generateAll($currentPeriod);
         }
 

@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Daftar Tugas &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.speed-meta')
     <style>
         /* Tampilan Responsif Daftar Tugas: Kartu (Setengah Layar & Mobile < 1024px) vs Tabel (Fullscreen Desktop >= 1024px) */
         @media (max-width: 1023px) {
