@@ -1095,7 +1095,7 @@
                                     <span class="text-xs text-slate-500 font-normal">(Terbuka)</span>
                                 @endif
                             </div>
-                            <span id="display-task-assigned-badge" class="text-[11px] font-medium {{ $user->isAdmin() ? 'text-amber-700 bg-amber-50 border border-amber-200 font-semibold' : 'text-indigo-600 bg-indigo-50 border border-indigo-200' }} px-2 py-0.5 rounded-full">{{ $user->isAdmin() ? 'Open' : 'Otomatis' }}</span>
+                            <span id="display-task-assigned-badge" class="{{ $user->isAdmin() ? '' : 'hidden' }} text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{{ $user->isAdmin() ? 'Open' : '' }}</span>
                         </div>
                     </div>
                 </div>
@@ -1405,10 +1405,13 @@
                     displayAssignedName.textContent = isUserAdmin ? 'Belum Ditugaskan' : '{{ $user->name }} (Anda)';
                 }
                 if (displayAssignedBadge) {
-                    displayAssignedBadge.textContent = isUserAdmin ? 'Open' : 'Otomatis';
-                    displayAssignedBadge.className = isUserAdmin
-                        ? 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full'
-                        : 'text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full';
+                    if (isUserAdmin) {
+                        displayAssignedBadge.textContent = 'Open';
+                        displayAssignedBadge.className = 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full';
+                    } else {
+                        displayAssignedBadge.textContent = '';
+                        displayAssignedBadge.className = 'hidden';
+                    }
                 }
                 formError.classList.add('hidden');
                 modalForm.classList.remove('hidden');
@@ -1445,10 +1448,13 @@
                 targetDateInput.value = targetDate;
                 if (displayAssignedName) displayAssignedName.textContent = assigneeName;
                 if (displayAssignedBadge) {
-                    displayAssignedBadge.textContent = hasAssignee ? 'Tetap' : 'Open';
-                    displayAssignedBadge.className = hasAssignee
-                        ? 'text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full'
-                        : 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full';
+                    if (!hasAssignee) {
+                        displayAssignedBadge.textContent = 'Open';
+                        displayAssignedBadge.className = 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full';
+                    } else {
+                        displayAssignedBadge.textContent = '';
+                        displayAssignedBadge.className = 'hidden';
+                    }
                 }
                 blockerInput.value = blocker;
                 descriptionInput.value = desc;

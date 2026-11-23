@@ -808,7 +808,7 @@
                 Apakah Anda yakin ingin menghapus proyek <span id="delete-project-name" class="font-bold text-slate-900"></span> (<span id="delete-project-code" class="font-mono font-semibold text-slate-700"></span>)?
             </p>
             <p class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
-                Peringatan: Seluruh modul, tugas, dan temuan bug yang tertaut pada proyek ini akan ikut terhapus secara otomatis karena relasi database terkait.
+                Peringatan: Seluruh modul, tugas, dan temuan bug yang tertaut pada proyek ini akan ikut terhapus karena relasi database terkait.
             </p>
 
             <form id="form-delete-project" method="POST" action="" class="mt-6 flex items-center justify-end gap-3">

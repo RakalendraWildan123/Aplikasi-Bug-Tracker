@@ -1115,7 +1115,7 @@
                         <span id="solution-resolved-at" class="text-[11px] font-semibold text-emerald-700"></span>
                     </div>
                     <textarea id="solution-notes" name="solution_notes" rows="4" placeholder="Tuliskan dokumentasi solusi teknis, kode patch, atau penanganan bug yang diterapkan..." class="w-full rounded-lg border border-emerald-300 bg-white px-3.5 py-2 text-sm text-slate-800 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 font-medium"></textarea>
-                    <p class="text-[11px] text-emerald-700">Menyimpan dengan status <strong>Resolved</strong> akan otomatis mencatat stempel waktu penyelesaian bug.</p>
+                    <p class="text-[11px] text-emerald-700">Menyimpan dengan status <strong>Resolved</strong> akan mencatat stempel waktu penyelesaian bug.</p>
                 </div>
 
                 {{-- Tombol Aksi Modal Solusi --}}
@@ -1232,7 +1232,6 @@
                                 <span class="font-semibold text-slate-900">{{ $user->name }}</span>
                                 <span class="text-xs text-slate-500 font-normal">(Anda)</span>
                             </div>
-                            <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
                         @endif
                     </div>
                 </div>

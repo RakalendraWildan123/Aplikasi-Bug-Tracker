@@ -668,7 +668,7 @@
                         id="create-avatar"
                         name="avatar"
                         maxlength="4"
-                        placeholder="Otomatis dari nama jika kosong"
+                        placeholder="Inisial nama (opsional)"
                         class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition uppercase"
                     />
                 </div>
@@ -1011,7 +1011,7 @@
                 Apakah Anda yakin ingin menghapus akun <span id="delete-account-name" class="font-bold text-slate-900"></span> (<span id="delete-account-email" class="font-semibold text-slate-700"></span>)?
             </p>
             <p class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                Riwayat tugas dan temuan bug yang pernah dibuat atau ditugaskan ke akun ini akan tetap tersimpan aman di sistem dengan status penugasan dikosongkan.
+                Riwayat tugas dan temuan bug yang pernah dibuat atau ditugaskan ke akun ini akan tersimpan aman di sistem dengan status penugasan dikosongkan.
             </p>
 
             <form id="form-delete-account" method="POST" action="" class="mt-6 flex items-center justify-end gap-3">

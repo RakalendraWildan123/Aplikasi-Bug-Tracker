@@ -238,12 +238,6 @@
                         </div>
                     </div>
 
-                    {{-- Sisi Kanan: Status Pencatatan Otomatis (Tanpa Tombol) --}}
-                    <div class="flex items-center gap-2 shrink-0">
-                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-2xs">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>Tercatat Otomatis oleh Sistem</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -251,28 +245,6 @@
 
         {{-- Isi Konten Halaman --}}
         <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-            {{-- Banner Status Evaluasi Otomatis Aktif --}}
-            <div class="flex items-start sm:items-center justify-between p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-indigo-50/90 to-blue-50/80 border border-indigo-100 text-slate-800 shadow-2xs">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-xs sm:text-sm font-bold text-slate-900">Evaluasi Aplikasi Otomatis Real-Time</h3>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                Sistem Terotomatisasi
-                            </span>
-                        </div>
-                        <p class="text-[11px] sm:text-xs text-slate-600 mt-0.5">
-                            Kendala operasional, tingkat penyelesaian tugas, stabilitas bug, dan riwayat rilis dievaluasi secara otomatis oleh sistem. Developer tidak perlu membuat atau mencatat evaluasi secara manual.
-                        </p>
-                    </div>
-                </div>
-            </div>
 
             {{-- Flash Alert Notifikasi --}}
             @if (session('status'))
@@ -504,12 +476,6 @@
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                                                 {{ $eval->period_review }}
-                                            </span>
-                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs" title="Evaluasi dihitung otomatis oleh sistem">
-                                                <svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
-                                                </svg>
-                                                <span>Otomatis</span>
                                             </span>
                                         </div>
                                         <div class="text-xs text-slate-500 mt-1 flex items-center gap-1">

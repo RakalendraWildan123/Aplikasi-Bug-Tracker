@@ -677,7 +677,7 @@
 
             <div class="mt-3 p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
                 <p class="font-semibold text-slate-800 mb-0.5">Informasi Penghapusan:</p>
-                <p>Tugas dan temuan bug yang terhubung dengan modul ini akan tetap tersimpan aman, namun status modulnya akan dikosongkan.</p>
+                <p>Tugas dan temuan bug yang terhubung dengan modul ini akan tersimpan aman di sistem, namun status modulnya akan dikosongkan.</p>
             </div>
 
             <form id="form-delete-module" method="POST" action="" class="mt-5 flex items-center justify-end gap-3">

@@ -807,7 +807,6 @@
                                 </svg>
                                 <span id="display-kanban-assigned-name" class="font-semibold text-slate-900">Belum ditugaskan</span>
                             </div>
-                            <span class="text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">Tetap</span>
                         </div>
                     </div>
                 </div>
