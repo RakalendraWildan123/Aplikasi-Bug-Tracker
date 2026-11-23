@@ -1211,18 +1211,29 @@
                     </div>
                 </div>
 
-                {{-- Penanggung Jawab Otomatis (Ditugaskan ke Pelapor) --}}
+                {{-- Penanggung Jawab Otomatis (Ditugaskan ke Pelapor / Open jika Admin) --}}
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Penanggung Jawab</label>
                     <div class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-                            </svg>
-                            <span class="font-semibold text-slate-900">{{ $user->name }}</span>
-                            <span class="text-xs text-slate-500 font-normal">(Anda)</span>
-                        </div>
-                        <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
+                        @if ($user->isAdmin())
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                                </svg>
+                                <span class="font-semibold text-slate-900">Belum Ditugaskan</span>
+                                <span class="text-xs text-slate-500 font-normal">(Terbuka untuk Developer)</span>
+                            </div>
+                            <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Open</span>
+                        @else
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                </svg>
+                                <span class="font-semibold text-slate-900">{{ $user->name }}</span>
+                                <span class="text-xs text-slate-500 font-normal">(Anda)</span>
+                            </div>
+                            <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
+                        @endif
                     </div>
                 </div>
 

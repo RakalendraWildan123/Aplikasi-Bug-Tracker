@@ -126,9 +126,20 @@ class TaskController extends Controller
             'target_date.date' => 'Format target deadline tidak valid.',
         ]);
 
-        $validated['created_by'] = $request->user()?->id ?? Auth::id();
-        if (empty($validated['assigned_to'])) {
-            $validated['assigned_to'] = $validated['created_by'];
+        $user = $request->user() ?? Auth::user();
+        $validated['created_by'] = $user?->id ?? Auth::id();
+
+        if ($user && $user->isAdmin()) {
+            if (empty($validated['assigned_to'])) {
+                $validated['assigned_to'] = null;
+            }
+            if (empty($validated['status'])) {
+                $validated['status'] = 'todo';
+            }
+        } else {
+            if (empty($validated['assigned_to'])) {
+                $validated['assigned_to'] = $validated['created_by'];
+            }
         }
 
         if ($validated['status'] === 'done') {

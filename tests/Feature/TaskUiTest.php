@@ -440,4 +440,37 @@ class TaskUiTest extends TestCase
         // Kepemilikan bug tetap milik Developer A, sedangkan task milik Developer B
         $this->assertNotSame($bug->assigned_to, $task->assigned_to);
     }
+
+    public function test_admin_creating_task_is_open_and_unassigned_and_any_developer_can_take_it(): void
+    {
+        $admin = User::factory()->admin()->create(['name' => 'Super Admin']);
+        $dev = User::factory()->create(['name' => 'Developer C']);
+        $project = Project::factory()->create();
+
+        // 1. Admin membuat tugas -> tugas open dan belum ditugaskan ke siapapun (assigned_to null)
+        $resTask = $this->actingAs($admin)->post('/tasks', [
+            'project_id' => $project->id,
+            'title' => 'Tugas Prioritas dari Admin',
+            'description' => 'Tugas ini terbuka untuk diambil oleh developer mana saja',
+            'task_type' => 'feature',
+            'status' => 'todo',
+        ]);
+        $resTask->assertRedirect(route('tasks.index'));
+
+        $task = Task::where('title', 'Tugas Prioritas dari Admin')->firstOrFail();
+        $this->assertSame($admin->id, $task->created_by);
+        $this->assertNull($task->assigned_to);
+        $this->assertSame('todo', $task->status);
+
+        // 2. Siapa saja developer bisa mengambil tugas tersebut (takeover)
+        $resTakeover = $this->actingAs($dev)->postJson("/tasks/{$task->id}/takeover", [
+            'note' => 'Saya ambil tugas ini untuk dikerjakan',
+        ]);
+        $resTakeover->assertOk();
+
+        $freshTask = $task->fresh(['assignee']);
+        $this->assertSame($dev->id, $freshTask->assigned_to);
+        $this->assertSame('Developer C', $freshTask->assignee->name);
+        $this->assertNotEmpty($freshTask->handover_logs);
+    }
 }

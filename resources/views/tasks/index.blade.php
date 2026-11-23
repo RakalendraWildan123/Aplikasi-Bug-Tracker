@@ -1087,12 +1087,15 @@
                         </label>
                         <div class="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 {{ $user->isAdmin() ? 'text-amber-500' : 'text-indigo-600' }} shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                                 </svg>
-                                <span id="display-task-assigned-name" class="font-semibold text-slate-900">{{ $user->name }}</span>
+                                <span id="display-task-assigned-name" class="font-semibold text-slate-900">{{ $user->isAdmin() ? 'Belum Ditugaskan' : $user->name }}</span>
+                                @if ($user->isAdmin())
+                                    <span class="text-xs text-slate-500 font-normal">(Terbuka)</span>
+                                @endif
                             </div>
-                            <span id="display-task-assigned-badge" class="text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Otomatis</span>
+                            <span id="display-task-assigned-badge" class="text-[11px] font-medium {{ $user->isAdmin() ? 'text-amber-700 bg-amber-50 border border-amber-200 font-semibold' : 'text-indigo-600 bg-indigo-50 border border-indigo-200' }} px-2 py-0.5 rounded-full">{{ $user->isAdmin() ? 'Open' : 'Otomatis' }}</span>
                         </div>
                     </div>
                 </div>
@@ -1392,15 +1395,20 @@
                 taskIdInput.value = '';
             };
 
+            const isUserAdmin = {{ $user->isAdmin() ? 'true' : 'false' }};
             btnOpenCreate?.addEventListener('click', () => {
                 modalTitle.textContent = 'Tambah Tugas Baru';
                 submitText.textContent = 'Tambah Tugas';
                 formAction.reset();
                 taskIdInput.value = '';
-                if (displayAssignedName) displayAssignedName.textContent = '{{ $user->name }} (Anda)';
+                if (displayAssignedName) {
+                    displayAssignedName.textContent = isUserAdmin ? 'Belum Ditugaskan' : '{{ $user->name }} (Anda)';
+                }
                 if (displayAssignedBadge) {
-                    displayAssignedBadge.textContent = 'Otomatis';
-                    displayAssignedBadge.className = 'text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full';
+                    displayAssignedBadge.textContent = isUserAdmin ? 'Open' : 'Otomatis';
+                    displayAssignedBadge.className = isUserAdmin
+                        ? 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full'
+                        : 'text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full';
                 }
                 formError.classList.add('hidden');
                 modalForm.classList.remove('hidden');
@@ -1425,6 +1433,8 @@
                 const targetDate = btnEdit.getAttribute('data-target-date') || '';
                 const blocker = btnEdit.getAttribute('data-blocker-notes') || '';
                 const assigneeName = btnEdit.getAttribute('data-assignee-name') || 'Belum Ditugaskan';
+                const assignedTo = btnEdit.getAttribute('data-assigned-to') || '';
+                const hasAssignee = Boolean(assignedTo);
 
                 taskIdInput.value = taskId;
                 titleInput.value = title;
@@ -1435,8 +1445,10 @@
                 targetDateInput.value = targetDate;
                 if (displayAssignedName) displayAssignedName.textContent = assigneeName;
                 if (displayAssignedBadge) {
-                    displayAssignedBadge.textContent = 'Tetap';
-                    displayAssignedBadge.className = 'text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full';
+                    displayAssignedBadge.textContent = hasAssignee ? 'Tetap' : 'Open';
+                    displayAssignedBadge.className = hasAssignee
+                        ? 'text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full'
+                        : 'text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full';
                 }
                 blockerInput.value = blocker;
                 descriptionInput.value = desc;

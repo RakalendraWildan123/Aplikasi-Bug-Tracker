@@ -436,4 +436,24 @@ class BugUiTest extends TestCase
         $this->assertSame($devA->id, $createdBug->created_by);
         $this->assertSame($devA->id, $createdBug->assigned_to);
     }
+
+    public function test_admin_who_records_bug_creates_open_and_unassigned_bug(): void
+    {
+        $admin = User::factory()->admin()->create(['name' => 'Super Admin']);
+        $project = Project::factory()->create();
+
+        $response = $this->actingAs($admin)->post('/bugs', [
+            'project_id' => $project->id,
+            'title' => 'Bug Temuan Admin',
+            'severity' => 'critical',
+            'status' => 'open',
+            'description' => 'Bug ini dicatat Admin dan terbuka untuk developer',
+        ]);
+
+        $response->assertRedirect(route('bugs.index'));
+        $createdBug = Bug::where('title', 'Bug Temuan Admin')->firstOrFail();
+        $this->assertSame($admin->id, $createdBug->created_by);
+        $this->assertNull($createdBug->assigned_to);
+        $this->assertSame('open', $createdBug->status);
+    }
 }

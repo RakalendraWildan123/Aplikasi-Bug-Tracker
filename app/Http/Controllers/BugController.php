@@ -101,9 +101,18 @@ class BugController extends Controller
             'status.required' => 'Status bug wajib dipilih.',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
-        if (empty($validated['assigned_to'])) {
-            $validated['assigned_to'] = $validated['created_by'];
+        $user = $request->user();
+        $validated['created_by'] = $user->id;
+
+        if ($user->isAdmin()) {
+            if (empty($validated['assigned_to'])) {
+                $validated['assigned_to'] = null;
+            }
+            $validated['status'] = 'open';
+        } else {
+            if (empty($validated['assigned_to'])) {
+                $validated['assigned_to'] = $validated['created_by'];
+            }
         }
 
         if (empty($validated['reported_date'])) {
