@@ -43,6 +43,7 @@ class DashboardController extends Controller
             'total_releases' => RepoHistory::count(),
             'blocker_tasks' => Task::whereNotNull('blocker_notes')->where('blocker_notes', '!=', '')->count(),
             'active_accounts_count' => User::where('is_active', true)->count(),
+            'inactive_accounts_count' => User::where('is_active', false)->count(),
             'total_accounts_count' => User::count(),
             'active_developers_count' => User::where('role', 'developer')->where('is_active', true)->count(),
             'active_admins_count' => User::where('role', 'admin')->where('is_active', true)->count(),
@@ -87,11 +88,12 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
-        // 8. Seluruh Akun Aktif (Untuk Modal Popup Akun Aktif)
-        $activeAccounts = User::where('is_active', true)
+        // 8. Seluruh Akun Tim (Aktif & Nonaktif untuk Modal Popup)
+        $activeAccounts = User::orderByRaw("CASE WHEN is_active = 1 THEN 1 ELSE 2 END")
             ->orderByRaw("CASE WHEN role = 'admin' THEN 1 ELSE 2 END")
             ->orderBy('name')
             ->get();
+        $allAccounts = $activeAccounts;
 
         // 9. Tim Pengembang Aktif (Maksimal 5)
         $activeDevelopers = User::where('role', 'developer')

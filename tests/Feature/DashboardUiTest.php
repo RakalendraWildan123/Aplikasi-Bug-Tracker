@@ -185,7 +185,7 @@ class DashboardUiTest extends TestCase
         $response->assertSee('Master Modul');
     }
 
-    public function test_dashboard_displays_active_accounts_modal_and_filters_inactive_users(): void
+    public function test_dashboard_displays_active_and_inactive_accounts_in_modal(): void
     {
         $activeDev = User::factory()->create([
             'name' => 'Budi Developer Aktif',
@@ -204,10 +204,15 @@ class DashboardUiTest extends TestCase
         $response = $this->actingAs($activeDev)->get('/dashboard');
 
         $response->assertOk();
-        $response->assertSee('Daftar Akun Aktif');
+        $response->assertSee('Daftar Akun Pengguna');
         $response->assertSee('Budi Developer Aktif');
         $response->assertSee('budi.aktif@example.com');
-        $response->assertDontSee('Doni Developer Nonaktif');
-        $response->assertDontSee('doni.nonaktif@example.com');
+        $response->assertSee('Doni Developer Nonaktif');
+        $response->assertSee('doni.nonaktif@example.com');
+        $response->assertSee('Aktif');
+        $response->assertSee('Nonaktif');
+        $response->assertSee('data-status-filter="all"', false);
+        $response->assertSee('data-status-filter="active"', false);
+        $response->assertSee('data-status-filter="inactive"', false);
     }
 }

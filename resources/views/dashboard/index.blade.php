@@ -315,8 +315,8 @@
                     </div>
                 </div>
 
-                {{-- 3. Akun Aktif (Klik untuk Melihat Daftar Akun Aktif) --}}
-                <div id="card-active-accounts" class="bg-white border border-slate-200 hover:border-sky-300 rounded-xl p-4 shadow-2xs flex flex-col justify-between transition group cursor-pointer" title="Klik untuk melihat daftar akun yang aktif">
+                {{-- 3. Akun Aktif & Nonaktif (Klik untuk Melihat Daftar Akun) --}}
+                <div id="card-active-accounts" class="bg-white border border-slate-200 hover:border-sky-300 rounded-xl p-4 shadow-2xs flex flex-col justify-between transition group cursor-pointer" title="Klik untuk melihat daftar akun yang aktif maupun nonaktif">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-400 group-hover:text-sky-600 uppercase tracking-wider transition-colors">Akun Aktif</span>
                         <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 group-hover:bg-sky-100 flex items-center justify-center transition-colors">
@@ -328,12 +328,12 @@
                     <div class="mt-3">
                         <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-sky-600 transition-colors">{{ $metrics['active_accounts_count'] }}</span>
                         <span class="text-xs text-slate-500 mt-0.5 block">
-                            {{ $metrics['active_developers_count'] }} Developer &bull; {{ $metrics['active_admins_count'] }} Admin
+                            {{ $metrics['active_developers_count'] }} Dev &bull; {{ $metrics['active_admins_count'] }} Admin &bull; {{ $metrics['inactive_accounts_count'] }} Nonaktif
                         </span>
                     </div>
                     <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
                         <button type="button" id="btn-open-active-accounts" class="text-xs font-semibold text-sky-600 group-hover:text-sky-800 transition inline-flex items-center gap-1 cursor-pointer">
-                            <span>Lihat Akun Aktif</span>
+                            <span>Lihat Akun Aktif &amp; Nonaktif</span>
                             <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
                             </svg>
@@ -687,7 +687,7 @@
         </main>
     </div>
 
-    {{-- Modal Pop-up: Daftar Akun Aktif --}}
+    {{-- Modal Pop-up: Daftar Akun Pengguna (Aktif & Nonaktif) --}}
     <div
         id="modal-active-accounts"
         class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto"
@@ -705,9 +705,9 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 id="modal-active-accounts-title" class="text-base font-bold text-slate-900 leading-tight">Daftar Akun Aktif</h3>
+                        <h3 id="modal-active-accounts-title" class="text-base font-bold text-slate-900 leading-tight">Daftar Akun Pengguna</h3>
                         <p class="text-xs text-slate-500 mt-0.5">
-                            Menampilkan seluruh anggota tim yang berstatus aktif dalam sistem
+                            Menampilkan seluruh anggota tim (aktif maupun nonaktif) dalam sistem
                         </p>
                     </div>
                 </div>
@@ -723,8 +723,34 @@
                 </button>
             </div>
 
-            {{-- Kolom Pencarian --}}
-            <div class="p-4 border-b border-slate-100 bg-white">
+            {{-- Filter Status Tabs & Kolom Pencarian --}}
+            <div class="p-4 border-b border-slate-100 bg-white space-y-3">
+                {{-- Tabs Status: Semua, Aktif, Nonaktif --}}
+                <div class="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl text-xs font-medium" id="status-filter-tabs">
+                    <button
+                        type="button"
+                        data-status-filter="all"
+                        class="tab-status-btn flex-1 py-1.5 px-3 rounded-lg text-center transition cursor-pointer font-bold bg-white text-slate-900 shadow-2xs"
+                    >
+                        Semua ({{ $metrics['total_accounts_count'] }})
+                    </button>
+                    <button
+                        type="button"
+                        data-status-filter="active"
+                        class="tab-status-btn flex-1 py-1.5 px-3 rounded-lg text-center transition cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                    >
+                        Aktif ({{ $metrics['active_accounts_count'] }})
+                    </button>
+                    <button
+                        type="button"
+                        data-status-filter="inactive"
+                        class="tab-status-btn flex-1 py-1.5 px-3 rounded-lg text-center transition cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                    >
+                        Nonaktif ({{ $metrics['inactive_accounts_count'] }})
+                    </button>
+                </div>
+
+                {{-- Kolom Pencarian --}}
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -741,27 +767,33 @@
                 </div>
             </div>
 
-            {{-- Daftar Akun Aktif (Scrollable) --}}
+            {{-- Daftar Akun (Scrollable) --}}
             <div id="list-active-accounts" class="overflow-y-auto divide-y divide-slate-100 p-2 sm:p-3 max-h-96">
                 @forelse ($activeAccounts as $acc)
                     @php
                         $words = explode(' ', trim($acc->name));
                         $initials = strtoupper(substr($words[0] ?? 'U', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
                         $isAdmin = $acc->role === 'admin';
+                        $isActive = (bool) $acc->is_active;
                     @endphp
                     <div
-                        class="active-account-item p-3 rounded-xl hover:bg-slate-50 transition flex items-center justify-between gap-3"
+                        class="active-account-item p-3 rounded-xl hover:bg-slate-50 transition flex items-center justify-between gap-3 {{ $isActive ? '' : 'bg-slate-50/60 opacity-90' }}"
                         data-account-name="{{ strtolower($acc->name) }}"
                         data-account-email="{{ strtolower($acc->email) }}"
                         data-account-role="{{ strtolower($acc->role) }}"
+                        data-account-status="{{ $isActive ? 'active' : 'inactive' }}"
                     >
                         <div class="flex items-center gap-3 min-w-0">
-                            {{-- Avatar Initial dengan Indikator Online Hijau --}}
+                            {{-- Avatar Initial dengan Indikator Online/Offline --}}
                             <div class="relative shrink-0">
-                                <div class="w-10 h-10 rounded-full {{ $isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700' }} flex items-center justify-center font-bold text-xs shadow-2xs">
+                                <div class="w-10 h-10 rounded-full {{ $isActive ? ($isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700') : 'bg-slate-200 text-slate-500' }} flex items-center justify-center font-bold text-xs shadow-2xs">
                                     {{ $initials }}
                                 </div>
-                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-200" title="Akun Aktif"></span>
+                                @if ($isActive)
+                                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-200" title="Akun Aktif"></span>
+                                @else
+                                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white ring-1 ring-slate-300" title="Akun Nonaktif"></span>
+                                @endif
                             </div>
 
                             <div class="min-w-0">
@@ -780,16 +812,23 @@
                             <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border capitalize {{ $isAdmin ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-sky-50 text-sky-700 border-sky-200' }}">
                                 {{ $acc->role }}
                             </span>
-                            {{-- Badge Status Aktif --}}
-                            <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                Aktif
-                            </span>
+                            {{-- Badge Status Aktif / Nonaktif --}}
+                            @if ($isActive)
+                                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Aktif
+                                </span>
+                            @else
+                                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-300">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    Nonaktif
+                                </span>
+                            @endif
                         </div>
                     </div>
                 @empty
                     <div class="p-8 text-center text-slate-400">
-                        <p class="text-xs font-semibold">Tidak ada akun aktif yang terdaftar saat ini.</p>
+                        <p class="text-xs font-semibold">Tidak ada akun yang terdaftar saat ini.</p>
                     </div>
                 @endforelse
 
@@ -798,15 +837,15 @@
                     <svg class="w-8 h-8 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                     </svg>
-                    <p class="text-xs font-semibold">Tidak ada akun yang sesuai dengan kata kunci.</p>
+                    <p class="text-xs font-semibold">Tidak ada akun yang sesuai dengan filter atau kata kunci pencarian.</p>
                 </div>
             </div>
 
             {{-- Footer Modal --}}
             <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between text-xs">
                 <span class="text-slate-500 font-medium">
-                    Total: <strong class="text-slate-800">{{ $metrics['active_accounts_count'] }}</strong> Akun Aktif
-                    ({{ $metrics['active_developers_count'] }} Dev, {{ $metrics['active_admins_count'] }} Admin)
+                    Total: <strong class="text-slate-800">{{ $metrics['total_accounts_count'] }}</strong> Akun
+                    ({{ $metrics['active_accounts_count'] }} Aktif, {{ $metrics['inactive_accounts_count'] }} Nonaktif)
                 </span>
                 <button
                     type="button"
@@ -819,7 +858,7 @@
         </div>
     </div>
 
-    {{-- Script Navigasi Sidebar Responsif & Modal Akun Aktif --}}
+    {{-- Script Navigasi Sidebar Responsif & Modal Akun Pengguna --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Sidebar Responsif
@@ -842,7 +881,7 @@
             btnClose?.addEventListener('click', closeSidebar);
             backdrop?.addEventListener('click', closeSidebar);
 
-            // 2. Modal Daftar Akun Aktif
+            // 2. Modal Daftar Akun (Aktif & Nonaktif)
             const modalActiveAccounts = document.getElementById('modal-active-accounts');
             const cardActiveAccounts = document.getElementById('card-active-accounts');
             const btnOpenActiveAccounts = document.getElementById('btn-open-active-accounts');
@@ -851,57 +890,24 @@
             const searchInput = document.getElementById('search-active-accounts');
             const accountItems = document.querySelectorAll('.active-account-item');
             const emptySearchNotice = document.getElementById('empty-search-active-accounts');
+            const statusFilterTabs = document.querySelectorAll('.tab-status-btn');
 
-            const openActiveAccountsModal = () => {
-                if (!modalActiveAccounts) return;
-                modalActiveAccounts.classList.remove('hidden');
-                modalActiveAccounts.classList.add('flex');
-                document.body.classList.add('overflow-hidden');
-                if (searchInput) {
-                    searchInput.value = '';
-                    filterAccounts('');
-                    setTimeout(() => searchInput.focus(), 50);
-                }
-            };
+            let currentStatusFilter = 'all';
 
-            const closeActiveAccountsModal = () => {
-                if (!modalActiveAccounts) return;
-                modalActiveAccounts.classList.add('hidden');
-                modalActiveAccounts.classList.remove('flex');
-                document.body.classList.remove('overflow-hidden');
-            };
-
-            cardActiveAccounts?.addEventListener('click', (e) => {
-                // Hindari bentrok jika link di dalamnya diklik
-                openActiveAccountsModal();
-            });
-
-            btnOpenActiveAccounts?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openActiveAccountsModal();
-            });
-
-            btnCloseX?.addEventListener('click', closeActiveAccountsModal);
-            btnCloseBottom?.addEventListener('click', closeActiveAccountsModal);
-
-            // Klik backdrop di luar modal box untuk menutup
-            modalActiveAccounts?.addEventListener('click', (e) => {
-                if (e.target === modalActiveAccounts) {
-                    closeActiveAccountsModal();
-                }
-            });
-
-            // Filter Pencarian Akun Aktif
-            const filterAccounts = (query) => {
-                const q = (query || '').toLowerCase().trim();
+            const filterAccounts = () => {
+                const q = (searchInput?.value || '').toLowerCase().trim();
                 let visibleCount = 0;
 
                 accountItems.forEach((item) => {
                     const name = item.getAttribute('data-account-name') || '';
                     const email = item.getAttribute('data-account-email') || '';
                     const role = item.getAttribute('data-account-role') || '';
+                    const status = item.getAttribute('data-account-status') || '';
 
-                    if (!q || name.includes(q) || email.includes(q) || role.includes(q)) {
+                    const matchesQuery = !q || name.includes(q) || email.includes(q) || role.includes(q);
+                    const matchesStatus = currentStatusFilter === 'all' || status === currentStatusFilter;
+
+                    if (matchesQuery && matchesStatus) {
                         item.classList.remove('hidden');
                         visibleCount++;
                     } else {
@@ -918,11 +924,70 @@
                 }
             };
 
-            searchInput?.addEventListener('input', (e) => {
-                filterAccounts(e.target.value);
+            const setStatusFilter = (filter) => {
+                currentStatusFilter = filter;
+                statusFilterTabs.forEach((tab) => {
+                    const isActive = tab.getAttribute('data-status-filter') === filter;
+                    if (isActive) {
+                        tab.classList.add('bg-white', 'text-slate-900', 'font-bold', 'shadow-2xs');
+                        tab.classList.remove('text-slate-600');
+                    } else {
+                        tab.classList.remove('bg-white', 'text-slate-900', 'font-bold', 'shadow-2xs');
+                        tab.classList.add('text-slate-600');
+                    }
+                });
+                filterAccounts();
+            };
+
+            statusFilterTabs.forEach((tab) => {
+                tab.addEventListener('click', () => {
+                    const filter = tab.getAttribute('data-status-filter') || 'all';
+                    setStatusFilter(filter);
+                });
             });
 
-            // Tutup dengan tombol Escape
+            const openActiveAccountsModal = () => {
+                if (!modalActiveAccounts) return;
+                modalActiveAccounts.classList.remove('hidden');
+                modalActiveAccounts.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+                setStatusFilter('all');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filterAccounts();
+                    setTimeout(() => searchInput.focus(), 50);
+                }
+            };
+
+            const closeActiveAccountsModal = () => {
+                if (!modalActiveAccounts) return;
+                modalActiveAccounts.classList.add('hidden');
+                modalActiveAccounts.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            cardActiveAccounts?.addEventListener('click', (e) => {
+                openActiveAccountsModal();
+            });
+
+            btnOpenActiveAccounts?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openActiveAccountsModal();
+            });
+
+            btnCloseX?.addEventListener('click', closeActiveAccountsModal);
+            btnCloseBottom?.addEventListener('click', closeActiveAccountsModal);
+
+            modalActiveAccounts?.addEventListener('click', (e) => {
+                if (e.target === modalActiveAccounts) {
+                    closeActiveAccountsModal();
+                }
+            });
+
+            searchInput?.addEventListener('input', () => {
+                filterAccounts();
+            });
+
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (modalActiveAccounts && !modalActiveAccounts.classList.contains('hidden')) {
