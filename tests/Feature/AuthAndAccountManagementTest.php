@@ -72,6 +72,25 @@ class AuthAndAccountManagementTest extends TestCase
         $this->assertAuthenticatedAs($dev);
     }
 
+    public function test_authenticated_routes_have_prevent_back_history_cache_headers_and_redirect_after_logout(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'developer',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('account.edit'));
+        $response->assertOk();
+        $response->assertHeader('Pragma', 'no-cache');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+
+        $this->post(route('logout'))->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        // Ketika user menekan tombol back setelah logout, browser dialihkan ke login
+        $this->get(route('account.edit'))->assertRedirect(route('login'));
+    }
+
     public function test_login_rejects_wrong_password_and_inactive_accounts(): void
     {
         User::factory()->create([

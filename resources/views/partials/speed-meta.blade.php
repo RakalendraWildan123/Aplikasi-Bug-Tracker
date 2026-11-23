@@ -49,6 +49,13 @@
             } catch (_) {}
         }
 
+        // 3. Mencegah tampilan halaman ter-cache saat tombol Back browser ditekan setelah logout (bfcache protection)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
         // Prefetch otomatis saat kursor mouse mendekati/menyentuh tautan navigasi
         document.addEventListener('pointerenter', function (e) {
             const a = e.target.closest('a');

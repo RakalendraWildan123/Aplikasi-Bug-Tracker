@@ -29,7 +29,7 @@
         @endif
 
         {{-- Form Login --}}
-        <form method="POST" action="{{ route('login.attempt') }}" class="space-y-4">
+        <form method="POST" action="{{ route('login.attempt') }}" class="space-y-4" autocomplete="off">
             @csrf
 
             <div>
@@ -99,6 +99,26 @@
     </div>
 
     <script>
+        // Bersihkan sisa input saat halaman login dimuat atau dikembalikan via tombol Back browser
+        window.addEventListener('pageshow', function (event) {
+            const hasError = document.querySelector('[role="alert"]');
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.value = '';
+            }
+            // Jika bukan karena error validasi yang sengaja dikembalikan sistem, bersihkan email & form
+            if (!hasError) {
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    emailInput.value = '';
+                }
+                const form = document.querySelector('form');
+                if (form) {
+                    form.reset();
+                }
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const toggleBtn = document.getElementById('toggle-password');
             const passwordInput = document.getElementById('password');

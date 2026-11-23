@@ -8,12 +8,12 @@ Route::model('release', \App\Models\RepoHistory::class);
 Route::model('evaluation', \App\Models\AppEvaluation::class);
 Route::model('actionItem', \App\Models\ActionItem::class);
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'prevent-back-history'])->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 });
 
-Route::middleware(['auth', 'role'])->group(function () {
+Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     Route::get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
