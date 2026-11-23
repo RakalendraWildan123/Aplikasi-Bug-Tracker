@@ -253,7 +253,10 @@ class TaskUiTest extends TestCase
     public function test_user_can_delete_task_via_delete(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->create(['title' => 'Tugas Akan Dihapus']);
+        $task = Task::factory()->create([
+            'title' => 'Tugas Akan Dihapus',
+            'assigned_to' => $user->id,
+        ]);
 
         $response = $this->actingAs($user)->deleteJson("/tasks/{$task->id}");
 
@@ -264,6 +267,24 @@ class TaskUiTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+    }
+
+    public function test_user_cannot_delete_task_assigned_to_another_developer(): void
+    {
+        $user = User::factory()->create();
+        $otherDev = User::factory()->create(['name' => 'Budi Santoso']);
+        $task = Task::factory()->create([
+            'title' => 'Tugas Milik Developer Lain',
+            'assigned_to' => $otherDev->id,
+        ]);
+
+        $response = $this->actingAs($user)->deleteJson("/tasks/{$task->id}");
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertDatabaseHas('tasks', ['id' => $task->id]);
     }
 
     public function test_tasks_page_renders_create_and_delete_modals(): void

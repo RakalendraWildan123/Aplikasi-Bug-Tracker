@@ -216,6 +216,25 @@ class TaskController extends Controller
 
     public function destroy(Request $request, Task $task): JsonResponse|RedirectResponse
     {
+        $user = $request->user();
+
+        // Validasi hak akses: hanya orang yang mengerjakan task tersebut (assigned_to) yang dapat menghapusnya
+        if ((int) $task->assigned_to !== (int) $user->id) {
+            $assigneeName = $task->assignee?->name ?? 'pengembang lain';
+            $errorMessage = $task->assigned_to
+                ? "Hanya orang yang mengerjakan task ini ({$assigneeName}) yang dapat menghapusnya."
+                : 'Tugas ini belum ditugaskan. Ambil alih tugas terlebih dahulu untuk dapat mengelolanya.';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                ], 403);
+            }
+
+            return redirect()->route('tasks.index')->with('error_message', $errorMessage);
+        }
+
         $task->delete();
 
         if ($request->wantsJson()) {

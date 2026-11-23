@@ -71,8 +71,8 @@
 | 4.1 | Tambah Tugas Baru (Normal) | 1. Buka `/tasks`<br>2. Klik Tambah Task<br>3. Pilih Proyek, Modul, PIC, Judul, Tgl Mulai & Target<br>4. Klik Simpan | Tugas baru berhasil disimpan dan muncul pada tabel serta papan Kanban. |PASS|
 | 4.2 | Validasi Form Task Kosong | 1. Buka form Tambah Task<br>2. Langsung klik Simpan tanpa mengisi data | Validasi muncul, field wajib ditandai merah, form tidak submit. |PASS|
 | 4.3 | Edit & Update Data Task | 1. Klik tombol Edit pada salah satu task<br>2. Ubah judul atau catatan kendala (blocker)<br>3. Klik Perbarui | Perubahan berhasil tersimpan dan langsung terlihat pada tabel. | PASS|
-| 4.4 | Fitur Ambil Alih (Take Over) | 1. Cari task yang PIC-nya bukan akun Anda<br>2. Klik tombol **[ ✋ Ambil Alih ]**<br>3. Konfirmasi pada dialog pop-up | PIC tugas otomatis berganti menjadi akun Anda, tercatat di `handover_logs`. | [ ] PASS<br>[ ] FAIL | |
-| 4.5 | Hapus Task | 1. Klik tombol Hapus pada task<br>2. Konfirmasi penghapusan | Task terhapus dari daftar dan database secara permanen. | [ ] PASS<br>[ ] FAIL | |
+| 4.4 | Fitur Ambil Alih (Take Over) | 1. Cari task yang PIC-nya bukan akun Anda<br>2. Klik tombol **[ ✋ Ambil Alih ]**<br>3. Konfirmasi pada dialog pop-up | PIC tugas otomatis berganti menjadi akun Anda, tercatat di `handover_logs`. |PASS|
+| 4.5 | Hapus Task | 1. Klik tombol Hapus pada task milik sendiri<br>2. Konfirmasi penghapusan | Hanya orang yang mengerjakan task yang dapat menghapusnya. Task terhapus dari daftar dan database secara permanen. |PASS|
 
 ---
 
