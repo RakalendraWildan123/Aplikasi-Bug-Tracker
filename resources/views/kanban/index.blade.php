@@ -426,9 +426,10 @@
                             @forelse ($column['tasks'] as $task)
                                 @php
                                     $isAssignee = (int)$task->assigned_to === (int)$user->id;
+                                    $isOverdue = $task->target_date && \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
                                 @endphp
                                 <div
-                                    class="kanban-card bg-white border border-slate-200 border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none {{ $isAssignee ? 'cursor-grab active:cursor-grabbing' : 'cursor-default' }} relative"
+                                    class="kanban-card bg-white border {{ $isOverdue ? 'border-rose-300 ring-1 ring-rose-200' : 'border-slate-200' }} border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none {{ $isAssignee ? 'cursor-grab active:cursor-grabbing' : 'cursor-default' }} relative"
                                     draggable="{{ $isAssignee ? 'true' : 'false' }}"
                                     id="card-task-{{ $task->id }}"
                                     data-task-id="{{ $task->id }}"
@@ -489,6 +490,7 @@
                                                 data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
                                                 data-blocker-notes="{{ $task->blocker_notes }}"
                                                 data-assigned-to="{{ $task->assigned_to }}"
+                                                data-developer-name="{{ $task->assignee?->name ?? 'Belum ditugaskan' }}"
                                                 data-project-code="{{ $task->project?->code }}"
                                                 data-project-name="{{ $task->project?->name }}"
                                             >
@@ -517,12 +519,15 @@
                                     {{-- Footer Kartu: Deadline & Avatar Assignee --}}
                                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                         {{-- Target Selesai --}}
-                                        <div class="flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <svg class="w-3.5 h-3.5 {{ $isOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                             </svg>
-                                            <span class="card-target-date font-medium text-slate-600 text-[11px]">
+                                            <span class="card-target-date font-medium {{ $isOverdue ? 'text-rose-600 font-bold' : 'text-slate-600' }} text-[11px]">
                                                 {{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}
+                                            </span>
+                                            <span class="card-overdue-badge inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 {{ $isOverdue ? '' : 'hidden' }}">
+                                                Terlambat
                                             </span>
                                         </div>
 
@@ -1324,6 +1329,9 @@
                                 btnEdit.setAttribute('data-blocker-notes', payload.blocker_notes || '');
                             }
 
+                            // Perbarui elemen status & indikator overdue
+                            updateCardStatusElements(card, payload.status);
+
                             // Pindahkan kartu jika status berubah
                             const currentStatus = card.getAttribute('data-current-status');
                             if (payload.status !== currentStatus) {
@@ -1333,7 +1341,6 @@
                                     if (placeholder) placeholder.remove();
 
                                     targetDropzone.insertBefore(card, targetDropzone.firstChild);
-                                    updateCardStatusElements(card, payload.status);
                                 }
                             }
 
@@ -1380,6 +1387,39 @@
                 Object.values(statusBorderClasses).forEach(cls => cardElement.classList.remove(cls));
                 if (statusBorderClasses[newStatus]) {
                     cardElement.classList.add(statusBorderClasses[newStatus]);
+                }
+
+                // Sinkronisasi status Overdue (Terlambat)
+                const overdueBadge = cardElement.querySelector('.card-overdue-badge');
+                const targetDateEl = cardElement.querySelector('.card-target-date');
+                const btnEdit = cardElement.querySelector('.btn-edit-task');
+                const targetDate = btnEdit ? btnEdit.getAttribute('data-target-date') : '';
+
+                let isOverdue = false;
+                if (targetDate && newStatus !== 'done') {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const deadline = new Date(targetDate);
+                    deadline.setHours(23, 59, 59, 999);
+                    isOverdue = deadline < today;
+                }
+
+                if (overdueBadge) {
+                    if (isOverdue) {
+                        overdueBadge.classList.remove('hidden');
+                        cardElement.classList.add('border-rose-300', 'ring-1', 'ring-rose-200');
+                        if (targetDateEl) {
+                            targetDateEl.classList.add('text-rose-600', 'font-bold');
+                            targetDateEl.classList.remove('text-slate-600');
+                        }
+                    } else {
+                        overdueBadge.classList.add('hidden');
+                        cardElement.classList.remove('border-rose-300', 'ring-1', 'ring-rose-200');
+                        if (targetDateEl) {
+                            targetDateEl.classList.remove('text-rose-600', 'font-bold');
+                            targetDateEl.classList.add('text-slate-600');
+                        }
+                    }
                 }
 
                 // 3. Dropdown pilihan status
@@ -1758,7 +1798,10 @@
                             }
 
                             const btnEdit = card.querySelector('.btn-edit-task');
-                            if (btnEdit) btnEdit.setAttribute('data-assigned-to', data.user.id);
+                            if (btnEdit) {
+                                btnEdit.setAttribute('data-assigned-to', data.user.id);
+                                btnEdit.setAttribute('data-developer-name', data.user.name);
+                            }
 
                             // Aktifkan izin memindahkan kartu tugas untuk pengguna yang baru mengambil alih
                             card.setAttribute('data-can-move', 'true');

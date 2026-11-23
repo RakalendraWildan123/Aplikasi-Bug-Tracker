@@ -527,6 +527,9 @@
                 {{-- TAMPILAN 1: MODE MOBILE & SETENGAH LAYAR (KARTU RESPONSIF, AMBIL ALIH LANGSUNG TERLIHAT TANPA SCROLL) --}}
                 <div class="task-card-view-mobile lg:hidden divide-y divide-slate-100 bg-white">
                     @forelse ($tasks as $task)
+                        @php
+                            $isTaskOverdue = $task->target_date && \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
+                        @endphp
                         <div class="p-4 hover:bg-slate-50/60 transition-colors" id="card-task-list-{{ $task->id }}">
                             {{-- Baris 1: Judul Tugas & Badge Tipe/Status --}}
                             <div class="flex items-start justify-between gap-2.5">
@@ -599,11 +602,16 @@
                                         <span class="text-xs text-slate-400 italic">Belum ditugaskan</span>
                                     @endif
                                 </div>
-                                <div class="text-[11px] text-slate-500 flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <div class="text-[11px] {{ $isTaskOverdue ? 'text-rose-600 font-bold' : 'text-slate-500' }} flex items-center gap-1.5 flex-wrap">
+                                    <svg class="w-3.5 h-3.5 {{ $isTaskOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                     </svg>
                                     <span>{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}</span>
+                                    @if ($isTaskOverdue)
+                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                            Terlambat
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
@@ -782,13 +790,21 @@
                                     </td>
 
                                     {{-- 5. Target Selesai (Deadline) --}}
-                                    <td class="py-4 px-3 whitespace-nowrap text-xs text-slate-600 font-medium">
+                                    <td class="py-4 px-3 whitespace-nowrap text-xs font-medium">
                                         @if ($task->target_date)
-                                            <div class="flex items-center gap-1.5">
-                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            @php
+                                                $isRowOverdue = \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
+                                            @endphp
+                                            <div class="flex items-center gap-1.5 flex-wrap {{ $isRowOverdue ? 'text-rose-600 font-bold' : 'text-slate-600' }}">
+                                                <svg class="w-3.5 h-3.5 {{ $isRowOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                                 </svg>
                                                 <span>{{ \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') }}</span>
+                                                @if ($isRowOverdue)
+                                                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                        Terlambat
+                                                    </span>
+                                                @endif
                                             </div>
                                         @else
                                             <span class="text-slate-400 italic">Tanpa batas</span>

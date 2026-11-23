@@ -197,6 +197,8 @@ class KanbanBoardTest extends TestCase
         $task = Task::factory()->create([
             'title' => 'Tugas dengan Tombol Edit',
             'status' => 'todo',
+            'assigned_to' => $user->id,
+            'target_date' => now()->subDays(3)->format('Y-m-d'),
         ]);
 
         $response = $this->actingAs($user)->get('/kanban');
@@ -207,6 +209,8 @@ class KanbanBoardTest extends TestCase
         $response->assertSee('btn-quick-nav');
         $response->assertSee('btn-edit-task');
         $response->assertSee('modal-edit-task');
+        $response->assertSee('Terlambat');
+        $response->assertSee('data-developer-name="'.$user->name.'"', false);
     }
 
     public function test_authenticated_user_can_update_task_details_via_put(): void
