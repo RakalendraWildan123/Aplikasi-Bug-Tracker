@@ -30,7 +30,8 @@ class AppEvaluationUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('Evaluasi Aplikasi');
         $response->assertSee('Fitur Operasional');
-        $response->assertSee('btn-open-create-evaluation', false);
+        $response->assertSee('Tercatat Otomatis oleh Sistem');
+        $response->assertDontSee('btn-open-create-evaluation', false);
     }
 
     public function test_evaluations_page_renders_sidebar_navigation_with_categories(): void

@@ -17,10 +17,11 @@ class AppEvaluationController extends Controller
 {
     public function index(Request $request, AppEvaluationService $evaluationService): View|JsonResponse
     {
-        // Otomatis sinkronkan jika ada proyek yang belum memiliki evaluasi di periode saat ini
         $currentPeriod = AppEvaluationService::currentPeriod();
-        if ($request->boolean('auto_sync') || (! app()->runningUnitTests() && Project::query()->whereDoesntHave('appEvaluations', fn ($q) => $q->where('period_review', $currentPeriod))->exists())) {
-            $evaluationService->syncMissingEvaluations($currentPeriod);
+
+        // Langsung catat dan perbarui evaluasi seluruh proyek secara otomatis setiap kali halaman diakses (tanpa perlu tombol)
+        if (! app()->runningUnitTests() || $request->boolean('auto_sync')) {
+            $evaluationService->generateAll($currentPeriod);
         }
 
         $search = $request->string('search')->toString();

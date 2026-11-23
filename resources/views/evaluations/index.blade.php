@@ -248,37 +248,12 @@
                         </div>
                     </div>
 
-                    {{-- Sisi Kanan: Tombol Sinkronisasi Otomatis & Catat Manual --}}
+                    {{-- Sisi Kanan: Status Pencatatan Otomatis (Tanpa Tombol) --}}
                     <div class="flex items-center gap-2 shrink-0">
-                        {{-- Tombol Utama: Sinkronkan Evaluasi Otomatis --}}
-                        <form method="POST" action="{{ route('evaluations.auto-sync') }}" class="inline-block">
-                            @csrf
-                            <button
-                                type="submit"
-                                id="btn-auto-sync-evaluations"
-                                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 transition shadow-sm cursor-pointer"
-                                title="Sinkronkan seluruh evaluasi proyek secara otomatis dari data bug, tugas, dan rilis terkini"
-                            >
-                                <svg class="w-4 h-4 shrink-0 text-indigo-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
-                                </svg>
-                                <span>Sinkronkan Evaluasi Otomatis</span>
-                            </button>
-                        </form>
-
-                        {{-- Tombol Sekunder: Catat Manual (Opsional) --}}
-                        <button
-                            type="button"
-                            id="btn-open-create-evaluation"
-                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
-                            title="Catat evaluasi manual jika diperlukan (opsional)"
-                        >
-                            <svg class="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                            </svg>
-                            <span class="hidden sm:inline">Catat Manual</span>
-                            <span class="sm:hidden">Manual</span>
-                        </button>
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-2xs">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Tercatat Otomatis oleh Sistem</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -629,23 +604,9 @@
                                         @endif
                                     </td>
 
-                                    {{-- 6. Aksi (Sinkronkan Ulang, Detail, Edit, Hapus) --}}
+                                    {{-- 6. Aksi (Detail, Edit, Hapus) --}}
                                     <td class="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1">
-                                            {{-- Tombol Sinkronkan Ulang dari Data Real-Time --}}
-                                            <form method="POST" action="{{ route('evaluations.sync', $eval->id) }}" class="inline">
-                                                @csrf
-                                                <button
-                                                    type="submit"
-                                                    class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                                                    title="Perbarui otomatis evaluasi proyek ini dari data tugas & bug terkini"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
-
                                             {{-- Tombol Detail --}}
                                             <button
                                                 type="button"
@@ -1182,7 +1143,6 @@
         const deleteModal = document.getElementById('modal-delete-evaluation');
         const detailModal = document.getElementById('modal-detail-evaluation');
 
-        const btnOpenCreate = document.getElementById('btn-open-create-evaluation');
         const formEdit = document.getElementById('form-edit-evaluation');
         const formDelete = document.getElementById('form-delete-evaluation');
         const formAddActionItem = document.getElementById('form-add-action-item');
@@ -1206,14 +1166,7 @@
             if (e.key === 'Escape') closeAllModals();
         });
 
-        // 3. Open Create Modal
-        if (btnOpenCreate) {
-            btnOpenCreate.addEventListener('click', function () {
-                openModal(createModal);
-            });
-        }
-
-        // 4. Open Edit Modal
+        // 3. Open Edit Modal
         document.querySelectorAll('.btn-edit-evaluation').forEach(btn => {
             btn.addEventListener('click', function () {
                 const dataRaw = this.getAttribute('data-evaluation');
