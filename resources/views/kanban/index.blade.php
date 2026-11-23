@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Papan Kanban &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -18,7 +19,7 @@
     {{-- Navigasi Sidebar di Sebelah Kiri --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -136,8 +137,7 @@
                     </a>
                 </div>
 
-                @if ($user->isAdmin())
-                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
+                {{-- KATEGORI 2: FITUR MASTER DATA --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -176,7 +176,6 @@
                         </a>
                     @endif
                 </div>
-                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -194,12 +193,28 @@
                     </a>
                 </div>
             </nav>
-        </div>
 
+            {{-- Ringkasan Pengguna Aktif di Bawah Sidebar (Tanpa Tombol Logout) --}}
+            <div class="p-3.5 border-t border-slate-800 bg-slate-950/40">
+                <a href="{{ route('account.edit') }}" class="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition group" title="Buka Pengaturan Akun">
+                    @if ($user->foto_profil_url)
+                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0 shadow-xs">
+                    @else
+                        <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#4F46E5' }};">
+                            {{ $user->avatar ?? strtoupper(substr($user->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition">{{ $user->name }}</span>
+                        <span class="block text-[11px] text-slate-400 capitalize truncate">{{ $user->role }}</span>
+                    </div>
+                </a>
+            </div>
+        </div>
     </aside>
 
     {{-- Area Konten Utama (Kanan) --}}
-    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+    <div class="main-content-wrapper flex-1 min-w-0 flex flex-col min-h-screen">
 
         {{-- Topbar Khusus Layar Tablet & Mobile --}}
         <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
@@ -218,21 +233,6 @@
             </div>
 
             <div class="flex items-center gap-2">
-                {{-- Tombol Buka Pop-up Notifikasi (Tablet & Mobile) --}}
-                <button
-                    type="button"
-                    class="btn-trigger-notifications relative p-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-2xs"
-                    aria-label="Buka Notifikasi Pop-up"
-                    title="Notifikasi"
-                >
-                    <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                    </svg>
-                    <span class="notification-badge-count hidden absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs">
-                        0
-                    </span>
-                </button>
-
                 @if ($user->foto_profil_url)
                     <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
                 @else
@@ -301,22 +301,20 @@
                         <span>Reset Filter</span>
                     </button>
 
-                    {{-- Tombol Buka Pop-up Notifikasi (Desktop & Tablet) --}}
-                    <button
-                        type="button"
-                        id="btn-open-notifications-desktop"
-                        class="btn-trigger-notifications relative inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition cursor-pointer"
-                        title="Buka Notifikasi Pop-up"
-                        aria-label="Buka Notifikasi Pop-up"
-                    >
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                        </svg>
-                        <span>Notifikasi</span>
-                        <span class="notification-badge-count hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
-                            0
-                        </span>
-                    </button>
+                    {{-- Profil Pengguna Aktif (Desktop Header) --}}
+                    <a href="{{ route('account.edit') }}" class="hidden sm:inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs group" title="Pengaturan Akun Saya">
+                        @if ($user->foto_profil_url)
+                            <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs">
+                        @else
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                                {{ $user->avatar ?? 'AK' }}
+                            </div>
+                        @endif
+                        <div class="text-left">
+                            <span class="block text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate max-w-[130px]">{{ $user->name }}</span>
+                            <span class="block text-[10px] text-slate-400 capitalize">{{ $user->role }}</span>
+                        </div>
+                    </a>
                 </div>
             </div>
 
@@ -476,12 +474,14 @@
                                                     'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
                                                     'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
                                                     'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                                    'bug' => 'bg-rose-50 text-rose-700 border-rose-200',
                                                 ];
                                                 $typeLabels = [
                                                     'feature' => 'Fitur',
                                                     'enhancement' => 'Peningkatan',
                                                     'refactor' => 'Refaktor',
                                                     'maintenance' => 'Maintenance',
+                                                    'bug' => 'Bug',
                                                 ];
                                             @endphp
                                             <span class="card-type-badge px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $typeBadges[$task->task_type] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
@@ -776,6 +776,7 @@
                             <option value="enhancement">Peningkatan (Enhancement)</option>
                             <option value="refactor">Refaktor (Refactor)</option>
                             <option value="maintenance">Maintenance</option>
+                            <option value="bug">Bug</option>
                         </select>
                     </div>
 
@@ -1295,12 +1296,13 @@
                             // Update Tipe Badge
                             const typeBadge = card.querySelector('.card-type-badge');
                             if (typeBadge) {
-                                const typeLabels = { feature: 'Fitur', enhancement: 'Peningkatan', refactor: 'Refaktor', maintenance: 'Maintenance' };
+                                const typeLabels = { feature: 'Fitur', enhancement: 'Peningkatan', refactor: 'Refaktor', maintenance: 'Maintenance', bug: 'Bug' };
                                 const typeBadges = {
                                     feature: 'bg-indigo-50 text-indigo-700 border-indigo-200',
                                     enhancement: 'bg-violet-50 text-violet-700 border-violet-200',
                                     refactor: 'bg-amber-50 text-amber-700 border-amber-200',
-                                    maintenance: 'bg-slate-100 text-slate-700 border-slate-200'
+                                    maintenance: 'bg-slate-100 text-slate-700 border-slate-200',
+                                    bug: 'bg-rose-50 text-rose-700 border-rose-200'
                                 };
                                 typeBadge.className = `card-type-badge px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${typeBadges[payload.task_type] || 'bg-slate-100 text-slate-700 border-slate-200'}`;
                                 typeBadge.textContent = typeLabels[payload.task_type] || payload.task_type;
@@ -1823,9 +1825,6 @@
             });
         });
     </script>
-
-    {{-- MODAL POP-UP NOTIFIKASI --}}
-    @include('partials.notification-modal')
 
 </body>
 </html>

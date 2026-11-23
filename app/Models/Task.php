@@ -21,6 +21,14 @@ class Task extends Model
         'maintenance',
     ];
 
+    public const ALL_TYPES = [
+        'feature',
+        'enhancement',
+        'refactor',
+        'maintenance',
+        'bug',
+    ];
+
     public const STATUSES = [
         'todo',
         'in_progress',
@@ -141,4 +149,6 @@ class Task extends Model
     {
         return $this->hasOne(ActionItem::class, 'converted_task_id');
     }
+
+
 }

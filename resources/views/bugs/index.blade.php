@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Pelacak Bug &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -18,7 +19,7 @@
     {{-- Navigasi Sidebar di Sebelah Kiri --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -136,8 +137,7 @@
                     </a>
                 </div>
 
-                @if ($user->isAdmin())
-                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
+                {{-- KATEGORI 2: FITUR MASTER DATA --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -176,7 +176,6 @@
                         </a>
                     @endif
                 </div>
-                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -194,11 +193,28 @@
                     </a>
                 </div>
             </nav>
+
+            {{-- Ringkasan Pengguna Aktif di Bawah Sidebar (Tanpa Tombol Logout) --}}
+            <div class="p-3.5 border-t border-slate-800 bg-slate-950/40">
+                <a href="{{ route('account.edit') }}" class="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition group" title="Buka Pengaturan Akun">
+                    @if ($user->foto_profil_url)
+                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0 shadow-xs">
+                    @else
+                        <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#4F46E5' }};">
+                            {{ $user->avatar ?? strtoupper(substr($user->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition">{{ $user->name }}</span>
+                        <span class="block text-[11px] text-slate-400 capitalize truncate">{{ $user->role }}</span>
+                    </div>
+                </a>
+            </div>
         </div>
     </aside>
 
     {{-- Area Konten Utama (Kanan) --}}
-    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+    <div class="main-content-wrapper flex-1 min-w-0 flex flex-col min-h-screen">
 
         {{-- Topbar Khusus Layar Tablet & Mobile --}}
         <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
@@ -228,7 +244,7 @@
         </header>
 
         {{-- Konten Halaman Pelacak Bug --}}
-        <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex flex-col">
+        <main class="flex-1 p-4 sm:p-5 lg:p-6 max-w-full xl:max-w-7xl w-full mx-auto flex flex-col">
 
             {{-- Header Halaman & Tombol Aksi Laporkan Bug --}}
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
@@ -237,17 +253,34 @@
                     <p class="mt-1 text-sm text-slate-600">Pantau temuan masalah, analisis akar masalah, serta kelola solusi penyelesaian bug secara terpisah dan terstruktur.</p>
                 </div>
 
-                {{-- Tombol Buka Pop-up Tambah Bug --}}
-                <button
-                    type="button"
-                    id="btn-open-create-bug"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 shrink-0 cursor-pointer shadow-sm"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                    </svg>
-                    <span>Laporkan Bug</span>
-                </button>
+                <div class="flex items-center gap-3 shrink-0">
+                    {{-- Profil Pengguna Aktif (Desktop Header) --}}
+                    <a href="{{ route('account.edit') }}" class="hidden sm:inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs group" title="Pengaturan Akun Saya">
+                        @if ($user->foto_profil_url)
+                            <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs">
+                        @else
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                                {{ $user->avatar ?? 'AK' }}
+                            </div>
+                        @endif
+                        <div class="text-left">
+                            <span class="block text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate max-w-[130px]">{{ $user->name }}</span>
+                            <span class="block text-[10px] text-slate-400 capitalize">{{ $user->role }}</span>
+                        </div>
+                    </a>
+
+                    {{-- Tombol Buka Pop-up Tambah Bug --}}
+                    <button
+                        type="button"
+                        id="btn-open-create-bug"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 shrink-0 cursor-pointer shadow-sm"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        <span>Laporkan Bug</span>
+                    </button>
+                </div>
             </div>
 
             {{-- Ringkasan Metrik Cepat (Bersih & Tegas, Ramah Desktop & Tablet) --}}
@@ -414,20 +447,20 @@
 
             {{-- Tabel Pelacak Bug (Bersih, Tegas, Ramah Desktop & Tablet) --}}
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                <div class="overflow-x-auto min-w-full">
-                    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                        <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none">
+                <div class="overflow-x-auto w-full relative">
+                    <table class="w-full text-left text-sm border-separate border-spacing-0">
+                        <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
                             <tr>
-                                <th scope="col" class="py-3.5 pl-5 pr-3">Bug &amp; Temuan</th>
-                                <th scope="col" class="py-3.5 px-3">Proyek &amp; Modul</th>
-                                <th scope="col" class="py-3.5 px-3">Keparahan</th>
-                                <th scope="col" class="py-3.5 px-3">Status</th>
-                                <th scope="col" class="py-3.5 px-3">Pelapor &amp; Tanggal</th>
-                                <th scope="col" class="py-3.5 px-3">Ditugaskan</th>
-                                <th scope="col" class="py-3.5 pl-3 pr-5 text-right">Aksi</th>
+                                <th scope="col" class="py-3 pl-4 pr-2.5 border-b border-slate-200">Bug &amp; Temuan</th>
+                                <th scope="col" class="py-3 px-2 border-b border-slate-200">Proyek &amp; Modul</th>
+                                <th scope="col" class="py-3 px-1.5 border-b border-slate-200">Keparahan</th>
+                                <th scope="col" class="py-3 px-1.5 border-b border-slate-200">Status</th>
+                                <th scope="col" class="py-3 px-2 border-b border-slate-200">Pelapor &amp; Tanggal</th>
+                                <th scope="col" class="py-3 px-2 border-b border-slate-200">Ditugaskan</th>
+                                <th scope="col" class="py-3 pl-2.5 pr-4 text-right sticky right-0 bg-slate-50 z-20 border-b border-slate-200 border-l border-slate-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)]">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
+                        <tbody class="bg-white">
                             @php
                                 $severityBadges = [
                                     'critical' => 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
@@ -489,23 +522,23 @@
                                         'handover_logs' => $bug->handover_logs ?? [],
                                     ];
                                 @endphp
-                                <tr class="hover:bg-slate-50/70 transition-colors" id="row-bug-{{ $bug->id }}">
+                                <tr class="hover:bg-slate-50/70 transition-colors group" id="row-bug-{{ $bug->id }}">
                                     {{-- 1. Judul, Deskripsi & Solusi Bug --}}
-                                    <td class="py-4 pl-5 pr-3 max-w-xs sm:max-w-sm">
+                                    <td class="py-3 pl-4 pr-2.5 max-w-[200px] lg:max-w-[240px] xl:max-w-xs border-b border-slate-100">
                                         <button
                                             type="button"
-                                            class="btn-detail-bug text-left font-bold text-slate-900 hover:text-indigo-600 transition cursor-pointer leading-snug group flex items-start gap-1"
+                                            class="btn-detail-bug text-left font-bold text-slate-900 hover:text-indigo-600 transition cursor-pointer leading-snug group/btn flex items-start gap-1"
                                             data-bug="{{ json_encode($bugData) }}"
                                             title="Klik untuk melihat dan mengedit detail bug"
                                         >
-                                            <span>{{ $bug->title }}</span>
-                                            <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <span class="break-words">{{ $bug->title }}</span>
+                                            <svg class="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-indigo-600 shrink-0 mt-0.5 opacity-0 group-hover/btn:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                             </svg>
                                         </button>
                                         @if ($bug->description)
                                             <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed" title="{{ $bug->description }}">
-                                                {{ \Illuminate\Support\Str::limit($bug->description, 130) }}
+                                                {{ \Illuminate\Support\Str::limit($bug->description, 110) }}
                                             </p>
                                         @else
                                             <p class="text-xs text-slate-400 italic mt-0.5">Tanpa deskripsi</p>
@@ -519,29 +552,29 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
                                                     </svg>
                                                     <span>Solusi:</span>
-                                                    <span class="truncate max-w-[190px]" title="{{ $bug->solution_notes }}">{{ $bug->solution_notes }}</span>
+                                                    <span class="truncate max-w-[170px]" title="{{ $bug->solution_notes }}">{{ $bug->solution_notes }}</span>
                                                 </div>
                                             @endif
                                             @if ($bug->root_cause)
                                                 <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                                                     <span>Akar Masalah:</span>
-                                                    <span class="truncate max-w-[190px]" title="{{ $bug->root_cause }}">{{ $bug->root_cause }}</span>
+                                                    <span class="truncate max-w-[170px]" title="{{ $bug->root_cause }}">{{ $bug->root_cause }}</span>
                                                 </div>
                                             @endif
                                         </div>
                                     </td>
 
                                     {{-- 2. Proyek & Modul (Disatukan) --}}
-                                    <td class="py-4 px-3 whitespace-nowrap">
+                                    <td class="py-3 px-2 whitespace-nowrap border-b border-slate-100">
                                         <div class="flex flex-col items-start gap-1">
                                             @if ($bug->project)
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
                                                     <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $bug->project->color ?? '#4F46E5' }}"></span>
                                                     <span>{{ $bug->project->code }}</span>
                                                 </span>
                                             @endif
                                             @if ($bug->module)
-                                                <span class="text-xs text-slate-600 font-medium truncate max-w-[150px]" title="{{ $bug->module->name }}">
+                                                <span class="text-xs text-slate-600 font-medium truncate max-w-[130px]" title="{{ $bug->module->name }}">
                                                     {{ $bug->module->name }}
                                                 </span>
                                             @elseif (!$bug->project)
@@ -551,36 +584,40 @@
                                     </td>
 
                                     {{-- 3. Tingkat Keparahan --}}
-                                    <td class="py-4 px-3 whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded text-[11px] uppercase tracking-wider border {{ $severityBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
+                                    <td class="py-3 px-1.5 whitespace-nowrap border-b border-slate-100">
+                                        <span class="px-2 py-0.5 rounded text-[11px] uppercase tracking-wider border {{ $severityBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
                                             {{ $severityLabels[$bug->severity] ?? $bug->severity }}
                                         </span>
                                     </td>
 
                                     {{-- 4. Status --}}
-                                    <td class="py-4 px-3 whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border {{ $statusBadges[$bug->status] ?? 'bg-slate-50 text-slate-700 border-slate-200' }}">
+                                    <td class="py-3 px-1.5 whitespace-nowrap border-b border-slate-100">
+                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border {{ $statusBadges[$bug->status] ?? 'bg-slate-50 text-slate-700 border-slate-200' }}">
                                             <span class="w-1.5 h-1.5 rounded-full {{ $statusDots[$bug->status] ?? 'bg-slate-400' }}"></span>
                                             <span>{{ $statusLabels[$bug->status] ?? $bug->status }}</span>
                                         </span>
                                     </td>
 
                                     {{-- 5. Pelapor & Tanggal --}}
-                                    <td class="py-4 px-3 whitespace-nowrap text-xs text-slate-600">
-                                        <div class="font-medium text-slate-800">{{ $bug->reported_by ?: '-' }}</div>
+                                    <td class="py-3 px-2 whitespace-nowrap text-xs text-slate-600 border-b border-slate-100">
+                                        <div class="font-medium text-slate-800 truncate max-w-[130px]" title="{{ $bug->reported_by }}">{{ $bug->reported_by ?: '-' }}</div>
                                         <div class="text-[11px] text-slate-400 mt-0.5">
                                             {{ $bug->reported_date ? $bug->reported_date->format('d M Y') : '-' }}
                                         </div>
                                     </td>
 
                                     {{-- 6. Ditugaskan & Tombol Ambil Alih --}}
-                                    <td class="py-4 px-3 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
+                                    <td class="py-3 px-2 whitespace-nowrap border-b border-slate-100">
+                                        <div class="flex items-center gap-1.5">
                                             @if ($bug->assignee)
-                                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $bug->assignee->avatar_bg ?? '#1E293B' }}">
-                                                    {{ $bug->assignee->avatar ?? 'AK' }}
-                                                </div>
-                                                <span class="text-xs font-semibold text-slate-800 truncate max-w-[110px]" title="{{ $bug->assignee->name }}">
+                                                @if ($bug->assignee->foto_profil_url)
+                                                    <img src="{{ $bug->assignee->foto_profil_url }}" alt="{{ $bug->assignee->name }}" class="w-6 h-6 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs">
+                                                @else
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $bug->assignee->avatar_bg ?? '#1E293B' }}">
+                                                        {{ $bug->assignee->avatar ?? 'AK' }}
+                                                    </div>
+                                                @endif
+                                                <span class="text-xs font-semibold text-slate-800 truncate max-w-[95px]" title="{{ $bug->assignee->name }}">
                                                     {{ $bug->assignee->name }}
                                                 </span>
                                             @else
@@ -590,7 +627,7 @@
                                             @if (!$bug->assigned_to || $bug->assigned_to !== $user->id)
                                                 <button
                                                     type="button"
-                                                    class="btn-takeover-bug inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs"
+                                                    class="btn-takeover-bug inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 transition cursor-pointer shadow-2xs shrink-0"
                                                     data-bug-id="{{ $bug->id }}"
                                                     data-bug-title="{{ $bug->title }}"
                                                     data-project-code="{{ $bug->project?->code ?? 'Umum' }}"
@@ -608,13 +645,13 @@
                                         </div>
                                     </td>
 
-                                    {{-- 7. Aksi: Terpisah Jelas (Detail Saja, Solusi Saja, Hapus) --}}
-                                    <td class="py-4 pl-3 pr-5 text-right whitespace-nowrap">
-                                        <div class="flex items-center justify-end gap-1.5">
+                                    {{-- 7. Aksi: Terpisah Jelas (Detail Saja, Solusi Saja, Hapus) - Selalu Tampil Penuh & Sticky --}}
+                                    <td class="py-3 pl-2.5 pr-4 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-b border-slate-100 border-l border-slate-100 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.06)]">
+                                        <div class="flex items-center justify-end gap-1.5 shrink-0">
                                             {{-- 1. Tombol Detail (Bisa Melihat & Mengedit Detail Bug) --}}
                                             <button
                                                 type="button"
-                                                class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer shadow-2xs"
+                                                class="btn-detail-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer shadow-2xs shrink-0"
                                                 data-bug="{{ json_encode($bugData) }}"
                                                 title="Lihat riwayat dan edit detail bug"
                                             >
@@ -627,7 +664,7 @@
                                             {{-- 2. Tombol Solusi (Khusus Kelola & Catat Solusi) --}}
                                             <button
                                                 type="button"
-                                                class="btn-solution-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border {{ $bug->solution_notes ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100' }} text-xs font-semibold transition cursor-pointer shadow-2xs"
+                                                class="btn-solution-bug inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border {{ $bug->solution_notes ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100' }} text-xs font-semibold transition cursor-pointer shadow-2xs shrink-0"
                                                 data-bug="{{ json_encode($bugData) }}"
                                                 title="Kelola dan lihat solusi penyelesaian bug"
                                             >
@@ -640,7 +677,7 @@
                                             {{-- 3. Tombol Hapus Bug --}}
                                             <button
                                                 type="button"
-                                                class="btn-delete-bug p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                                                class="btn-delete-bug p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0"
                                                 data-bug-id="{{ $bug->id }}"
                                                 data-bug-title="{{ $bug->title }}"
                                                 data-delete-url="{{ route('bugs.destroy', $bug) }}"
@@ -655,7 +692,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-12 text-center">
+                                    <td colspan="7" class="py-12 text-center border-b border-slate-100">
                                         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />

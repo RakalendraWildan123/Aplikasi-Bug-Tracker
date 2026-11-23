@@ -23,7 +23,7 @@
     {{-- Sidebar Navigasi Utama (Clean, Tegas, Tanpa Tab Bersarang & Tanpa Tombol Logout) --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -197,11 +197,28 @@
                     </a>
                 </div>
             </nav>
+
+            {{-- Ringkasan Pengguna Aktif di Bawah Sidebar (Tanpa Tombol Logout) --}}
+            <div class="p-3.5 border-t border-slate-800 bg-slate-950/40">
+                <a href="{{ route('account.edit') }}" class="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition group" title="Buka Pengaturan Akun">
+                    @if ($user->foto_profil_url)
+                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0 shadow-xs">
+                    @else
+                        <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#4F46E5' }};">
+                            {{ $user->avatar ?? strtoupper(substr($user->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition">{{ $user->name }}</span>
+                        <span class="block text-[11px] text-slate-400 capitalize truncate">{{ $user->role }}</span>
+                    </div>
+                </a>
+            </div>
         </div>
     </aside>
 
     {{-- Area Konten Utama (Kanan) --}}
-    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+    <div class="main-content-wrapper flex-1 min-w-0 flex flex-col min-h-screen">
 
         {{-- Topbar Khusus Layar Tablet & Mobile --}}
         <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
@@ -499,36 +516,41 @@
                                                 <span>Edit</span>
                                             </button>
 
-                                            {{-- Tombol Toggle Status (Aktif / Non-Aktif) --}}
+                                            {{-- Tombol Toggle Status (Aktif / Non-Aktif) via Pop-up Modal --}}
                                             @if ($account->id !== $user->id)
-                                                <form method="POST" action="{{ route('admin.accounts.toggle-active', $account) }}" class="inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    @if ($account->is_active)
-                                                        <button
-                                                            type="submit"
-                                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-2xs"
-                                                            title="Nonaktifkan akses akun"
-                                                            onclick="return confirm('Nonaktifkan akses login akun {{ addslashes($account->name) }}?')"
-                                                        >
-                                                            <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                                                            </svg>
-                                                            <span>Nonaktifkan</span>
-                                                        </button>
-                                                    @else
-                                                        <button
-                                                            type="submit"
-                                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-2xs"
-                                                            title="Aktifkan kembali akses akun"
-                                                        >
-                                                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                            </svg>
-                                                            <span>Aktifkan</span>
-                                                        </button>
-                                                    @endif
-                                                </form>
+                                                @if ($account->is_active)
+                                                    <button
+                                                        type="button"
+                                                        class="btn-toggle-account inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition cursor-pointer shadow-2xs"
+                                                        title="Nonaktifkan akses akun"
+                                                        data-id="{{ $account->id }}"
+                                                        data-name="{{ $account->name }}"
+                                                        data-email="{{ $account->email }}"
+                                                        data-action="deactivate"
+                                                        data-url="{{ route('admin.accounts.toggle-active', $account) }}"
+                                                    >
+                                                        <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                                        </svg>
+                                                        <span>Nonaktifkan</span>
+                                                    </button>
+                                                @else
+                                                    <button
+                                                        type="button"
+                                                        class="btn-toggle-account inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-2xs"
+                                                        title="Aktifkan kembali akses akun"
+                                                        data-id="{{ $account->id }}"
+                                                        data-name="{{ $account->name }}"
+                                                        data-email="{{ $account->email }}"
+                                                        data-action="activate"
+                                                        data-url="{{ route('admin.accounts.toggle-active', $account) }}"
+                                                    >
+                                                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        <span>Aktifkan</span>
+                                                    </button>
+                                                @endif
                                             @endif
 
                                             {{-- Tombol Hapus Akun (Tidak Bisa Menghapus Akun Sendiri) --}}
@@ -928,6 +950,59 @@
 </div>
 
 {{-- ========================================================================= --}}
+{{-- 2.5. POP-UP MODAL: TOGGLE STATUS (NONAKTIFKAN / AKTIFKAN AKUN)            --}}
+{{-- ========================================================================= --}}
+<div
+    id="modal-toggle-account"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto hidden"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+>
+    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 transition-all">
+        <div class="p-6">
+            <div id="toggle-modal-header" class="flex items-center gap-3 mb-3 text-amber-600">
+                <div id="toggle-modal-icon-bg" class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <svg id="toggle-modal-icon-warn" class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                    <svg id="toggle-modal-icon-check" class="w-6 h-6 text-emerald-600 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 id="toggle-modal-title" class="text-lg font-bold text-slate-900">Nonaktifkan Akses Akun?</h3>
+            </div>
+
+            <p class="text-sm text-slate-600 mb-2">
+                <span id="toggle-modal-prompt">Apakah Anda yakin ingin menonaktifkan akses login untuk akun</span>
+                <span id="toggle-account-name" class="font-bold text-slate-900"></span> (<span id="toggle-account-email" class="font-semibold text-slate-700"></span>)?
+            </p>
+            <p id="toggle-modal-desc" class="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                Pengguna dengan akun ini tidak akan dapat login ke dalam sistem hingga statusnya diaktifkan kembali oleh Admin.
+            </p>
+
+            <form id="form-toggle-account" method="POST" action="" class="mt-6 flex items-center justify-end gap-3">
+                @csrf
+                @method('PATCH')
+                <button
+                    type="button"
+                    class="btn-close-modal px-4 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    id="toggle-modal-submit-btn"
+                    type="submit"
+                    class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold transition shadow-xs cursor-pointer focus:ring-2 focus:ring-amber-500"
+                >
+                    Nonaktifkan Akun
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- ========================================================================= --}}
 {{-- 3. POP-UP MODAL: HAPUS AKUN                                               --}}
 {{-- ========================================================================= --}}
 <div
@@ -1063,6 +1138,54 @@
             });
         });
 
+        // 3.5. KONTROL MODAL TOGGLE STATUS (NONAKTIFKAN / AKTIFKAN AKUN)
+        const modalToggle = document.getElementById('modal-toggle-account');
+        const formToggle = document.getElementById('form-toggle-account');
+        const toggleName = document.getElementById('toggle-account-name');
+        const toggleEmail = document.getElementById('toggle-account-email');
+        const toggleTitle = document.getElementById('toggle-modal-title');
+        const togglePrompt = document.getElementById('toggle-modal-prompt');
+        const toggleDesc = document.getElementById('toggle-modal-desc');
+        const toggleSubmitBtn = document.getElementById('toggle-modal-submit-btn');
+        const toggleIconBg = document.getElementById('toggle-modal-icon-bg');
+        const toggleIconWarn = document.getElementById('toggle-modal-icon-warn');
+        const toggleIconCheck = document.getElementById('toggle-modal-icon-check');
+
+        document.querySelectorAll('.btn-toggle-account').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const name = btn.dataset.name;
+                const email = btn.dataset.email;
+                const action = btn.dataset.action;
+                const url = btn.dataset.url;
+
+                formToggle.action = url;
+                toggleName.textContent = name;
+                toggleEmail.textContent = email;
+
+                if (action === 'deactivate') {
+                    toggleTitle.textContent = 'Nonaktifkan Akses Akun?';
+                    togglePrompt.textContent = 'Apakah Anda yakin ingin menonaktifkan akses login untuk akun ';
+                    toggleDesc.textContent = 'Pengguna dengan akun ini tidak akan dapat login ke dalam sistem hingga statusnya diaktifkan kembali oleh Admin.';
+                    toggleSubmitBtn.textContent = 'Nonaktifkan Akun';
+                    toggleSubmitBtn.className = 'px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold transition shadow-xs cursor-pointer focus:ring-2 focus:ring-amber-500';
+                    toggleIconBg.className = 'w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0';
+                    toggleIconWarn.classList.remove('hidden');
+                    toggleIconCheck.classList.add('hidden');
+                } else {
+                    toggleTitle.textContent = 'Aktifkan Akses Akun?';
+                    togglePrompt.textContent = 'Apakah Anda yakin ingin mengaktifkan kembali akses login untuk akun ';
+                    toggleDesc.textContent = 'Pengguna akan dapat langsung login kembali ke dalam sistem menggunakan kredensial akun miliknya.';
+                    toggleSubmitBtn.textContent = 'Aktifkan Akun';
+                    toggleSubmitBtn.className = 'px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold transition shadow-xs cursor-pointer focus:ring-2 focus:ring-emerald-500';
+                    toggleIconBg.className = 'w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0';
+                    toggleIconWarn.classList.add('hidden');
+                    toggleIconCheck.classList.remove('hidden');
+                }
+
+                modalToggle?.classList.remove('hidden');
+            });
+        });
+
         // 4. KONTROL MODAL HAPUS AKUN
         const modalDelete = document.getElementById('modal-delete-account');
         const formDelete = document.getElementById('form-delete-account');
@@ -1087,6 +1210,7 @@
             btn.addEventListener('click', () => {
                 modalCreate?.classList.add('hidden');
                 modalEdit?.classList.add('hidden');
+                modalToggle?.classList.add('hidden');
                 modalDelete?.classList.add('hidden');
             });
         });
@@ -1105,7 +1229,7 @@
         }
 
         // Tutup modal jika klik di luar box modal
-        [modalCreate, modalEdit, modalDelete].forEach(modal => {
+        [modalCreate, modalEdit, modalToggle, modalDelete].forEach(modal => {
             modal?.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.add('hidden');

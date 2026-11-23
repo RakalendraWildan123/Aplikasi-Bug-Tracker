@@ -21,35 +21,40 @@ class ModuleUiTest extends TestCase
         $response->assertRedirect('/login');
     }
 
-    public function test_developer_cannot_access_modules_page(): void
+    public function test_developer_can_access_modules_page(): void
     {
         $developer = User::factory()->create(['role' => 'developer']);
         $response = $this->actingAs($developer)->get('/modules');
-        $response->assertForbidden();
+        $response->assertOk();
+        $response->assertSee('Master Modul');
     }
 
-    public function test_developer_cannot_create_update_or_delete_module(): void
+    public function test_developer_can_create_update_or_delete_module(): void
     {
         $developer = User::factory()->create(['role' => 'developer']);
         $project = Project::factory()->create();
-        $module = Module::factory()->create(['project_id' => $project->id, 'name' => 'Modul Rahasia']);
+        $module = Module::factory()->create(['project_id' => $project->id, 'name' => 'Modul Awal']);
 
         // Attempt POST
         $this->actingAs($developer)->post('/modules', [
             'project_id' => $project->id,
-            'name' => 'Modul Ilegal',
-        ])->assertForbidden();
+            'name' => 'Modul Baru Dev',
+        ])->assertRedirect(route('modules.index'));
+
+        $this->assertDatabaseHas('modules', ['name' => 'Modul Baru Dev']);
 
         // Attempt PUT
         $this->actingAs($developer)->put("/modules/{$module->id}", [
             'project_id' => $project->id,
-            'name' => 'Modul Diubah Ilegal',
-        ])->assertForbidden();
+            'name' => 'Modul Diubah Dev',
+        ])->assertRedirect(route('modules.index'));
+
+        $this->assertDatabaseHas('modules', ['id' => $module->id, 'name' => 'Modul Diubah Dev']);
 
         // Attempt DELETE
-        $this->actingAs($developer)->delete("/modules/{$module->id}")->assertForbidden();
+        $this->actingAs($developer)->delete("/modules/{$module->id}")->assertRedirect(route('modules.index'));
 
-        $this->assertDatabaseHas('modules', ['id' => $module->id]);
+        $this->assertDatabaseMissing('modules', ['id' => $module->id]);
     }
 
     public function test_admin_user_can_view_modules_page(): void

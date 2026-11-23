@@ -21,10 +21,12 @@ class TaskController extends Controller
         $statusFilter = $request->query('status');
         $typeFilter = $request->query('task_type');
         $developerFilter = $request->query('assigned_to');
+        $activeTab = $request->query('tab', 'all');
+        $currentUser = $request->user();
 
         $baseQuery = Task::query();
 
-        // Metrik statistik tugas (bersih & ringkas)
+        // 1. Metrik Statistik Tugas
         $metrics = [
             'total' => (clone $baseQuery)->count(),
             'todo' => (clone $baseQuery)->where('status', 'todo')->count(),
@@ -33,8 +35,16 @@ class TaskController extends Controller
             'done' => (clone $baseQuery)->where('status', 'done')->count(),
         ];
 
+        // 2. Hitung Jumlah untuk Tab Navigasi: Semua Task vs Task Saya
+        $allTasksCount = (clone $baseQuery)->count();
+        $myTasksCount = (clone $baseQuery)->where('assigned_to', $currentUser->id)->count();
+
+        // 3. Query Koleksi Tasks (Pencatatan bug tidak otomatis menambahkan task baru)
         $tasksQuery = Task::query()
             ->with(['project', 'module', 'creator', 'assignee'])
+            ->when($activeTab === 'my_tasks', function ($q) use ($currentUser) {
+                $q->where('assigned_to', $currentUser->id);
+            })
             ->when($search, function ($q, $term) {
                 $q->where(function ($sub) use ($term) {
                     $sub->where('title', 'like', "%{$term}%")
@@ -58,11 +68,14 @@ class TaskController extends Controller
             return response()->json([
                 'metrics' => $metrics,
                 'tasks' => $tasks,
+                'active_tab' => $activeTab,
+                'all_tasks_count' => $allTasksCount,
+                'my_tasks_count' => $myTasksCount,
             ]);
         }
 
         return view('tasks.index', [
-            'user' => $request->user(),
+            'user' => $currentUser,
             'tasks' => $tasks,
             'metrics' => $metrics,
             'projects' => $projects,
@@ -75,11 +88,18 @@ class TaskController extends Controller
             'selectedStatus' => $statusFilter,
             'selectedType' => $typeFilter,
             'selectedDeveloper' => $developerFilter,
+            'activeTab' => $activeTab,
+            'allTasksCount' => $allTasksCount,
+            'myTasksCount' => $myTasksCount,
         ]);
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
+        if ($request->input('task_type') === 'bug') {
+            $request->merge(['task_type' => 'maintenance']);
+        }
+
         $validated = $request->validate([
             'project_id' => ['required', 'exists:projects,id'],
             'module_id' => ['nullable', 'exists:modules,id'],
@@ -93,12 +113,20 @@ class TaskController extends Controller
             'blocker_notes' => ['nullable', 'string'],
         ], [
             'title.required' => 'Judul tugas wajib diisi.',
+            'title.max' => 'Judul tugas tidak boleh melebihi 255 karakter.',
             'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek yang dipilih tidak terdaftar.',
+            'module_id.exists' => 'Modul yang dipilih tidak terdaftar.',
+            'assigned_to.exists' => 'Pengembang yang dipilih tidak terdaftar.',
             'task_type.required' => 'Tipe tugas wajib dipilih.',
+            'task_type.in' => 'Tipe tugas yang dipilih tidak valid.',
             'status.required' => 'Status tugas wajib dipilih.',
+            'status.in' => 'Status tugas yang dipilih tidak valid.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'target_date.date' => 'Format target deadline tidak valid.',
         ]);
 
-        $validated['created_by'] = $request->user()->id;
+        $validated['created_by'] = $request->user()?->id ?? Auth::id();
 
         if ($validated['status'] === 'done') {
             $validated['completed_at'] = now();
@@ -119,6 +147,10 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): JsonResponse|RedirectResponse
     {
+        if ($request->input('task_type') === 'bug') {
+            $request->merge(['task_type' => 'maintenance']);
+        }
+
         $validated = $request->validate([
             'project_id' => ['required', 'exists:projects,id'],
             'module_id' => ['nullable', 'exists:modules,id'],
@@ -132,9 +164,17 @@ class TaskController extends Controller
             'blocker_notes' => ['nullable', 'string'],
         ], [
             'title.required' => 'Judul tugas wajib diisi.',
+            'title.max' => 'Judul tugas tidak boleh melebihi 255 karakter.',
             'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek yang dipilih tidak terdaftar.',
+            'module_id.exists' => 'Modul yang dipilih tidak terdaftar.',
+            'assigned_to.exists' => 'Pengembang yang dipilih tidak terdaftar.',
             'task_type.required' => 'Tipe tugas wajib dipilih.',
+            'task_type.in' => 'Tipe tugas yang dipilih tidak valid.',
             'status.required' => 'Status tugas wajib dipilih.',
+            'status.in' => 'Status tugas yang dipilih tidak valid.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'target_date.date' => 'Format target deadline tidak valid.',
         ]);
 
         if ($validated['status'] === 'done' && ! $task->completed_at) {
@@ -194,7 +234,6 @@ class TaskController extends Controller
         ]);
 
         $freshTask = $task->fresh(['project', 'module', 'assignee']);
-
         $message = "Tugas '{$freshTask->title}' berhasil Anda ambil alih dari " . ($previousAssignee?->name ?? 'developer sebelumnya') . '.';
 
         if ($request->wantsJson()) {

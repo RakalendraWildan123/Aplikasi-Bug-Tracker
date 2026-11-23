@@ -14,3 +14,111 @@
 [v-cloak] {
     display: none;
 }
+
+/* Sidebar Navigasi Tetap Diam Saat Halaman Di-scroll (Desktop >= 1024px) */
+@media (min-width: 1024px) {
+
+    html,
+    body {
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+
+    body {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+
+    #app-sidebar,
+    #sidebar {
+        position: static !important;
+        top: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        inset: auto !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        transform: none !important;
+        flex-shrink: 0 !important;
+        z-index: 30 !important;
+        width: 16rem !important;
+        overflow: hidden !important;
+    }
+
+    .main-content-wrapper {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* Scrollbar Halus & Tidak Terlalu Jelas pada Navigasi Sidebar */
+#app-sidebar nav,
+#sidebar nav,
+#app-sidebar,
+#sidebar {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent !important;
+}
+
+#app-sidebar nav::-webkit-scrollbar,
+#sidebar nav::-webkit-scrollbar,
+#app-sidebar::-webkit-scrollbar,
+#sidebar::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+}
+
+#app-sidebar nav::-webkit-scrollbar-track,
+#sidebar nav::-webkit-scrollbar-track,
+#app-sidebar::-webkit-scrollbar-track,
+#sidebar::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+#app-sidebar nav::-webkit-scrollbar-thumb,
+#sidebar nav::-webkit-scrollbar-thumb,
+#app-sidebar::-webkit-scrollbar-thumb,
+#sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 9999px !important;
+    transition: background-color 0.2s ease !important;
+}
+
+#app-sidebar nav:hover::-webkit-scrollbar-thumb,
+#sidebar nav:hover::-webkit-scrollbar-thumb,
+#app-sidebar nav::-webkit-scrollbar-thumb:hover,
+#sidebar nav::-webkit-scrollbar-thumb:hover,
+#app-sidebar:hover::-webkit-scrollbar-thumb,
+#sidebar:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* Scrollbar Halus pada Konten Utama */
+.main-content-wrapper {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent !important;
+}
+
+.main-content-wrapper::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+.main-content-wrapper::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.main-content-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.3) !important;
+    border-radius: 9999px !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.main-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 116, 139, 0.5) !important;
+}

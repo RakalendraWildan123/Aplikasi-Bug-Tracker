@@ -58,6 +58,8 @@ class Bug extends Model
         ];
     }
 
+
+
     /**
      * @return BelongsTo<Project, $this>
      */
@@ -89,6 +91,8 @@ class Bug extends Model
     {
         return $this->belongsTo(Developer::class, 'assigned_to');
     }
+
+
 
     /**
      * Scope a query to filter bugs by status.

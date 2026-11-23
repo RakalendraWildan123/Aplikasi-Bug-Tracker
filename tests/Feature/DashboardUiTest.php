@@ -128,18 +128,6 @@ class DashboardUiTest extends TestCase
         $response->assertDontSee('tablist-nested');
     }
 
-    public function test_dashboard_renders_notification_triggers_and_modal(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->get('/dashboard');
-
-        $response->assertOk();
-        $response->assertSee('btn-trigger-notifications');
-        $response->assertSee('notification-badge-count');
-        $response->assertSee('id="modal-notifications"', false);
-    }
-
     public function test_dashboard_returns_json_when_requested_via_json(): void
     {
         $user = User::factory()->create();
@@ -182,5 +170,16 @@ class DashboardUiTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('Master Akun');
+    }
+
+    public function test_developer_sees_master_proyek_and_master_modul_in_sidebar(): void
+    {
+        $dev = User::factory()->create(['role' => 'developer']);
+
+        $response = $this->actingAs($dev)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee('Master Proyek');
+        $response->assertSee('Master Modul');
     }
 }

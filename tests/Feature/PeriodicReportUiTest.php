@@ -31,7 +31,8 @@ class PeriodicReportUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('Laporan Periodik');
         $response->assertSee('Fitur Operasional');
-        $response->assertSee('btn-export-csv', false);
+        $response->assertDontSee('btn-export-csv', false);
+        $response->assertDontSee('Ekspor CSV');
         $response->assertSee('btn-print-report', false);
     }
 

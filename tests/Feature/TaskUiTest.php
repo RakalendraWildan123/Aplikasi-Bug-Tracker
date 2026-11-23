@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
@@ -200,6 +201,25 @@ class TaskUiTest extends TestCase
         $response->assertJsonValidationErrors(['title', 'project_id', 'task_type', 'status']);
     }
 
+    public function test_create_task_with_bug_type_normalizes_to_maintenance(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/tasks', [
+            'project_id' => $project->id,
+            'title' => 'Tugas Perbaikan Masalah Bug',
+            'task_type' => 'bug',
+            'status' => 'todo',
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('tasks', [
+            'title' => 'Tugas Perbaikan Masalah Bug',
+            'task_type' => 'maintenance',
+        ]);
+    }
+
     public function test_user_can_update_task_via_put(): void
     {
         $user = User::factory()->create();
@@ -312,5 +332,72 @@ class TaskUiTest extends TestCase
         $response->assertSee('btn-takeover-task', false);
         $response->assertSee('Ambil Alih');
         $response->assertSee('Tugas Anda');
+    }
+
+    public function test_tasks_page_renders_my_tasks_tab_and_filters_user_tasks(): void
+    {
+        $currentUser = User::factory()->create(['name' => 'Saya']);
+        $otherDev = User::factory()->create(['name' => 'Dev Lain']);
+        $project = Project::factory()->create(['code' => 'DEMO']);
+
+        Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Tugas Milik Orang Lain',
+            'assigned_to' => $otherDev->id,
+        ]);
+
+        Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Tugas Prioritas Saya',
+            'assigned_to' => $currentUser->id,
+        ]);
+
+        // Default: semua task ditampilkan
+        $resAll = $this->actingAs($currentUser)->get('/tasks');
+        $resAll->assertOk();
+        $resAll->assertSee('Semua Task');
+        $resAll->assertSee('Task Saya');
+        $resAll->assertSee('Tugas Milik Orang Lain');
+        $resAll->assertSee('Tugas Prioritas Saya');
+
+        // Tab: Task Saya
+        $resMy = $this->actingAs($currentUser)->get('/tasks?tab=my_tasks');
+        $resMy->assertOk();
+        $resMy->assertSee('Tugas Prioritas Saya');
+        $resMy->assertDontSee('Tugas Milik Orang Lain');
+    }
+
+    public function test_bug_creation_in_bug_tracker_does_not_add_new_task(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['code' => 'APP']);
+        $module = Module::factory()->create(['project_id' => $project->id, 'name' => 'Autentikasi']);
+
+        $initialTaskCount = Task::count();
+
+        // Laporkan bug melalui BugController
+        $resBug = $this->actingAs($user)->post('/bugs', [
+            'project_id' => $project->id,
+            'module_id' => $module->id,
+            'assigned_to' => $user->id,
+            'title' => 'Crash saat upload avatar PNG 4K',
+            'description' => 'Memory limit exceeded pada image processing',
+            'severity' => 'high',
+            'status' => 'open',
+        ]);
+
+        $resBug->assertRedirect(route('bugs.index'));
+        $this->assertDatabaseHas('bugs', [
+            'title' => 'Crash saat upload avatar PNG 4K',
+            'status' => 'open',
+        ]);
+
+        // Memastikan pencatatan bug tidak otomatis menambahkan task baru
+        $this->assertSame($initialTaskCount, Task::count());
+
+        // Buka halaman task: tidak ada penambahan task baru dari pencatatan bug
+        $resTasks = $this->actingAs($user)->get('/tasks');
+        $resTasks->assertOk();
+        $resTasks->assertDontSee('Crash saat upload avatar PNG 4K');
     }
 }

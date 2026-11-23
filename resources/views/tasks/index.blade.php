@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Daftar Tugas &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -18,7 +19,7 @@
     {{-- Navigasi Sidebar di Sebelah Kiri --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -136,8 +137,7 @@
                     </a>
                 </div>
 
-                @if ($user->isAdmin())
-                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
+                {{-- KATEGORI 2: FITUR MASTER DATA --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -176,7 +176,6 @@
                         </a>
                     @endif
                 </div>
-                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -194,12 +193,28 @@
                     </a>
                 </div>
             </nav>
-        </div>
 
+            {{-- Ringkasan Pengguna Aktif di Bawah Sidebar (Tanpa Tombol Logout) --}}
+            <div class="p-3.5 border-t border-slate-800 bg-slate-950/40">
+                <a href="{{ route('account.edit') }}" class="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-slate-800/60 transition group" title="Buka Pengaturan Akun">
+                    @if ($user->foto_profil_url)
+                        <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0 shadow-xs">
+                    @else
+                        <div class="h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs" style="background-color: {{ $user->avatar_bg ?? '#4F46E5' }};">
+                            {{ $user->avatar ?? strtoupper(substr($user->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div class="min-w-0 flex-1">
+                        <span class="block text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition">{{ $user->name }}</span>
+                        <span class="block text-[11px] text-slate-400 capitalize truncate">{{ $user->role }}</span>
+                    </div>
+                </a>
+            </div>
+        </div>
     </aside>
 
     {{-- Area Konten Utama (Kanan) --}}
-    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+    <div class="main-content-wrapper flex-1 min-w-0 flex flex-col min-h-screen">
 
         {{-- Topbar Khusus Layar Tablet & Mobile --}}
         <header class="lg:hidden w-full bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30 shadow-xs">
@@ -218,21 +233,6 @@
             </div>
 
             <div class="flex items-center gap-2">
-                {{-- Tombol Buka Pop-up Notifikasi (Tablet & Mobile) --}}
-                <button
-                    type="button"
-                    class="btn-trigger-notifications relative p-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-2xs"
-                    aria-label="Buka Notifikasi Pop-up"
-                    title="Notifikasi"
-                >
-                    <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                    </svg>
-                    <span class="notification-badge-count hidden absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs">
-                        0
-                    </span>
-                </button>
-
                 @if ($user->foto_profil_url)
                     <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
                 @else
@@ -253,22 +253,21 @@
                     <p class="mt-1 text-sm text-slate-600">Kelola, pantau, dan atur penugasan tugas tim pengembang secara terstruktur.</p>
                 </div>
 
-                <div class="flex items-center gap-2.5">
-                    {{-- Tombol Buka Pop-up Notifikasi (Desktop & Tablet) --}}
-                    <button
-                        type="button"
-                        class="btn-trigger-notifications relative inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition cursor-pointer"
-                        title="Buka Notifikasi Pop-up"
-                        aria-label="Buka Notifikasi Pop-up"
-                    >
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                        </svg>
-                        <span>Notifikasi</span>
-                        <span class="notification-badge-count hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
-                            0
-                        </span>
-                    </button>
+                <div class="flex items-center gap-3 shrink-0">
+                    {{-- Profil Pengguna Aktif (Desktop Header) --}}
+                    <a href="{{ route('account.edit') }}" class="hidden sm:inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs group" title="Pengaturan Akun Saya">
+                        @if ($user->foto_profil_url)
+                            <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs">
+                        @else
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                                {{ $user->avatar ?? 'AK' }}
+                            </div>
+                        @endif
+                        <div class="text-left">
+                            <span class="block text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate max-w-[130px]">{{ $user->name }}</span>
+                            <span class="block text-[10px] text-slate-400 capitalize">{{ $user->role }}</span>
+                        </div>
+                    </a>
 
                     {{-- Tombol Buka Pop-up Tambah Tugas --}}
                     <button
@@ -340,9 +339,43 @@
                 <span id="toast-text">Tugas berhasil diperbarui.</span>
             </div>
 
+            {{-- Navigasi Tab Segmented: Semua Task vs Task Saya (Bersih, Tegas, Tanpa Tab Bersarang) --}}
+            <div class="mb-4 flex items-center gap-2 border-b border-slate-200 pb-3" data-testid="task-tabs-nav" aria-label="Kategori Tampilan Tugas">
+                <a
+                    href="{{ route('tasks.index', array_merge(request()->query(), ['tab' => 'all'])) }}"
+                    id="tab-all-tasks"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ ($activeTab ?? 'all') !== 'my_tasks' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                    </svg>
+                    <span>Semua Task</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold {{ ($activeTab ?? 'all') !== 'my_tasks' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+                        {{ $allTasksCount ?? $metrics['total'] }}
+                    </span>
+                </a>
+
+                <a
+                    href="{{ route('tasks.index', array_merge(request()->query(), ['tab' => 'my_tasks'])) }}"
+                    id="tab-my-tasks"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ ($activeTab ?? 'all') === 'my_tasks' ? 'bg-slate-900 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                    <span>Task Saya</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold {{ ($activeTab ?? 'all') === 'my_tasks' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+                        {{ $myTasksCount ?? 0 }}
+                    </span>
+                </a>
+            </div>
+
             {{-- Filter & Pencarian Sederhana (Tanpa Tab Bersarang) --}}
             <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-2xs">
                 <form method="GET" action="{{ route('tasks.index') }}" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 flex-wrap">
+                    @if (($activeTab ?? 'all') === 'my_tasks')
+                        <input type="hidden" name="tab" value="my_tasks">
+                    @endif
                     {{-- Pencarian Kata Kunci --}}
                     <div class="flex-1 min-w-[220px]">
                         <label for="search-task" class="sr-only">Cari Tugas</label>
@@ -407,6 +440,7 @@
                             <option value="enhancement" {{ $selectedType === 'enhancement' ? 'selected' : '' }}>Peningkatan</option>
                             <option value="refactor" {{ $selectedType === 'refactor' ? 'selected' : '' }}>Refaktor</option>
                             <option value="maintenance" {{ $selectedType === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                            <option value="bug" {{ $selectedType === 'bug' ? 'selected' : '' }}>Bug / Masalah</option>
                         </select>
                     </div>
 
@@ -437,7 +471,7 @@
                         </button>
                         @if ($selectedSearch || $selectedProject || $selectedStatus || $selectedType || $selectedDeveloper)
                             <a
-                                href="{{ route('tasks.index') }}"
+                                href="{{ route('tasks.index', (($activeTab ?? 'all') === 'my_tasks' ? ['tab' => 'my_tasks'] : [])) }}"
                                 class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-100 hover:text-slate-900 transition"
                             >
                                 Reset
@@ -470,12 +504,14 @@
                                         'enhancement' => 'bg-violet-50 text-violet-700 border-violet-200',
                                         'refactor' => 'bg-amber-50 text-amber-700 border-amber-200',
                                         'maintenance' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                        'bug' => 'bg-rose-50 text-rose-700 border-rose-200',
                                     ];
                                     $typeLabels = [
                                         'feature' => 'Fitur',
                                         'enhancement' => 'Peningkatan',
                                         'refactor' => 'Refaktor',
                                         'maintenance' => 'Maintenance',
+                                        'bug' => 'Bug',
                                     ];
                                     $statusBadges = [
                                         'todo' => 'bg-slate-100 text-slate-700 border-slate-200 dot-slate-500',
@@ -736,8 +772,9 @@
             </div>
 
             {{-- Form Tambah/Edit Tugas --}}
-            <form id="form-task-action" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                <input type="hidden" id="task-id" value="">
+            <form id="form-task-action" method="POST" action="{{ route('tasks.store') }}" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                @csrf
+                <input type="hidden" id="task-id" name="task_id" value="">
 
                 {{-- Alert Error Validasi --}}
                 <div id="task-form-error" class="hidden rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-800">
@@ -751,6 +788,7 @@
                     </label>
                     <input
                         id="input-task-title"
+                        name="title"
                         type="text"
                         required
                         class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
@@ -766,6 +804,7 @@
                         </label>
                         <select
                             id="input-task-project"
+                            name="project_id"
                             required
                             class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
@@ -782,6 +821,7 @@
                         </label>
                         <select
                             id="input-task-module"
+                            name="module_id"
                             class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
                             <option value="">Tanpa Modul Khusus</option>
@@ -802,13 +842,14 @@
                         </label>
                         <select
                             id="input-task-type"
+                            name="task_type"
                             required
                             class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
                             <option value="feature">Fitur (Feature)</option>
                             <option value="enhancement">Peningkatan (Enhancement)</option>
                             <option value="refactor">Refaktor (Refactor)</option>
-                            <option value="maintenance">Maintenance</option>
+                            <option value="maintenance">Pemeliharaan (Maintenance)</option>
                         </select>
                     </div>
 
@@ -818,6 +859,7 @@
                         </label>
                         <select
                             id="input-task-status"
+                            name="status"
                             required
                             class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
@@ -837,6 +879,7 @@
                         </label>
                         <input
                             id="input-task-target-date"
+                            name="target_date"
                             type="date"
                             class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
@@ -848,6 +891,7 @@
                         </label>
                         <select
                             id="input-task-assigned-to"
+                            name="assigned_to"
                             class="block w-full rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
                         >
                             <option value="">Belum Ditugaskan</option>
@@ -865,6 +909,7 @@
                     </label>
                     <input
                         id="input-task-blocker"
+                        name="blocker_notes"
                         type="text"
                         placeholder="Contoh: Menunggu review spesifikasi teknis dari klien"
                         class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
@@ -878,6 +923,7 @@
                     </label>
                     <textarea
                         id="input-task-description"
+                        name="description"
                         rows="3"
                         placeholder="Uraikan instruksi atau kriteria tugas secara ringkas..."
                         class="block w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-900 transition focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 resize-none"
@@ -1197,13 +1243,37 @@
                 setTimeout(() => titleInput.focus(), 100);
             });
 
+            // Filter modul berdasarkan proyek yang dipilih
+            projectInput?.addEventListener('change', () => {
+                const selectedProjId = projectInput.value;
+                const currentModVal = moduleInput.value;
+                let hasCurrentSelected = false;
+
+                Array.from(moduleInput.options).forEach((opt, idx) => {
+                    if (idx === 0) return; // opsi 'Tanpa Modul Khusus'
+                    const modProjId = opt.getAttribute('data-project-id');
+                    if (!selectedProjId || modProjId === selectedProjId) {
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        if (opt.value === currentModVal) hasCurrentSelected = true;
+                    } else {
+                        opt.hidden = true;
+                        opt.disabled = true;
+                    }
+                });
+
+                if (!hasCurrentSelected) {
+                    moduleInput.value = '';
+                }
+            });
+
             // Submit Form Tambah / Edit Tugas
             formAction?.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const taskId = taskIdInput.value;
                 const isEditing = Boolean(taskId);
-                const url = isEditing ? `/tasks/${taskId}` : '/tasks';
+                const url = isEditing ? `/tasks/${taskId}` : '{{ route("tasks.store") }}';
                 const method = isEditing ? 'PUT' : 'POST';
 
                 const payload = {
@@ -1224,12 +1294,17 @@
                 formError.classList.add('hidden');
 
                 try {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        || document.querySelector('input[name="_token"]')?.value
+                        || "{{ csrf_token() }}";
+
                     const response = await fetch(url, {
                         method: method,
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                            'Accept': 'application/json'
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify(payload)
                     });
@@ -1240,13 +1315,21 @@
                         closeModalForm();
                         showToast(data.message);
                         setTimeout(() => window.location.reload(), 400);
+                    } else if (response.status === 419) {
+                        formError.classList.remove('hidden');
+                        formErrorText.textContent = 'Sesi Anda telah kedaluwarsa. Memuat ulang halaman...';
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else if (data.errors) {
+                        formError.classList.remove('hidden');
+                        const errorList = Object.values(data.errors).flat();
+                        formErrorText.innerHTML = errorList.join('<br>');
                     } else {
                         formError.classList.remove('hidden');
                         formErrorText.textContent = data.message || 'Gagal menyimpan tugas.';
                     }
                 } catch (err) {
                     formError.classList.remove('hidden');
-                    formErrorText.textContent = 'Terjadi kesalahan koneksi jaringan.';
+                    formErrorText.textContent = 'Terjadi kendala sistem: ' + (err.message || 'Silakan coba lagi.');
                 } finally {
                     btnSubmit.disabled = false;
                     submitText.textContent = isEditing ? 'Simpan Perubahan' : 'Tambah Tugas';
@@ -1450,9 +1533,6 @@
             });
         });
     </script>
-
-    {{-- MODAL POP-UP NOTIFIKASI --}}
-    @include('partials.notification-modal')
 
 </body>
 </html>

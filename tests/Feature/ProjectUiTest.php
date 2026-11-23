@@ -20,25 +20,28 @@ class ProjectUiTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_developer_cannot_access_projects_page(): void
+    public function test_developer_can_access_projects_page(): void
     {
         $developer = User::factory()->create(['role' => 'developer']);
         $response = $this->actingAs($developer)->get('/projects');
-        $response->assertForbidden();
+        $response->assertOk();
+        $response->assertSee('Master Proyek');
     }
 
-    public function test_developer_cannot_create_update_or_delete_project(): void
+    public function test_developer_can_create_update_or_delete_project(): void
     {
         $developer = User::factory()->create(['role' => 'developer']);
-        $project = Project::factory()->create(['name' => 'Proyek Rahasia']);
+        $project = Project::factory()->create(['name' => 'Proyek Dev']);
 
         // Attempt POST
         $this->actingAs($developer)->post('/projects', [
-            'name' => 'Proyek Ilegal',
-            'code' => 'ILEGAL',
+            'name' => 'Proyek Baru Dev',
+            'code' => 'DEV01',
             'status' => 'active',
-            'color' => '#EF4444',
-        ])->assertForbidden();
+            'color' => '#10B981',
+        ])->assertRedirect(route('projects.index'));
+
+        $this->assertDatabaseHas('projects', ['code' => 'DEV01']);
 
         // Attempt PUT
         $this->actingAs($developer)->put("/projects/{$project->id}", [
@@ -46,12 +49,14 @@ class ProjectUiTest extends TestCase
             'code' => $project->code,
             'status' => 'active',
             'color' => '#EF4444',
-        ])->assertForbidden();
+        ])->assertRedirect(route('projects.index'));
+
+        $this->assertDatabaseHas('projects', ['id' => $project->id, 'name' => 'Proyek Dimodifikasi']);
 
         // Attempt DELETE
-        $this->actingAs($developer)->delete("/projects/{$project->id}")->assertForbidden();
+        $this->actingAs($developer)->delete("/projects/{$project->id}")->assertRedirect(route('projects.index'));
 
-        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
     }
 
     public function test_admin_user_can_view_projects_page(): void

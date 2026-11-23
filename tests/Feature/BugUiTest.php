@@ -95,6 +95,9 @@ class BugUiTest extends TestCase
         $response->assertSee('btn-detail-bug', false);
         $response->assertSee('btn-solution-bug', false);
         $response->assertSee('btn-delete-bug', false);
+        $response->assertSee('sticky right-0', false);
+        $response->assertSee('Solusi');
+        $response->assertSee('Detail');
     }
 
     public function test_bugs_page_filters_by_search_and_project(): void

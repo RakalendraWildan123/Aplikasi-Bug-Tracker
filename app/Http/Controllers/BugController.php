@@ -113,6 +113,8 @@ class BugController extends Controller
 
         $bug = Bug::create($validated);
 
+
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -165,6 +167,8 @@ class BugController extends Controller
 
         $bug->update($validated);
 
+
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -178,6 +182,8 @@ class BugController extends Controller
 
     public function destroy(Request $request, Bug $bug): JsonResponse|RedirectResponse
     {
+
+
         $bug->delete();
 
         if ($request->wantsJson()) {
@@ -212,6 +218,8 @@ class BugController extends Controller
             'assigned_to' => $currentUser->id,
             'handover_logs' => $logs,
         ]);
+
+
 
         $freshBug = $bug->fresh(['project', 'module', 'assignee']);
 

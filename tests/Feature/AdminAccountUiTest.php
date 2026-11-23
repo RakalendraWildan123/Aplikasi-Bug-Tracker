@@ -137,9 +137,11 @@ class AdminAccountUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('id="modal-create-account"', false);
         $response->assertSee('id="modal-edit-account"', false);
+        $response->assertSee('id="modal-toggle-account"', false);
         $response->assertSee('id="modal-delete-account"', false);
         $response->assertSee('Tambah Akun Baru');
         $response->assertSee('Edit Data Akun');
+        $response->assertSee('Nonaktifkan Akses Akun?');
         $response->assertSee('Hapus Akun Pengguna?');
     }
 

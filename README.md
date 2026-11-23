@@ -18,7 +18,7 @@ Aplikasi ini memanfaatkan tumpukan teknologi modern untuk menghasilkan performa 
 - **PHP 8.2+**: Bahasa pemrograman utama yang cepat, bertipe kuat (*strict types*), dan efisien.
 - **Laravel 12.x Framework**: Kerangka kerja PHP modern berbasis MVC (*Model-View-Controller*):
   - *Routing & Middleware*: Pengaturan rute terisolasi dengan filter autentikasi sesi dan otorisasi peran (`EnsureUserHasRole`).
-  - *Eloquent ORM*: Pengelolaan entitas database relasional dengan relasi integritas tinggi (*Project*, *Module*, *Task*, *Bug*, *RepoHistory*, *AppEvaluation*, *ActionItem*, *Notification*, *User*).
+  - *Eloquent ORM*: Pengelolaan entitas database relasional dengan relasi integritas tinggi (*Project*, *Module*, *Task*, *Bug*, *RepoHistory*, *AppEvaluation*, *ActionItem*, *User*).
   - *Blade Templating Engine*: Mesin template komponen server-side yang ringan dan aman dari serangan XSS.
   - *Form Validation & CSRF Protection*: Validasi input ketat di sisi server serta proteksi token anti-CSRF pada setiap permintaan pengubahan data.
 - **Laravel Snappy / Wkhtmltopdf**: Pustaka ekspor dokumen untuk konversi laporan ke format cetak PDF berpresisi tinggi.
@@ -70,7 +70,7 @@ Aplikasi menghubungkan seluruh siklus operasional tim pengembang teknologi infor
 7. **Monitoring Terpadu & Pelaporan Kinerja**:
    - **Dashboard**: Menyajikan 4 metrik ringkasan tercepat, peringatan kendala blocker, temuan bug kritis, dan rilis terbaru.
    - **Laporan Periodik**: Menghasilkan metrik rasio penyelesaian tugas, resolusi bug, rekapitulasi performa per proyek, serta ekspor data ke format CSV dan cetak PDF.
-   - **Pop-up Notifikasi**: Menampilkan pembaruan terkini secara instan saat terdapat tugas baru, kendala blocker, atau bug kritis.
+   - **Pop-up Konfirmasi Interaktif**: Setiap aksi kritis (penonaktifan akun, pengaktifan kembali, penghapusan entitas, dan serah terima tugas) dilengkapi pop-up modal konfirmasi modern in-app yang menggantikan dialog native browser.
 
 ---
 
@@ -97,8 +97,7 @@ Navigasi sidebar dirancang bersih, tegas, dan adaptif terhadap peran pengguna:
 |   |-- Pelacak Bug           (/bugs)
 |   |-- Riwayat Rilis         (/releases)
 |   |-- Evaluasi Aplikasi     (/evaluations)
-|   |-- Laporan Periodik      (/reports)
-|   `-- Pop-up Notifikasi     (Ikon Lonceng di Topbar / Header)
+|   `-- Laporan Periodik      (/reports)
 |
 |-- 2. FITUR MASTER DATA (Khusus Administrator - Tersembunyi untuk Developer)
 |   |-- Master Proyek         (/projects)
@@ -220,17 +219,6 @@ Navigasi sidebar dirancang bersih, tegas, dan adaptif terhadap peran pengguna:
      - Tombol *Ekspor CSV* mengunduh rekapitulasi data tabel secara instan.
      - Tombol *Cetak / Simpan PDF* memanfaatkan stylesheet cetak khusus `@media print` yang menyembunyikan sidebar dan tombol navigasi untuk menghasilkan lembar laporan bersih siap cetak atau simpan ke PDF.
 
-#### H. Pop-up Notifikasi Terpadu (`/notifications`)
-- **Tujuan**: Memberikan pembaruan cepat atas kejadian penting (tugas baru, kendala blocker, temuan bug kritis, dan rilis kode baru).
-- **Cara Kerja**:
-  1. Diakses melalui ikon lonceng pada topbar/header dengan badge counter yang menampilkan jumlah notifikasi yang belum dibaca.
-  2. Pop-up modal dirancang datar satu layar tanpa tab bersarang, dilengkapi tombol filter cepat (*Semua* dan *Belum Dibaca*).
-  3. Fitur interaksi instan:
-     - *Tandai Semua Dibaca*: Mengubah seluruh notifikasi menjadi terbaca dalam satu klik.
-     - *Tandai Satuan*: Menandai notifikasi tertentu telah ditinjau.
-     - *Hapus Satuan / Bersihkan Semua*: Menghapus notifikasi dari daftar tampilan.
-     - *Tautan Langsung*: Mengklik kartu notifikasi mengarahkan pengguna langsung ke modul terkait (Kanban, Bug, atau Rilis).
-
 ---
 
 ### 5.3. Pengaturan Profil & Keamanan Akun
@@ -313,5 +301,4 @@ php artisan test
 - `AdminAccountUiTest.php` (Pengujian Master Akun Admin, aktivasi toggle akun, dan reset password).
 - `BugUiTest.php` (Pengujian pelacak bug, pemisahan modal solusi teknis, dan serah terima bug).
 - `TaskUiTest.php` (Pengujian inventaris tugas tabular dan filter multi-kriteria).
-- `NotificationUiTest.php` (Pengujian pop-up notifikasi terpadu, aksi tandai dibaca, dan penghapusan).
 - `UiComprehensiveScenariosTest.php` (Pengujian terpadu 110 skenario antarmuka, tata letak bebas tab bersarang, dan lokasi tombol logout).

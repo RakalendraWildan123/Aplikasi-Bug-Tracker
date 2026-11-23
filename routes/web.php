@@ -62,29 +62,23 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export/csv', [\App\Http\Controllers\ReportController::class, 'exportCsv'])->name('reports.export.csv');
 
-    // Notifikasi Pop-up
-    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::delete('/notifications', [\App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    // Fitur Master Data (Proyek & Modul dapat diakses oleh Developer dan Admin)
+    // Master Proyek / CRUD Proyek
+    Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
+    Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
+    Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
 
-    // Fitur Master Data (Khusus Atasan / Admin)
+    // Master Modul / CRUD Modul
+    Route::get('/modules', [\App\Http\Controllers\ModuleController::class, 'index'])->name('modules.index');
+    Route::post('/modules', [\App\Http\Controllers\ModuleController::class, 'store'])->name('modules.store');
+    Route::get('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'show'])->name('modules.show');
+    Route::put('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'update'])->name('modules.update');
+    Route::delete('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'destroy'])->name('modules.destroy');
+
+    // Fitur Master Data Khusus Atasan / Admin
     Route::middleware('role:admin')->group(function () {
-        // Master Proyek / CRUD Proyek
-        Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects.index');
-        Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');
-        Route::get('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'show'])->name('projects.show');
-        Route::put('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'update'])->name('projects.update');
-        Route::delete('/projects/{project}', [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('projects.destroy');
-
-        // Master Modul / CRUD Modul
-        Route::get('/modules', [\App\Http\Controllers\ModuleController::class, 'index'])->name('modules.index');
-        Route::post('/modules', [\App\Http\Controllers\ModuleController::class, 'store'])->name('modules.store');
-        Route::get('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'show'])->name('modules.show');
-        Route::put('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'update'])->name('modules.update');
-        Route::delete('/modules/{module}', [\App\Http\Controllers\ModuleController::class, 'destroy'])->name('modules.destroy');
-
         // Master Akun / CRUD Akun (Khusus Atasan / Admin)
         Route::prefix('admin/accounts')
             ->name('admin.accounts.')

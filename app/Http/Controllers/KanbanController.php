@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Developer;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Contracts\View\View;
@@ -74,7 +75,7 @@ class KanbanController extends Controller
         ];
 
         $projects = Project::query()->orderBy('name')->get(['id', 'name', 'code', 'color']);
-        $developers = \App\Models\Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
+        $developers = Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -97,6 +98,10 @@ class KanbanController extends Controller
 
     public function update(Request $request, Task $task): JsonResponse|RedirectResponse
     {
+        if ($request->input('task_type') === 'bug') {
+            $request->merge(['task_type' => 'maintenance']);
+        }
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

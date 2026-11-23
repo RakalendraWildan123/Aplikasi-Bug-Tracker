@@ -23,7 +23,7 @@
     {{-- Sidebar Navigasi Utama (Clean, Tegas, Tanpa Tab Bersarang & Tanpa Tombol Logout) --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -141,8 +141,7 @@
                     </a>
                 </div>
 
-                @if ($user->isAdmin())
-                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
+                {{-- KATEGORI 2: FITUR MASTER DATA --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -181,7 +180,6 @@
                         </a>
                     @endif
                 </div>
-                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -216,7 +214,7 @@
     </aside>
 
     {{-- Main Content Area --}}
-    <div class="flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
+    <div class="main-content-wrapper flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
 
         {{-- Top App Bar --}}
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30">

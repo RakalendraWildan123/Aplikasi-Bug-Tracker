@@ -47,7 +47,7 @@
     {{-- Sidebar Navigasi Utama (Clean, Tegas, Tanpa Tab Bersarang & Tanpa Tombol Logout) --}}
     <aside
         id="app-sidebar"
-        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:min-h-screen shrink-0 shadow-lg lg:shadow-none no-print"
+        class="fixed inset-y-0 left-0 z-50 flex w-64 sm:w-68 -translate-x-full flex-col justify-between border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 ease-in-out lg:sticky lg:inset-auto lg:top-0 lg:h-screen lg:translate-x-0 shrink-0 shadow-lg lg:shadow-none no-print"
     >
         <div class="flex flex-col flex-1 min-h-0">
             {{-- Brand Header Sidebar --}}
@@ -165,8 +165,7 @@
                     </a>
                 </div>
 
-                @if ($user->isAdmin())
-                {{-- KATEGORI 2: FITUR MASTER DATA (Khusus Administrator) --}}
+                {{-- KATEGORI 2: FITUR MASTER DATA --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
                     <p class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">Fitur Master Data</p>
 
@@ -205,7 +204,6 @@
                         </a>
                     @endif
                 </div>
-                @endif
 
                 {{-- KATEGORI 3: PENGATURAN / AKUN PRIBADI --}}
                 <div class="space-y-1 pt-4 border-t border-slate-800/80">
@@ -240,7 +238,7 @@
     </aside>
 
     {{-- Main Content Area --}}
-    <div class="flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
+    <div class="main-content-wrapper flex-1 flex flex-col min-w-0 bg-slate-50 min-h-screen">
 
         {{-- Top App Bar --}}
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
@@ -274,20 +272,21 @@
                         </div>
                     </div>
 
-                    {{-- Sisi Kanan: Tombol Ekspor CSV & Cetak / PDF --}}
-                    <div class="flex items-center gap-2 shrink-0">
-                        {{-- Tombol Ekspor CSV --}}
-                        <a
-                            href="{{ route('reports.export.csv', request()->query()) }}"
-                            id="btn-export-csv"
-                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition shadow-2xs cursor-pointer"
-                            title="Unduh rekapitulasi data format CSV"
-                        >
-                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                            </svg>
-                            <span class="hidden sm:inline">Ekspor CSV</span>
-                            <span class="sm:hidden">CSV</span>
+                    {{-- Sisi Kanan: Tombol Cetak / PDF & Profil Pengguna --}}
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        {{-- Profil Pengguna Aktif (Desktop Header) --}}
+                        <a href="{{ route('account.edit') }}" class="hidden sm:inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs group" title="Pengaturan Akun Saya">
+                            @if ($user->foto_profil_url)
+                                <img src="{{ $user->foto_profil_url }}" alt="{{ $user->name }}" class="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0 shadow-2xs">
+                            @else
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-2xs" style="background-color: {{ $user->avatar_bg ?? '#1E293B' }}">
+                                    {{ $user->avatar ?? 'AK' }}
+                                </div>
+                            @endif
+                            <div class="text-left">
+                                <span class="block text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate max-w-[130px]">{{ $user->name }}</span>
+                                <span class="block text-[10px] text-slate-400 capitalize">{{ $user->role }}</span>
+                            </div>
                         </a>
 
                         {{-- Tombol Cetak / PDF --}}
