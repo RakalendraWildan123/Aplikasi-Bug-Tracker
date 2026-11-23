@@ -42,6 +42,10 @@ class DashboardController extends Controller
             'bugs_low_total' => Bug::where('severity', 'low')->count(),
             'total_releases' => RepoHistory::count(),
             'blocker_tasks' => Task::whereNotNull('blocker_notes')->where('blocker_notes', '!=', '')->count(),
+            'active_accounts_count' => User::where('is_active', true)->count(),
+            'total_accounts_count' => User::count(),
+            'active_developers_count' => User::where('role', 'developer')->where('is_active', true)->count(),
+            'active_admins_count' => User::where('role', 'admin')->where('is_active', true)->count(),
         ];
 
         // 2. Rilis Kode Terbaru
@@ -83,7 +87,13 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
-        // 8. Tim Pengembang Aktif (Maksimal 5)
+        // 8. Seluruh Akun Aktif (Untuk Modal Popup Akun Aktif)
+        $activeAccounts = User::where('is_active', true)
+            ->orderByRaw("CASE WHEN role = 'admin' THEN 1 ELSE 2 END")
+            ->orderBy('name')
+            ->get();
+
+        // 9. Tim Pengembang Aktif (Maksimal 5)
         $activeDevelopers = User::where('role', 'developer')
             ->where('is_active', true)
             ->limit(5)
@@ -95,6 +105,7 @@ class DashboardController extends Controller
                 'status' => 'online',
                 'name' => config('app.name', 'Aplikasi Bug Tracker'),
                 'metrics' => $metrics,
+                'active_accounts' => $activeAccounts,
                 'latest_release' => $latestRelease,
                 'recent_tasks' => $recentTasks,
                 'urgent_bugs' => $urgentBugs,
@@ -110,7 +121,8 @@ class DashboardController extends Controller
             'urgentBugs',
             'recentReleases',
             'activeActionItems',
-            'activeDevelopers'
+            'activeDevelopers',
+            'activeAccounts'
         ));
     }
 }

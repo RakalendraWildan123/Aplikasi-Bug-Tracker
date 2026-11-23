@@ -315,30 +315,29 @@
                     </div>
                 </div>
 
-                {{-- 3. Temuan Bug Terbuka --}}
-                <div class="bg-white border {{ $metrics['critical_bugs'] > 0 ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200' }} rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                {{-- 3. Akun Aktif (Klik untuk Melihat Daftar Akun Aktif) --}}
+                <div id="card-active-accounts" class="bg-white border border-slate-200 hover:border-sky-300 rounded-xl p-4 shadow-2xs flex flex-col justify-between transition group cursor-pointer" title="Klik untuk melihat daftar akun yang aktif">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Bug Perlu Ditangani</span>
-                        <div class="w-7 h-7 rounded-lg {{ $metrics['critical_bugs'] > 0 ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600' }} flex items-center justify-center">
+                        <span class="text-xs font-bold text-slate-400 group-hover:text-sky-600 uppercase tracking-wider transition-colors">Akun Aktif</span>
+                        <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 group-hover:bg-sky-100 flex items-center justify-center transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.002A11.959 11.959 0 0112 2.714zm0 13.036a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                             </svg>
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900">{{ $metrics['open_bugs'] }}</span>
-                        <span class="text-xs mt-0.5 block {{ $metrics['critical_bugs'] > 0 ? 'text-rose-600 font-bold' : 'text-slate-500' }}">
-                            @if ($metrics['critical_bugs'] > 0)
-                                {{ $metrics['critical_bugs'] }} Bug Kritis Aktif!
-                            @else
-                                {{ $metrics['total_bugs'] }} total bug tercatat
-                            @endif
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-slate-900 group-hover:text-sky-600 transition-colors">{{ $metrics['active_accounts_count'] }}</span>
+                        <span class="text-xs text-slate-500 mt-0.5 block">
+                            {{ $metrics['active_developers_count'] }} Developer &bull; {{ $metrics['active_admins_count'] }} Admin
                         </span>
                     </div>
-                    <div class="mt-3 pt-2.5 border-t border-slate-100">
-                        <a href="{{ route('bugs.index') }}" class="text-xs font-semibold text-rose-600 hover:text-rose-800 transition">
-                            Buka Pelacak Bug
-                        </a>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                        <button type="button" id="btn-open-active-accounts" class="text-xs font-semibold text-sky-600 group-hover:text-sky-800 transition inline-flex items-center gap-1 cursor-pointer">
+                            <span>Lihat Akun Aktif</span>
+                            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -688,9 +687,142 @@
         </main>
     </div>
 
-    {{-- Script Navigasi Sidebar Responsif (Tablet & Mobile) --}}
+    {{-- Modal Pop-up: Daftar Akun Aktif --}}
+    <div
+        id="modal-active-accounts"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-active-accounts-title"
+    >
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in fade-in zoom-in-95 duration-150">
+            {{-- Header Modal --}}
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="modal-active-accounts-title" class="text-base font-bold text-slate-900 leading-tight">Daftar Akun Aktif</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Menampilkan seluruh anggota tim yang berstatus aktif dalam sistem
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    id="btn-close-active-accounts-x"
+                    class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition flex items-center justify-center cursor-pointer"
+                    aria-label="Tutup modal"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Kolom Pencarian --}}
+            <div class="p-4 border-b border-slate-100 bg-white">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        id="search-active-accounts"
+                        placeholder="Cari nama, email, atau peran..."
+                        class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition"
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
+            {{-- Daftar Akun Aktif (Scrollable) --}}
+            <div id="list-active-accounts" class="overflow-y-auto divide-y divide-slate-100 p-2 sm:p-3 max-h-96">
+                @forelse ($activeAccounts as $acc)
+                    @php
+                        $words = explode(' ', trim($acc->name));
+                        $initials = strtoupper(substr($words[0] ?? 'U', 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
+                        $isAdmin = $acc->role === 'admin';
+                    @endphp
+                    <div
+                        class="active-account-item p-3 rounded-xl hover:bg-slate-50 transition flex items-center justify-between gap-3"
+                        data-account-name="{{ strtolower($acc->name) }}"
+                        data-account-email="{{ strtolower($acc->email) }}"
+                        data-account-role="{{ strtolower($acc->role) }}"
+                    >
+                        <div class="flex items-center gap-3 min-w-0">
+                            {{-- Avatar Initial dengan Indikator Online Hijau --}}
+                            <div class="relative shrink-0">
+                                <div class="w-10 h-10 rounded-full {{ $isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700' }} flex items-center justify-center font-bold text-xs shadow-2xs">
+                                    {{ $initials }}
+                                </div>
+                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-200" title="Akun Aktif"></span>
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-xs sm:text-sm font-bold text-slate-800 truncate">{{ $acc->name }}</h4>
+                                    @if (auth()->id() === $acc->id)
+                                        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-200 text-slate-700 shrink-0">Anda</span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-slate-500 truncate">{{ $acc->email }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            {{-- Badge Role --}}
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border capitalize {{ $isAdmin ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-sky-50 text-sky-700 border-sky-200' }}">
+                                {{ $acc->role }}
+                            </span>
+                            {{-- Badge Status Aktif --}}
+                            <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Aktif
+                            </span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-8 text-center text-slate-400">
+                        <p class="text-xs font-semibold">Tidak ada akun aktif yang terdaftar saat ini.</p>
+                    </div>
+                @endforelse
+
+                {{-- Empty Search Results State --}}
+                <div id="empty-search-active-accounts" class="p-8 text-center text-slate-400 hidden">
+                    <svg class="w-8 h-8 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                    <p class="text-xs font-semibold">Tidak ada akun yang sesuai dengan kata kunci.</p>
+                </div>
+            </div>
+
+            {{-- Footer Modal --}}
+            <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">
+                    Total: <strong class="text-slate-800">{{ $metrics['active_accounts_count'] }}</strong> Akun Aktif
+                    ({{ $metrics['active_developers_count'] }} Dev, {{ $metrics['active_admins_count'] }} Admin)
+                </span>
+                <button
+                    type="button"
+                    id="btn-close-active-accounts-bottom"
+                    class="px-4 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-700 transition cursor-pointer shadow-2xs"
+                >
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Script Navigasi Sidebar Responsif & Modal Akun Aktif --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // 1. Sidebar Responsif
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             const btnOpen = document.getElementById('btn-sidebar-open');
@@ -710,9 +842,94 @@
             btnClose?.addEventListener('click', closeSidebar);
             backdrop?.addEventListener('click', closeSidebar);
 
+            // 2. Modal Daftar Akun Aktif
+            const modalActiveAccounts = document.getElementById('modal-active-accounts');
+            const cardActiveAccounts = document.getElementById('card-active-accounts');
+            const btnOpenActiveAccounts = document.getElementById('btn-open-active-accounts');
+            const btnCloseX = document.getElementById('btn-close-active-accounts-x');
+            const btnCloseBottom = document.getElementById('btn-close-active-accounts-bottom');
+            const searchInput = document.getElementById('search-active-accounts');
+            const accountItems = document.querySelectorAll('.active-account-item');
+            const emptySearchNotice = document.getElementById('empty-search-active-accounts');
+
+            const openActiveAccountsModal = () => {
+                if (!modalActiveAccounts) return;
+                modalActiveAccounts.classList.remove('hidden');
+                modalActiveAccounts.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filterAccounts('');
+                    setTimeout(() => searchInput.focus(), 50);
+                }
+            };
+
+            const closeActiveAccountsModal = () => {
+                if (!modalActiveAccounts) return;
+                modalActiveAccounts.classList.add('hidden');
+                modalActiveAccounts.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            cardActiveAccounts?.addEventListener('click', (e) => {
+                // Hindari bentrok jika link di dalamnya diklik
+                openActiveAccountsModal();
+            });
+
+            btnOpenActiveAccounts?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openActiveAccountsModal();
+            });
+
+            btnCloseX?.addEventListener('click', closeActiveAccountsModal);
+            btnCloseBottom?.addEventListener('click', closeActiveAccountsModal);
+
+            // Klik backdrop di luar modal box untuk menutup
+            modalActiveAccounts?.addEventListener('click', (e) => {
+                if (e.target === modalActiveAccounts) {
+                    closeActiveAccountsModal();
+                }
+            });
+
+            // Filter Pencarian Akun Aktif
+            const filterAccounts = (query) => {
+                const q = (query || '').toLowerCase().trim();
+                let visibleCount = 0;
+
+                accountItems.forEach((item) => {
+                    const name = item.getAttribute('data-account-name') || '';
+                    const email = item.getAttribute('data-account-email') || '';
+                    const role = item.getAttribute('data-account-role') || '';
+
+                    if (!q || name.includes(q) || email.includes(q) || role.includes(q)) {
+                        item.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+
+                if (emptySearchNotice) {
+                    if (visibleCount === 0 && accountItems.length > 0) {
+                        emptySearchNotice.classList.remove('hidden');
+                    } else {
+                        emptySearchNotice.classList.add('hidden');
+                    }
+                }
+            };
+
+            searchInput?.addEventListener('input', (e) => {
+                filterAccounts(e.target.value);
+            });
+
+            // Tutup dengan tombol Escape
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && sidebar && !sidebar.classList.contains('-translate-x-full')) {
-                    closeSidebar();
+                if (e.key === 'Escape') {
+                    if (modalActiveAccounts && !modalActiveAccounts.classList.contains('hidden')) {
+                        closeActiveAccountsModal();
+                    } else if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                        closeSidebar();
+                    }
                 }
             });
         });

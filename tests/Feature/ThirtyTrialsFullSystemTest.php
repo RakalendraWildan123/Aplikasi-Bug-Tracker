@@ -47,7 +47,7 @@ class ThirtyTrialsFullSystemTest extends TestCase
         $resDash = $this->actingAs($devA)->get(route('dashboard'));
         $resDash->assertOk();
         $resDash->assertSee('Tugas Telah Diselesaikan');
-        $resDash->assertSee('Bug Perlu Ditangani');
+        $resDash->assertSee('Akun Aktif');
         $resDash->assertSee('Buka Akun Saya');
 
         // 4. Fitur Master Proyek & Modul
