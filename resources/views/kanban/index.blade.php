@@ -436,6 +436,7 @@
                                     data-current-status="{{ $task->status }}"
                                     data-project-id="{{ $task->project_id ?? '' }}"
                                     data-assigned-to="{{ $task->assigned_to ?? '' }}"
+                                    data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
                                     data-can-move="{{ $isAssignee ? 'true' : 'false' }}"
                                 >
                                     {{-- Baris Atas: Badge Proyek & Modul, Tipe Tugas & TOMBOL EDIT KARTU --}}
@@ -475,29 +476,6 @@
                                             <span class="card-type-badge px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border {{ $typeBadges[$task->task_type] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
                                                 {{ $typeLabels[$task->task_type] ?? $task->task_type }}
                                             </span>
-
-                                            {{-- TOMBOL EDIT PADA KARTU --}}
-                                            <button
-                                                type="button"
-                                                class="btn-edit-task p-1 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
-                                                title="Edit Tugas: {{ $task->title }}"
-                                                aria-label="Edit Tugas {{ $task->title }}"
-                                                data-task-id="{{ $task->id }}"
-                                                data-title="{{ $task->title }}"
-                                                data-description="{{ $task->description }}"
-                                                data-task-type="{{ $task->task_type }}"
-                                                data-status="{{ $task->status }}"
-                                                data-target-date="{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->format('Y-m-d') : '' }}"
-                                                data-blocker-notes="{{ $task->blocker_notes }}"
-                                                data-assigned-to="{{ $task->assigned_to }}"
-                                                data-developer-name="{{ $task->assignee?->name ?? 'Belum ditugaskan' }}"
-                                                data-project-code="{{ $task->project?->code }}"
-                                                data-project-name="{{ $task->project?->name }}"
-                                            >
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                                                </svg>
-                                            </button>
                                         </div>
                                     </div>
 
@@ -1392,8 +1370,7 @@
                 // Sinkronisasi status Overdue (Terlambat)
                 const overdueBadge = cardElement.querySelector('.card-overdue-badge');
                 const targetDateEl = cardElement.querySelector('.card-target-date');
-                const btnEdit = cardElement.querySelector('.btn-edit-task');
-                const targetDate = btnEdit ? btnEdit.getAttribute('data-target-date') : '';
+                const targetDate = cardElement.getAttribute('data-target-date') || '';
 
                 let isOverdue = false;
                 if (targetDate && newStatus !== 'done') {

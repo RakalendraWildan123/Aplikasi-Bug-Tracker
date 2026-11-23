@@ -207,10 +207,8 @@ class KanbanBoardTest extends TestCase
         $response->assertSee('Navigasi Cepat:');
         $response->assertSee('Semua Kolom');
         $response->assertSee('btn-quick-nav');
-        $response->assertSee('btn-edit-task');
-        $response->assertSee('modal-edit-task');
+        $response->assertDontSee('<button type="button" class="btn-edit-task', false);
         $response->assertSee('Terlambat');
-        $response->assertSee('data-developer-name="'.$user->name.'"', false);
     }
 
     public function test_authenticated_user_can_update_task_details_via_put(): void
