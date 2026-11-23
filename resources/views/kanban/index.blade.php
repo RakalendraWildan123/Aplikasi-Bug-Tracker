@@ -609,6 +609,8 @@
                                                     data-developer-name="{{ $task->assignee?->name ?? 'Belum ditugaskan' }}"
                                                     data-developer-role="{{ $task->assignee?->role_title ?? $task->assignee?->roleLabel() }}"
                                                     data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
+                                                    data-developer-avatar-bg="{{ $task->assignee?->avatar_bg ?? '#1E293B' }}"
+                                                    data-developer-photo="{{ $task->assignee?->foto_profil_url ?? '' }}"
                                                     title="Ambil Alih Tugas dari {{ $task->assignee?->name }}"
                                                 >
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -877,8 +879,11 @@
                 <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
                     {{-- Nama Developer Lain --}}
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5" id="takeover-dev-avatar">
-                            DV
+                        <div class="relative shrink-0 mt-0.5">
+                            <img id="takeover-dev-photo" src="" alt="Foto Developer" class="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs hidden">
+                            <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-2xs" id="takeover-dev-avatar">
+                                DV
+                            </div>
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="block text-[11px] font-bold uppercase tracking-wider text-amber-900/70">Developer Saat Ini</span>
@@ -1709,12 +1714,28 @@
                 const devName = btn.getAttribute('data-developer-name') || 'Belum ditugaskan';
                 const devRole = btn.getAttribute('data-developer-role') || 'Pengembang';
                 const devAvatar = btn.getAttribute('data-developer-avatar') || 'DV';
+                const devPhoto = btn.getAttribute('data-developer-photo') || '';
+                const devAvatarBg = btn.getAttribute('data-developer-avatar-bg') || '#1E293B';
+                const takeoverDevPhoto = document.getElementById('takeover-dev-photo');
 
                 takeoverTaskTitle.textContent = title;
                 takeoverProjectName.textContent = projCode ? `[${projCode}] ${projName}` : projName;
                 takeoverDevName.textContent = devName;
                 takeoverDevRole.textContent = devRole;
-                takeoverDevAvatar.textContent = devAvatar;
+
+                if (devPhoto && takeoverDevPhoto) {
+                    takeoverDevPhoto.src = devPhoto;
+                    takeoverDevPhoto.classList.remove('hidden');
+                    takeoverDevAvatar.classList.add('hidden');
+                } else {
+                    if (takeoverDevPhoto) {
+                        takeoverDevPhoto.src = '';
+                        takeoverDevPhoto.classList.add('hidden');
+                    }
+                    takeoverDevAvatar.classList.remove('hidden');
+                    takeoverDevAvatar.textContent = devAvatar;
+                    takeoverDevAvatar.style.backgroundColor = devAvatarBg;
+                }
 
                 modalTakeover?.classList.remove('hidden');
             });

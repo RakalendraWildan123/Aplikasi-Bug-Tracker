@@ -6,8 +6,8 @@
 ### 📋 INFORMASI PENGUJIAN
 * **Nama Aplikasi:** Aplikasi Monitoring & Manajemen IT Developer (Bug Tracker)
 * **Nomor Dokumen SRS:** SRS-ITDEV-2026-001-REV07 (Versi 2.0)
-* **Nama Penguji (Tester):** _____________________________
-* **Tanggal Pengujian:** _____________________________
+* **Nama Penguji (Tester):** Rakalendra Wildan
+* **Tanggal Pengujian:** 23 November
 * **Lingkungan Uji (Environment):** Local Development (PHP 8.2+ / Laravel 12 / SQLite / Chrome / Edge)
 * **URL Aplikasi:** `http://127.0.0.1:8000`
 
@@ -28,13 +28,13 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 1.1 | Login Sukses (Positive Test) | 1. Buka `/login`<br>2. Masukkan email & password benar (`admin@bugtracker.test` / `password`)<br>3. Klik tombol Masuk | Berhasil masuk dan dialihkan ke Dashboard. Sesi login aktif. | [ ] PASS<br>[ ] FAIL | |
-| 1.2 | Login Password Salah (Negative Test) | 1. Masukkan password sembarangan<br>2. Klik tombol Masuk | Sistem menolak login dan menampilkan pesan error peringatan. Tidak crash. | [ ] PASS<br>[ ] FAIL | |
-| 1.3 | Login Form Kosong (Negative Test) | 1. Kosongkan email dan password<br>2. Klik tombol Masuk | Muncul pesan validasi form bahwa email & password wajib diisi. | [ ] PASS<br>[ ] FAIL | |
-| 1.4 | Akun Dinonaktifkan | 1. Login dengan akun yang statusnya nonaktif (`is_active = 0`) | Sistem menolak akses dan memberi tahu bahwa akun dinonaktifkan. | [ ] PASS<br>[ ] FAIL | |
-| 1.5 | Edit Profil & Ganti Nama | 1. Buka menu Akun Saya (`/account/edit`)<br>2. Ubah Nama Lengkap<br>3. Masukkan password saat ini (`current_password`)<br>4. Klik Simpan | Nama profil berhasil diperbarui, muncul notifikasi sukses. | [ ] PASS<br>[ ] FAIL | |
-| 1.6 | Edit Profil Tanpa Password Lama | 1. Ubah profil tanpa mengisi password saat ini<br>2. Klik Simpan | Sistem menolak perubahan dan meminta konfirmasi password saat ini. | [ ] PASS<br>[ ] FAIL | |
-| 1.7 | Logout Sistem | 1. Klik menu / tombol Logout | Sesi keluar, halaman kembali ke form login, tombol back browser tidak membocorkan data. | [ ] PASS<br>[ ] FAIL | |
+| 1.1 | Login Sukses (Positive Test) | 1. Buka `/login`<br>2. Masukkan email & password benar (`admin@bugtracker.test` / `password`)<br>3. Klik tombol Masuk | Berhasil masuk dan dialihkan ke Dashboard. Sesi login aktif. |PASS|
+| 1.2 | Login Password Salah (Negative Test) | 1. Masukkan password sembarangan<br>2. Klik tombol Masuk | Sistem menolak login dan menampilkan pesan error peringatan. Tidak crash. |PASS|
+| 1.3 | Login Form Kosong (Negative Test) | 1. Kosongkan email dan password<br>2. Klik tombol Masuk | Muncul pesan validasi form bahwa email & password wajib diisi. |PASS|
+| 1.4 | Akun Dinonaktifkan | 1. Login dengan akun yang statusnya nonaktif (`is_active = 0`) | Sistem menolak akses dan memberi tahu bahwa akun dinonaktifkan. |PASS|
+| 1.5 | Edit Profil & Ganti Nama | 1. Buka menu Akun Saya (`/account/edit`)<br>2. Ubah Nama Lengkap<br>3. Masukkan password saat ini (`current_password`)<br>4. Klik Simpan | Nama profil berhasil diperbarui, muncul notifikasi sukses. |PASS|
+| 1.6 | Edit Profil Tanpa Password Lama | 1. Ubah profil tanpa mengisi password saat ini<br>2. Klik Simpan | Sistem menolak perubahan dan meminta konfirmasi password saat ini. |PASS|
+| 1.7 | Logout Sistem | 1. Klik menu / tombol Logout | Sesi keluar, halaman kembali ke form login, tombol back browser tidak membocorkan data. |PASS|
 
 ---
 
@@ -42,11 +42,11 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 2.1 | Tampilan Ringkasan Metrik | 1. Buka `/dashboard`<br>2. Amati 4 kartu metrik utama | Kartu menampilkan angka valid: Total Task Aktif, Bug Terbuka, Akun Aktif, dan Proyek Aktif. | [ ] PASS<br>[ ] FAIL | |
-| 2.2 | Buka Modal Akun Aktif | 1. Klik pada kartu **Akun Aktif** di Dashboard | Muncul popup modal berisi daftar nama seluruh akun tim. | [ ] PASS<br>[ ] FAIL | |
-| 2.3 | Filter Tab Status pada Modal | 1. Klik tab **Semua**<br>2. Klik tab **Aktif**<br>3. Klik tab **Nonaktif** | Daftar akun terfilter secara instan. Akun nonaktif tampil dengan penanda abu-abu/offline. | [ ] PASS<br>[ ] FAIL | |
-| 2.4 | Fitur Pencarian Akun pada Modal | 1. Ketik nama tertentu di kolom cari modal (misal: "Raka")<br>2. Ketik nama yang tidak ada | Hasil langsung tersaring real-time. Jika tidak ada, muncul pesan "Tidak ditemukan". | [ ] PASS<br>[ ] FAIL | |
-| 2.5 | Tutup Modal Akun | 1. Klik tombol [ × ] atau klik di luar area modal | Modal menutup dengan mulus dan mengembalikan fokus layar ke Dashboard. | [ ] PASS<br>[ ] FAIL | |
+| 2.1 | Tampilan Ringkasan Metrik | 1. Buka `/dashboard`<br>2. Amati 4 kartu metrik utama | Kartu menampilkan angka valid: Total Task Aktif, Bug Terbuka, Akun Aktif, dan Proyek Aktif. |PASS|
+| 2.2 | Buka Modal Akun Aktif | 1. Klik pada kartu **Akun Aktif** di Dashboard | Muncul popup modal berisi daftar nama seluruh akun tim. |PASS|
+| 2.3 | Filter Tab Status pada Modal | 1. Klik tab **Semua**<br>2. Klik tab **Aktif**<br>3. Klik tab **Nonaktif** | Daftar akun terfilter secara instan. Akun nonaktif tampil dengan penanda abu-abu/offline. | PASS|
+| 2.4 | Fitur Pencarian Akun pada Modal | 1. Ketik nama tertentu di kolom cari modal (misal: "Raka")<br>2. Ketik nama yang tidak ada | Hasil langsung tersaring real-time. Jika tidak ada, muncul pesan "Tidak ditemukan". |PASS|
+| 2.5 | Tutup Modal Akun | 1. Klik tombol [ × ] atau klik di luar area modal | Modal menutup dengan mulus dan mengembalikan fokus layar ke Dashboard. |PASS|
 
 ---
 
@@ -54,13 +54,13 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 3.1 | Tampilan 4 Kolom Alur | 1. Buka menu Papan Kanban (`/kanban`) | Menampilkan 4 kolom lengkap: To Do, In Progress, Review, dan Done. | [ ] PASS<br>[ ] FAIL | |
-| 3.2 | Drag & Drop Kartu Antar Kolom | 1. Klik & tahan kartu pada To Do<br>2. Geser (drag) dan lepas (drop) ke In Progress | Kartu berpindah kolom seketika tanpa reload halaman. Status di database terupdate. | [ ] PASS<br>[ ] FAIL | |
-| 3.3 | Tombol Geser Cepat [ ◀ ] dan [ ▶ ] | 1. Klik tombol panah kanan pada kartu To Do<br>2. Klik tombol panah kiri | Kartu berpindah ke kolom berikutnya atau sebelumnya secara instan. | [ ] PASS<br>[ ] FAIL | |
-| 3.4 | Filter Kanban per Proyek | 1. Pilih proyek tertentu pada dropdown filter atas | Hanya kartu tugas dari proyek terpilih yang ditampilkan pada papan. | [ ] PASS<br>[ ] FAIL | |
-| 3.5 | Filter Kanban per Developer | 1. Pilih nama developer pada dropdown PIC | Hanya tugas milik developer tersebut yang muncul di papan. | [ ] PASS<br>[ ] FAIL | |
-| 3.6 | Kartu Berstatus Selesai (Done) | 1. Pindahkan kartu ke kolom Done | Kartu bertanda selesai dan sistem merekam stempel waktu selesai (`completed_at`). | [ ] PASS<br>[ ] FAIL | |
-| 3.7 | Indikator Overdue | 1. Amati kartu yang target tanggalnya sudah lewat | Muncul badge peringatan Overdue/Terlambat dengan penanda warna merah. | [ ] PASS<br>[ ] FAIL | |
+| 3.1 | Tampilan 4 Kolom Alur | 1. Buka menu Papan Kanban (`/kanban`) | Menampilkan 4 kolom lengkap: To Do, In Progress, Review, dan Done. |PASS|
+| 3.2 | Drag & Drop Kartu Antar Kolom | 1. Klik & tahan kartu pada To Do<br>2. Geser (drag) dan lepas (drop) ke In Progress | Kartu berpindah kolom seketika tanpa reload halaman. Status di database terupdate. |PASS|
+| 3.3 | Tombol Geser Cepat [ ◀ ] dan [ ▶ ] | 1. Klik tombol panah kanan pada kartu To Do<br>2. Klik tombol panah kiri | Kartu berpindah ke kolom berikutnya atau sebelumnya secara instan. |PASS|
+| 3.4 | Filter Kanban per Proyek | 1. Pilih proyek tertentu pada dropdown filter atas | Hanya kartu tugas dari proyek terpilih yang ditampilkan pada papan. |PASS|
+| 3.5 | Filter Kanban per Developer | 1. Pilih nama developer pada dropdown PIC | Hanya tugas milik developer tersebut yang muncul di papan. |PASS|
+| 3.6 | Kartu Berstatus Selesai (Done) | 1. Pindahkan kartu ke kolom Done | Kartu bertanda selesai dan sistem merekam stempel waktu selesai (`completed_at`). |PASS|
+| 3.7 | Indikator Overdue | 1. Amati kartu yang target tanggalnya sudah lewat | Muncul badge peringatan Overdue/Terlambat dengan penanda warna merah. |PASS|
 
 ---
 
@@ -68,9 +68,9 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 4.1 | Tambah Tugas Baru (Normal) | 1. Buka `/tasks`<br>2. Klik Tambah Task<br>3. Pilih Proyek, Modul, PIC, Judul, Tgl Mulai & Target<br>4. Klik Simpan | Tugas baru berhasil disimpan dan muncul pada tabel serta papan Kanban. | [ ] PASS<br>[ ] FAIL | |
-| 4.2 | Validasi Form Task Kosong | 1. Buka form Tambah Task<br>2. Langsung klik Simpan tanpa mengisi data | Validasi muncul, field wajib ditandai merah, form tidak submit. | [ ] PASS<br>[ ] FAIL | |
-| 4.3 | Edit & Update Data Task | 1. Klik tombol Edit pada salah satu task<br>2. Ubah judul atau catatan kendala (blocker)<br>3. Klik Perbarui | Perubahan berhasil tersimpan dan langsung terlihat pada tabel. | [ ] PASS<br>[ ] FAIL | |
+| 4.1 | Tambah Tugas Baru (Normal) | 1. Buka `/tasks`<br>2. Klik Tambah Task<br>3. Pilih Proyek, Modul, PIC, Judul, Tgl Mulai & Target<br>4. Klik Simpan | Tugas baru berhasil disimpan dan muncul pada tabel serta papan Kanban. |PASS|
+| 4.2 | Validasi Form Task Kosong | 1. Buka form Tambah Task<br>2. Langsung klik Simpan tanpa mengisi data | Validasi muncul, field wajib ditandai merah, form tidak submit. |PASS|
+| 4.3 | Edit & Update Data Task | 1. Klik tombol Edit pada salah satu task<br>2. Ubah judul atau catatan kendala (blocker)<br>3. Klik Perbarui | Perubahan berhasil tersimpan dan langsung terlihat pada tabel. | PASS|
 | 4.4 | Fitur Ambil Alih (Take Over) | 1. Cari task yang PIC-nya bukan akun Anda<br>2. Klik tombol **[ ✋ Ambil Alih ]**<br>3. Konfirmasi pada dialog pop-up | PIC tugas otomatis berganti menjadi akun Anda, tercatat di `handover_logs`. | [ ] PASS<br>[ ] FAIL | |
 | 4.5 | Hapus Task | 1. Klik tombol Hapus pada task<br>2. Konfirmasi penghapusan | Task terhapus dari daftar dan database secara permanen. | [ ] PASS<br>[ ] FAIL | |
 

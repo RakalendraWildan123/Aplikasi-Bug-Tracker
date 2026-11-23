@@ -633,6 +633,8 @@
                                             data-developer-name="{{ $task->assignee?->name ?? 'Belum Ditugaskan' }}"
                                             data-developer-role="{{ $task->assignee?->role ?? 'Developer' }}"
                                             data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
+                                            data-developer-avatar-bg="{{ $task->assignee?->avatar_bg ?? '#1E293B' }}"
+                                            data-developer-photo="{{ $task->assignee?->foto_profil_url ?? '' }}"
                                         >
                                             <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
@@ -848,6 +850,8 @@
                                                         data-developer-name="{{ $task->assignee?->name ?? 'Belum Ditugaskan' }}"
                                                         data-developer-role="{{ $task->assignee?->role ?? 'Developer' }}"
                                                         data-developer-avatar="{{ $task->assignee?->avatar ?? 'DV' }}"
+                                                        data-developer-avatar-bg="{{ $task->assignee?->avatar_bg ?? '#1E293B' }}"
+                                                        data-developer-photo="{{ $task->assignee?->foto_profil_url ?? '' }}"
                                                     >
                                                         <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
@@ -1250,11 +1254,14 @@
                 <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
                     {{-- Nama Developer Lain --}}
                     <div class="flex items-start gap-3">
-                        <div
-                            id="takeover-dev-avatar"
-                            class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-xs"
-                        >
-                            DV
+                        <div class="relative shrink-0 mt-0.5">
+                            <img id="takeover-dev-photo" src="" alt="Foto Developer" class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs hidden">
+                            <div
+                                id="takeover-dev-avatar"
+                                class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-xs"
+                            >
+                                DV
+                            </div>
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="block text-[11px] font-bold uppercase tracking-wider text-amber-900">Developer Saat Ini</span>
@@ -1678,12 +1685,28 @@
                 const devName = btn.getAttribute('data-developer-name') || 'Belum ditugaskan';
                 const devRole = btn.getAttribute('data-developer-role') || 'Pengembang';
                 const devAvatar = btn.getAttribute('data-developer-avatar') || 'DV';
+                const devPhoto = btn.getAttribute('data-developer-photo') || '';
+                const devAvatarBg = btn.getAttribute('data-developer-avatar-bg') || '#1E293B';
+                const takeoverDevPhoto = document.getElementById('takeover-dev-photo');
 
                 takeoverTaskTitle.textContent = title;
                 takeoverProjectName.textContent = projCode ? `[${projCode}] ${projName}` : projName;
                 takeoverDevName.textContent = devName;
                 takeoverDevRole.textContent = devRole;
-                takeoverDevAvatar.textContent = devAvatar;
+
+                if (devPhoto && takeoverDevPhoto) {
+                    takeoverDevPhoto.src = devPhoto;
+                    takeoverDevPhoto.classList.remove('hidden');
+                    takeoverDevAvatar.classList.add('hidden');
+                } else {
+                    if (takeoverDevPhoto) {
+                        takeoverDevPhoto.src = '';
+                        takeoverDevPhoto.classList.add('hidden');
+                    }
+                    takeoverDevAvatar.classList.remove('hidden');
+                    takeoverDevAvatar.textContent = devAvatar;
+                    takeoverDevAvatar.style.backgroundColor = devAvatarBg;
+                }
 
                 modalTakeover?.classList.remove('hidden');
             });
