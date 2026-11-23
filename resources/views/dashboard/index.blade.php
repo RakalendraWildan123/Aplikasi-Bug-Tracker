@@ -785,11 +785,18 @@
                         data-account-status="{{ $isActive ? 'active' : 'inactive' }}"
                     >
                         <div class="flex items-center gap-3 min-w-0">
-                            {{-- Avatar Initial dengan Indikator Online/Offline --}}
+                            {{-- Avatar / Foto Profil dengan Indikator Online/Offline --}}
                             <div class="relative shrink-0">
-                                <div class="w-10 h-10 rounded-full {{ $isActive ? ($isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700') : 'bg-slate-200 text-slate-500' }} flex items-center justify-center font-bold text-xs shadow-2xs">
-                                    {{ $initials }}
-                                </div>
+                                @if ($acc->foto_profil_url)
+                                    <img src="{{ $acc->foto_profil_url }}" alt="{{ $acc->name }}" class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs">
+                                @else
+                                    <div
+                                        class="w-10 h-10 rounded-full {{ $isActive ? ($isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700') : 'bg-slate-200 text-slate-500' }} flex items-center justify-center font-bold text-xs shadow-2xs"
+                                        style="{{ $acc->avatar_bg && $isActive ? 'background-color: ' . $acc->avatar_bg . '; color: white;' : '' }}"
+                                    >
+                                        {{ $acc->avatar ?? $initials }}
+                                    </div>
+                                @endif
                                 @if ($isActive)
                                     <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-200" title="Akun Aktif"></span>
                                 @else

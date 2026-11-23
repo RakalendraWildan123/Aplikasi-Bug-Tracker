@@ -192,6 +192,7 @@ class DashboardUiTest extends TestCase
             'email' => 'budi.aktif@example.com',
             'role' => 'developer',
             'is_active' => true,
+            'foto_profil' => 'profile-photos/sample-dev.jpg',
         ]);
 
         $inactiveDev = User::factory()->create([
@@ -211,6 +212,7 @@ class DashboardUiTest extends TestCase
         $response->assertSee('doni.nonaktif@example.com');
         $response->assertSee('Aktif');
         $response->assertSee('Nonaktif');
+        $response->assertSee('/storage/profile-photos/sample-dev.jpg');
         $response->assertSee('data-status-filter="all"', false);
         $response->assertSee('data-status-filter="active"', false);
         $response->assertSee('data-status-filter="inactive"', false);
