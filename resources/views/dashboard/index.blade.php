@@ -473,7 +473,7 @@
                                             {{-- Waktu Update --}}
                                             <span>Diperbarui {{ $task->updated_at ? $task->updated_at->diffForHumans() : '-' }}</span>
 
-                                            @if ($task->blocker_notes)
+                                            @if ($task->blocker_notes && $task->status !== 'done')
                                                 <span>&bull;</span>
                                                 <span class="text-rose-600 font-bold inline-flex items-center gap-0.5">
                                                     Kendala: {{ Str::limit($task->blocker_notes, 30) }}

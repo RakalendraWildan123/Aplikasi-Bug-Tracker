@@ -41,7 +41,7 @@ class DashboardController extends Controller
             'bugs_medium_total' => Bug::where('severity', 'medium')->count(),
             'bugs_low_total' => Bug::where('severity', 'low')->count(),
             'total_releases' => RepoHistory::count(),
-            'blocker_tasks' => Task::whereNotNull('blocker_notes')->where('blocker_notes', '!=', '')->count(),
+            'blocker_tasks' => Task::where('status', '!=', 'done')->whereNotNull('blocker_notes')->where('blocker_notes', '!=', '')->count(),
             'active_accounts_count' => User::where('is_active', true)->count(),
             'inactive_accounts_count' => User::where('is_active', false)->count(),
             'total_accounts_count' => User::count(),
@@ -59,8 +59,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. Tugas Tertahan Kendala (Blockers)
+        // 4. Tugas Tertahan Kendala (Blockers - hanya tugas yang belum selesai)
         $blockerTasks = Task::with(['project', 'assignee'])
+            ->where('status', '!=', 'done')
             ->whereNotNull('blocker_notes')
             ->where('blocker_notes', '!=', '')
             ->latest('updated_at')

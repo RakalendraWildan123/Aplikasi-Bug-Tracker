@@ -106,6 +106,25 @@ class DashboardUiTest extends TestCase
         $response->assertSee('Tinjau di Kanban');
     }
 
+    public function test_dashboard_does_not_render_blocker_alert_when_task_is_done(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['code' => 'PAYMENT']);
+
+        Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Sistem Verifikasi Pembayaran Selesai',
+            'status' => 'done',
+            'blocker_notes' => 'Kendala lama yang sudah terselesaikan',
+        ]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertDontSee('Perhatian: Terdapat');
+        $response->assertDontSee('Kendala lama yang sudah terselesaikan');
+    }
+
     public function test_dashboard_sidebar_does_not_contain_logout_button(): void
     {
         $user = User::factory()->create();
