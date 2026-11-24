@@ -1069,6 +1069,92 @@
     </div>
 </div>
 
+{{-- MODAL 5: KONFIRMASI KONVERSI ACTION ITEM KE TASK (Pop-up Dialog Konfirmasi Elegan) --}}
+<div
+    id="modal-confirm-convert-task"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden"
+    aria-modal="true"
+    role="dialog"
+>
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+        <div class="p-6">
+            <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mx-auto mb-4 shadow-2xs">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 text-center">Konversi Tindak Lanjut ke Task?</h3>
+            <p class="text-xs text-slate-500 mt-1.5 text-center">
+                Rencana tindakan berikut akan otomatis dibuatkan sebagai <strong>Tugas Baru (Task)</strong> di daftar tugas dan papan Kanban:
+            </p>
+
+            {{-- Detail Rencana --}}
+            <div class="mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div>
+                    <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Rencana Tindakan</span>
+                    <p id="convert-confirm-plan" class="text-xs font-semibold text-slate-900 mt-0.5"></p>
+                </div>
+                <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between text-[11px] text-slate-600">
+                    <div>
+                        <span class="text-slate-400">PIC:</span>
+                        <span id="convert-confirm-pic" class="font-semibold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400">Target:</span>
+                        <span id="convert-confirm-target" class="font-semibold text-slate-800"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-end gap-2.5">
+                <button
+                    type="button"
+                    id="btn-cancel-convert-modal"
+                    class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="button"
+                    id="btn-confirm-convert-action"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 transition shadow-sm cursor-pointer"
+                >
+                    <span id="convert-spinner" class="hidden">
+                        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </span>
+                    <span id="convert-btn-text">Ya, Konversi ke Task</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- POP-UP TOAST NOTIFIKASI SUKSES (Floating Alert Melayang) --}}
+<div
+    id="eval-toast-notification"
+    class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-xl border border-emerald-200 bg-white p-4 text-slate-900 shadow-2xl backdrop-blur-xs transition-all animate-in slide-in-from-top-2 duration-200"
+>
+    <div class="flex items-start gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shrink-0 mt-0.5 shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+            </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+            <h4 class="text-xs font-bold text-slate-900">Berhasil Dikonversi!</h4>
+            <p id="eval-toast-text" class="text-xs text-slate-600 mt-0.5">Rencana tindakan telah dibuat menjadi Task baru di daftar tugas & papan Kanban.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('eval-toast-notification').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
 {{-- JAVASCRIPT LOGIC (Modal Interactivity & Collapsible Sidebar) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -1097,10 +1183,21 @@
         const editModal = document.getElementById('modal-edit-evaluation');
         const deleteModal = document.getElementById('modal-delete-evaluation');
         const detailModal = document.getElementById('modal-detail-evaluation');
+        const convertModal = document.getElementById('modal-confirm-convert-task');
 
         const formEdit = document.getElementById('form-edit-evaluation');
         const formDelete = document.getElementById('form-delete-evaluation');
         const formAddActionItem = document.getElementById('form-add-action-item');
+
+        const convertConfirmPlan = document.getElementById('convert-confirm-plan');
+        const convertConfirmPic = document.getElementById('convert-confirm-pic');
+        const convertConfirmTarget = document.getElementById('convert-confirm-target');
+        const btnConfirmConvert = document.getElementById('btn-confirm-convert-action');
+        const btnCancelConvert = document.getElementById('btn-cancel-convert-modal');
+        const convertSpinner = document.getElementById('convert-spinner');
+        const convertBtnText = document.getElementById('convert-btn-text');
+
+        let activeConvertUrl = null;
 
         function openModal(el) {
             if (el) el.classList.remove('hidden');
@@ -1111,10 +1208,15 @@
             if (editModal) editModal.classList.add('hidden');
             if (deleteModal) deleteModal.classList.add('hidden');
             if (detailModal) detailModal.classList.add('hidden');
+            if (convertModal) convertModal.classList.add('hidden');
         }
 
         document.querySelectorAll('.btn-close-modal').forEach(btn => {
             btn.addEventListener('click', closeAllModals);
+        });
+
+        btnCancelConvert?.addEventListener('click', () => {
+            if (convertModal) convertModal.classList.add('hidden');
         });
 
         document.addEventListener('keydown', function (e) {
@@ -1222,6 +1324,8 @@
                                     data-action-id="${item.id}"
                                     data-convert-url="${item.convert_url}"
                                     data-action-plan="${(item.action_plan || '').replace(/"/g, '&quot;')}"
+                                    data-assignee-name="${(item.assignee_name || 'Belum Ditugaskan').replace(/"/g, '&quot;')}"
+                                    data-target-date="${item.target_date_formatted || '-'}"
                                     title="Konversi Action Item ini menjadi Task baru"
                                 >
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1263,30 +1367,33 @@
             });
         });
 
-        // 1-Klik Konversi Action Item ke Task
-        document.addEventListener('click', async (e) => {
+        // 1-Klik Konversi Action Item ke Task (Buka Pop-up Dialog Konfirmasi)
+        document.addEventListener('click', (e) => {
             const btn = e.target.closest('.btn-convert-action-item');
             if (!btn) return;
 
-            const convertUrl = btn.getAttribute('data-convert-url');
+            activeConvertUrl = btn.getAttribute('data-convert-url');
             const actionPlan = btn.getAttribute('data-action-plan') || 'Action Item';
+            const pic = btn.getAttribute('data-assignee-name') || 'Belum Ditugaskan';
+            const targetDate = btn.getAttribute('data-target-date') || '-';
 
-            if (!confirm(`Konversi rencana tindakan:\n"${actionPlan}"\n\nMenjadi tugas baru (Task) di papan Kanban & daftar tugas?`)) {
-                return;
-            }
+            if (convertConfirmPlan) convertConfirmPlan.textContent = actionPlan;
+            if (convertConfirmPic) convertConfirmPic.textContent = pic;
+            if (convertConfirmTarget) convertConfirmTarget.textContent = targetDate;
 
-            btn.disabled = true;
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `
-                <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                <span>Mengonversi...</span>
-            `;
+            openModal(convertModal);
+        });
+
+        // Eksekusi Konversi saat tombol konfirmasi pop-up diklik
+        btnConfirmConvert?.addEventListener('click', async () => {
+            if (!activeConvertUrl) return;
+
+            btnConfirmConvert.disabled = true;
+            if (convertSpinner) convertSpinner.classList.remove('hidden');
+            if (convertBtnText) convertBtnText.textContent = 'Mengonversi...';
 
             try {
-                const res = await fetch(convertUrl, {
+                const res = await fetch(activeConvertUrl, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1297,17 +1404,28 @@
 
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert(data.message || 'Action item berhasil dikonversi menjadi tugas!');
-                    window.location.reload();
+                    if (convertModal) convertModal.classList.add('hidden');
+                    if (detailModal) detailModal.classList.add('hidden');
+
+                    const toast = document.getElementById('eval-toast-notification');
+                    const toastText = document.getElementById('eval-toast-text');
+                    if (toast && toastText) {
+                        toastText.textContent = data.message || 'Action item berhasil dikonversi menjadi tugas baru di daftar tugas!';
+                        toast.classList.remove('hidden');
+                    }
+
+                    setTimeout(() => window.location.reload(), 1200);
                 } else {
                     alert(data.message || 'Gagal mengonversi action item.');
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
+                    btnConfirmConvert.disabled = false;
+                    if (convertSpinner) convertSpinner.classList.add('hidden');
+                    if (convertBtnText) convertBtnText.textContent = 'Ya, Konversi ke Task';
                 }
             } catch (err) {
                 alert('Terjadi kesalahan koneksi saat memproses konversi.');
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
+                btnConfirmConvert.disabled = false;
+                if (convertSpinner) convertSpinner.classList.add('hidden');
+                if (convertBtnText) convertBtnText.textContent = 'Ya, Konversi ke Task';
             }
         });
     });
