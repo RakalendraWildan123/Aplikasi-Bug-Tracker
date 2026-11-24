@@ -1155,6 +1155,51 @@
     </div>
 </div>
 
+{{-- MODAL 6: POP-UP NOTIFIKASI DIALOG ELEGAN (Pengganti alert bawaan & penampil notifikasi status) --}}
+<div
+    id="modal-eval-popup-notification"
+    class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden"
+    aria-modal="true"
+    role="dialog"
+>
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150 p-6 text-center">
+        {{-- Ikon Pop-Up --}}
+        <div id="eval-popup-icon-container" class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-emerald-100 text-emerald-600">
+            <svg id="eval-popup-icon-success" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+            </svg>
+            <svg id="eval-popup-icon-warning" class="w-7 h-7 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+            <svg id="eval-popup-icon-info" class="w-7 h-7 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+        </div>
+
+        <h3 id="eval-popup-title" class="text-base font-bold text-slate-900">Notifikasi Pop-up</h3>
+        <p id="eval-popup-message" class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+            Pesan notifikasi
+        </p>
+
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            <button
+                type="button"
+                id="eval-popup-btn-close"
+                class="w-full px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-900 hover:bg-slate-800 active:scale-95 transition shadow-sm cursor-pointer"
+            >
+                OK, Mengerti
+            </button>
+            <a
+                href="{{ route('tasks.index') }}"
+                id="eval-popup-btn-view-task"
+                class="hidden w-full px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition shadow-sm text-center"
+            >
+                Buka Daftar Task
+            </a>
+        </div>
+    </div>
+</div>
+
 {{-- JAVASCRIPT LOGIC (Modal Interactivity & Collapsible Sidebar) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -1184,6 +1229,55 @@
         const deleteModal = document.getElementById('modal-delete-evaluation');
         const detailModal = document.getElementById('modal-detail-evaluation');
         const convertModal = document.getElementById('modal-confirm-convert-task');
+        const popupModal = document.getElementById('modal-eval-popup-notification');
+
+        const popupIconContainer = document.getElementById('eval-popup-icon-container');
+        const popupIconSuccess = document.getElementById('eval-popup-icon-success');
+        const popupIconWarning = document.getElementById('eval-popup-icon-warning');
+        const popupIconInfo = document.getElementById('eval-popup-icon-info');
+        const popupTitle = document.getElementById('eval-popup-title');
+        const popupMessage = document.getElementById('eval-popup-message');
+        const popupBtnClose = document.getElementById('eval-popup-btn-close');
+        const popupBtnViewTask = document.getElementById('eval-popup-btn-view-task');
+        let popupConfirmCallback = null;
+
+        function showEvalPopup(title, message, type = 'success', showViewTask = false, onConfirm = null) {
+            if (popupTitle) popupTitle.textContent = title;
+            if (popupMessage) popupMessage.textContent = message;
+            popupConfirmCallback = onConfirm;
+
+            if (popupIconSuccess) popupIconSuccess.classList.add('hidden');
+            if (popupIconWarning) popupIconWarning.classList.add('hidden');
+            if (popupIconInfo) popupIconInfo.classList.add('hidden');
+
+            if (type === 'success') {
+                if (popupIconContainer) popupIconContainer.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-emerald-100 text-emerald-600';
+                if (popupIconSuccess) popupIconSuccess.classList.remove('hidden');
+            } else if (type === 'warning' || type === 'error') {
+                if (popupIconContainer) popupIconContainer.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-amber-100 text-amber-600';
+                if (popupIconWarning) popupIconWarning.classList.remove('hidden');
+            } else {
+                if (popupIconContainer) popupIconContainer.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-blue-100 text-blue-600';
+                if (popupIconInfo) popupIconInfo.classList.remove('hidden');
+            }
+
+            if (showViewTask && popupBtnViewTask) {
+                popupBtnViewTask.classList.remove('hidden');
+                if (popupBtnClose) popupBtnClose.textContent = 'Tutup';
+            } else {
+                if (popupBtnViewTask) popupBtnViewTask.classList.add('hidden');
+                if (popupBtnClose) popupBtnClose.textContent = 'OK, Mengerti';
+            }
+
+            openModal(popupModal);
+        }
+
+        popupBtnClose?.addEventListener('click', () => {
+            if (popupModal) popupModal.classList.add('hidden');
+            if (typeof popupConfirmCallback === 'function') {
+                popupConfirmCallback();
+            }
+        });
 
         const formEdit = document.getElementById('form-edit-evaluation');
         const formDelete = document.getElementById('form-delete-evaluation');
@@ -1209,6 +1303,7 @@
             if (deleteModal) deleteModal.classList.add('hidden');
             if (detailModal) detailModal.classList.add('hidden');
             if (convertModal) convertModal.classList.add('hidden');
+            if (popupModal) popupModal.classList.add('hidden');
         }
 
         document.querySelectorAll('.btn-close-modal').forEach(btn => {
@@ -1402,32 +1497,55 @@
                     }
                 });
 
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
+                if (convertModal) convertModal.classList.add('hidden');
+                if (detailModal) detailModal.classList.add('hidden');
+
                 if (res.ok && data.success) {
-                    if (convertModal) convertModal.classList.add('hidden');
-                    if (detailModal) detailModal.classList.add('hidden');
-
-                    const toast = document.getElementById('eval-toast-notification');
-                    const toastText = document.getElementById('eval-toast-text');
-                    if (toast && toastText) {
-                        toastText.textContent = data.message || 'Action item berhasil dikonversi menjadi tugas baru di daftar tugas!';
-                        toast.classList.remove('hidden');
-                    }
-
-                    setTimeout(() => window.location.reload(), 1200);
+                    showEvalPopup(
+                        'Berhasil Dikonversi!',
+                        data.message || 'Action item berhasil dikonversi menjadi tugas baru di daftar tugas & papan Kanban.',
+                        'success',
+                        true,
+                        () => window.location.reload()
+                    );
                 } else {
-                    alert(data.message || 'Gagal mengonversi action item.');
-                    btnConfirmConvert.disabled = false;
-                    if (convertSpinner) convertSpinner.classList.add('hidden');
-                    if (convertBtnText) convertBtnText.textContent = 'Ya, Konversi ke Task';
+                    showEvalPopup(
+                        'Pemberitahuan Konversi',
+                        data.message || 'Action item ini tidak dapat dikonversi atau sudah pernah dikonversi sebelumnya.',
+                        'warning',
+                        false,
+                        () => window.location.reload()
+                    );
                 }
             } catch (err) {
-                alert('Terjadi kesalahan koneksi saat memproses konversi.');
+                if (convertModal) convertModal.classList.add('hidden');
+                showEvalPopup(
+                    'Pemberitahuan',
+                    'Terjadi kendala saat memproses konversi rencana tindak lanjut. Silakan coba kembali.',
+                    'warning'
+                );
+            } finally {
                 btnConfirmConvert.disabled = false;
                 if (convertSpinner) convertSpinner.classList.add('hidden');
                 if (convertBtnText) convertBtnText.textContent = 'Ya, Konversi ke Task';
             }
         });
+
+        {{-- Trigger Pop-up Notifikasi Otomatis dari Flash Session --}}
+        @if (session('status') || session('success_message'))
+            showEvalPopup(
+                'Berhasil!',
+                @json(session('status') ?? session('success_message')),
+                'success'
+            );
+        @elseif (session('error_message'))
+            showEvalPopup(
+                'Pemberitahuan',
+                @json(session('error_message')),
+                'warning'
+            );
+        @endif
     });
 </script>
 

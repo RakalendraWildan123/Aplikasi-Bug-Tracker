@@ -94,8 +94,8 @@
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
 | 6.1 | Tampilan Daftar Evaluasi | 1. Buka menu Evaluasi Aplikasi (`/evaluations`) | Tabel menampilkan daftar evaluasi sistem berkala per proyek. Layout rapi. |PASS|
-| 6.2 | Tambah Action Item (Rencana Tindak Lanjut) | 1. Klik tombol **Tindak Lanjut / Detail** pada salah satu baris evaluasi proyek<br>2. Pada form Tambah Tindak Lanjut, isi Judul Rencana, PIC, dan Target Selesai<br>3. Klik **Tambahkan Action Item** | Evaluasi ter-generate otomatis oleh sistem per proyek, dan Action Item baru berhasil ditambahkan ke daftar rencana tindak lanjut. | [ ] PASS<br>[ ] FAIL | |
-| 6.3 | Konversi 1-Klik Action Item ke Task | 1. Pada baris Action Item, klik tombol **Konversi ke Task** | Action item langsung berubah menjadi Task baru di daftar tugas dan Kanban. | [ ] PASS<br>[ ] FAIL | |
+| 6.2 | Tambah Action Item (Rencana Tindak Lanjut) | 1. Klik tombol **Tindak Lanjut / Detail** pada salah satu baris evaluasi proyek<br>2. Pada form Tambah Tindak Lanjut, isi Judul Rencana, PIC, dan Target Selesai<br>3. Klik **Tambahkan Action Item** | Evaluasi ter-generate otomatis oleh sistem per proyek, dan Action Item baru berhasil ditambahkan ke daftar rencana tindak lanjut. |PASS|
+| 6.3 | Konversi 1-Klik Action Item ke Task | 1. Pada baris Action Item, klik tombol **Konversi ke Task**<br>2. Konfirmasi pada pop-up dialog | Muncul pop-up notifikasi berhasil, dan Action item langsung berubah menjadi Task baru di daftar tugas dan papan Kanban. | PASS | Fitur konversi 1-klik dilengkapi Pop-up Notifikasi dialog elegan & toast sukses. |
 
 ---
 

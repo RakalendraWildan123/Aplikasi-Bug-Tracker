@@ -345,6 +345,7 @@ class AppEvaluationUiTest extends TestCase
         $response->assertSee('id="modal-delete-evaluation"', false);
         $response->assertSee('id="modal-detail-evaluation"', false);
         $response->assertSee('id="modal-confirm-convert-task"', false);
+        $response->assertSee('id="modal-eval-popup-notification"', false);
     }
 
     public function test_evaluations_sidebar_does_not_contain_logout_button(): void
