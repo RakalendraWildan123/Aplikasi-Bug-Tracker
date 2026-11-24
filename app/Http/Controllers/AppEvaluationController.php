@@ -6,6 +6,7 @@ use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
 use App\Models\Project;
+use App\Models\Task;
 use App\Services\AppEvaluationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -308,6 +309,74 @@ class AppEvaluationController extends Controller
         return redirect()
             ->route('evaluations.index')
             ->with('status', 'Rencana tindak lanjut berhasil dihapus.');
+    }
+
+    /**
+     * Konversi 1-Klik Action Item evaluasi menjadi Task baru.
+     */
+    public function convertToTask(Request $request, ActionItem $actionItem): JsonResponse|RedirectResponse
+    {
+        if ($actionItem->status === 'converted_to_task' && $actionItem->converted_task_id) {
+            $message = 'Action item ini sudah dikonversi menjadi tugas sebelumnya.';
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+            return redirect()->back()->with('error_message', $message);
+        }
+
+        $evaluation = $actionItem->evaluation()->with('project')->first();
+        if (! $evaluation || ! $evaluation->project) {
+            $message = 'Data proyek evaluasi tidak ditemukan.';
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 404);
+            }
+            return redirect()->back()->with('error_message', $message);
+        }
+
+        $user = $request->user();
+        $title = $actionItem->action_plan;
+        if (mb_strlen($title) > 250) {
+            $title = mb_substr($title, 0, 247) . '...';
+        }
+
+        // Buat Task baru di database
+        $task = Task::query()->create([
+            'project_id' => $evaluation->project_id,
+            'module_id' => null,
+            'created_by' => $user?->id,
+            'assigned_to' => $actionItem->assigned_to,
+            'title' => $title,
+            'description' => "Tindak lanjut evaluasi aplikasi periode {$evaluation->period_review} untuk proyek {$evaluation->project->name}.\n\nRencana tindakan: {$actionItem->action_plan}",
+            'task_type' => 'enhancement',
+            'status' => 'todo',
+            'start_date' => now()->toDateString(),
+            'target_date' => $actionItem->target_date ? $actionItem->target_date->toDateString() : now()->addDays(7)->toDateString(),
+        ]);
+
+        // Perbarui status ActionItem dan simpan foreign key converted_task_id
+        $actionItem->update([
+            'status' => 'converted_to_task',
+            'converted_task_id' => $task->id,
+        ]);
+
+        $message = "Action item berhasil dikonversi menjadi tugas '{$task->title}'.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $task->fresh(['project', 'assignee']),
+                'action_item' => $actionItem->fresh(['assignee', 'convertedTask']),
+            ], 201);
+        }
+
+        return redirect()->route('evaluations.index')->with('status', $message);
     }
 
     /**

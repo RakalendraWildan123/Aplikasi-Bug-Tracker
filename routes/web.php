@@ -57,6 +57,7 @@ Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     Route::delete('/evaluations/{evaluation}', [\App\Http\Controllers\AppEvaluationController::class, 'destroy'])->name('evaluations.destroy');
 
     Route::post('/evaluations/{evaluation}/action-items', [\App\Http\Controllers\AppEvaluationController::class, 'storeActionItem'])->name('evaluations.action-items.store');
+    Route::post('/evaluations/action-items/{actionItem}/convert-to-task', [\App\Http\Controllers\AppEvaluationController::class, 'convertToTask'])->name('evaluations.action-items.convert-to-task');
     Route::patch('/evaluations/action-items/{actionItem}/status', [\App\Http\Controllers\AppEvaluationController::class, 'updateActionItemStatus'])->name('evaluations.action-items.update-status');
     Route::delete('/evaluations/action-items/{actionItem}', [\App\Http\Controllers\AppEvaluationController::class, 'destroyActionItem'])->name('evaluations.action-items.destroy');
 

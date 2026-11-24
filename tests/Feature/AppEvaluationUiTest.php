@@ -6,6 +6,7 @@ use App\Models\ActionItem;
 use App\Models\AppEvaluation;
 use App\Models\Developer;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -458,5 +459,79 @@ class AppEvaluationUiTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('evaluation.period_review', 'Single Eval Q4');
         $response->assertJsonPath('evaluation.project.name', 'Proyek Single Eval');
+    }
+
+    public function test_user_can_convert_action_item_to_task_via_post(): void
+    {
+        $user = User::factory()->create();
+        $developer = User::factory()->create(['name' => 'Dev Tindak Lanjut']);
+        $project = Project::factory()->create(['name' => 'Proyek Konversi Task']);
+
+        $evaluation = AppEvaluation::create([
+            'project_id' => $project->id,
+            'evaluation_date' => '2026-11-20',
+            'period_review' => 'Periode 2026-11',
+            'operational_issues' => 'Performa query lambat saat ekspor laporan.',
+        ]);
+
+        $item = ActionItem::create([
+            'evaluation_id' => $evaluation->id,
+            'action_plan' => 'Optimalisasi indeks database pada tabel transaksi',
+            'assigned_to' => $developer->id,
+            'target_date' => '2026-11-28',
+            'status' => 'planned',
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/evaluations/action-items/{$item->id}/convert-to-task");
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        // Verifikasi task baru terbuat di database
+        $this->assertDatabaseHas('tasks', [
+            'project_id' => $project->id,
+            'assigned_to' => $developer->id,
+            'title' => 'Optimalisasi indeks database pada tabel transaksi',
+            'status' => 'todo',
+        ]);
+
+        // Verifikasi action item berstatus converted_to_task dan memiliki converted_task_id
+        $freshItem = $item->fresh();
+        $this->assertSame('converted_to_task', $freshItem->status);
+        $this->assertNotNull($freshItem->converted_task_id);
+    }
+
+    public function test_cannot_convert_already_converted_action_item(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['name' => 'Proyek Double Convert']);
+
+        $evaluation = AppEvaluation::create([
+            'project_id' => $project->id,
+            'evaluation_date' => '2026-11-20',
+            'period_review' => 'Periode 2026-11',
+        ]);
+
+        $existingTask = Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Tugas Hasil Konversi Lama',
+        ]);
+
+        $item = ActionItem::create([
+            'evaluation_id' => $evaluation->id,
+            'action_plan' => 'Rencana yang sudah pernah dikonversi',
+            'status' => 'converted_to_task',
+            'converted_task_id' => $existingTask->id,
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/evaluations/action-items/{$item->id}/convert-to-task");
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Action item ini sudah dikonversi menjadi tugas sebelumnya.',
+        ]);
     }
 }

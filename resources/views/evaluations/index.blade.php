@@ -460,6 +460,8 @@
                                                 'target_date' => $item->target_date ? $item->target_date->format('Y-m-d') : null,
                                                 'target_date_formatted' => $item->target_date ? $item->target_date->isoFormat('D MMM Y') : '-',
                                                 'assignee_name' => $item->assignee ? $item->assignee->name : 'Belum Ditugaskan',
+                                                'converted_task_id' => $item->converted_task_id,
+                                                'convert_url' => route('evaluations.action-items.convert-to-task', $item->id),
                                             ];
                                         })->values(),
                                         'update_url' => route('evaluations.update', $eval->id),
@@ -1199,22 +1201,45 @@
                     items.forEach(item => {
                         let badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
                         let labelText = 'Direncanakan';
+                        let actionBtn = '';
                         if (item.status === 'converted_to_task') {
                             badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
                             labelText = 'Dikonversi ke Tugas';
+                            actionBtn = `
+                                <a href="/tasks" class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition shadow-2xs" title="Buka Halaman Tugas">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                    <span>Lihat Tugas</span>
+                                </a>
+                            `;
                         } else if (item.status === 'completed') {
                             badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                             labelText = 'Selesai';
+                        } else {
+                            actionBtn = `
+                                <button
+                                    type="button"
+                                    class="btn-convert-action-item inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition cursor-pointer shadow-xs"
+                                    data-action-id="${item.id}"
+                                    data-convert-url="${item.convert_url}"
+                                    data-action-plan="${(item.action_plan || '').replace(/"/g, '&quot;')}"
+                                    title="Konversi Action Item ini menjadi Task baru"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                                    </svg>
+                                    <span>Konversi ke Task</span>
+                                </button>
+                            `;
                         }
 
                         const itemRow = document.createElement('div');
-                        itemRow.className = 'p-3 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+                        itemRow.className = 'p-3 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/50 transition';
                         itemRow.innerHTML = `
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-semibold text-slate-800">${item.action_plan}</p>
                                 <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
                                     <span class="inline-flex items-center gap-1 font-medium">
-                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                                         </svg>
                                         ${item.assignee_name}
@@ -1227,6 +1252,7 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${badgeClass}">
                                     ${labelText}
                                 </span>
+                                ${actionBtn}
                             </div>
                         `;
                         itemsListEl.appendChild(itemRow);
@@ -1235,6 +1261,54 @@
 
                 openModal(detailModal);
             });
+        });
+
+        // 1-Klik Konversi Action Item ke Task
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-convert-action-item');
+            if (!btn) return;
+
+            const convertUrl = btn.getAttribute('data-convert-url');
+            const actionPlan = btn.getAttribute('data-action-plan') || 'Action Item';
+
+            if (!confirm(`Konversi rencana tindakan:\n"${actionPlan}"\n\nMenjadi tugas baru (Task) di papan Kanban & daftar tugas?`)) {
+                return;
+            }
+
+            btn.disabled = true;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `
+                <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Mengonversi...</span>
+            `;
+
+            try {
+                const res = await fetch(convertUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert(data.message || 'Action item berhasil dikonversi menjadi tugas!');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Gagal mengonversi action item.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch (err) {
+                alert('Terjadi kesalahan koneksi saat memproses konversi.');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         });
     });
 </script>
