@@ -1,105 +1,396 @@
-﻿# PENJELASAN LENGKAP DOKUMEN SRS
+﻿# PENJELASAN LENGKAP & RINCI DOKUMEN SRS
 ## APLIKASI MONITORING & MANAJEMEN IT DEVELOPER (BUG TRACKER)
 
-Dokumen ini merupakan ringkasan dan penjelasan mendalam dari dokumen **Software Requirements Specification (SRS)** resmi bernomor `SRS-ITDEV-2026-001-REV07` (Versi 2.0, Terbit 16 November 2026).
+Dokumen ini merupakan penjelasan mendalam, komprehensif, dan rinci dari dokumen **Software Requirements Specification (SRS)** resmi bernomor `SRS-ITDEV-2026-001-REV07` (Versi 2.0, Terbit 16 November 2026), yang menjadi acuan utama pengembangan sistem, arsitektur basis data, alur antarmuka pengguna, serta pengujian sistem.
 
 ---
 
-### 1. RINGKASAN EKSEKUTIF & TUJUAN UTAMA
-Aplikasi ini dirancang sebagai platform **Manajemen Tugas (Task Management), Pelacak Bug (Bug Tracker), dan Dokumentasi Rilis/Evaluasi** yang ditujukan khusus bagi tim IT Developer. 
+## 1. RINGKASAN EKSEKUTIF, FILOSOFI & 5 PILAR DESAIN UTAMA
 
-Aplikasi mengusung filosofi:
-> *"Input Task Bebas Kapan Saja, Pelaporan Fleksibel Multi-Periode, dan Kolaborasi Tanpa Sekat."*
+### A. Latar Belakang & Masalah Riil yang Dipecahkan
+Dalam proses rekayasa perangkat lunak tim IT Developer, banyak platform pelacak tugas komersial yang terlalu kaku (*rigid*), mengharuskan alur birokrasi tiket bertingkat yang lambat, atau memisahkan pelaporan bug dengan repositori kode dan evaluasi sistem. Akibatnya:
+1. Developer enggan mencatat tugas kecil atau perbaikan harian (*ad-hoc*).
+2. Temuan bug dari tim penguji sering kali hanya ditutup (*close*) tanpa ada dokumentasi teknis mengenai penyebab aslinya (*root cause*), sehingga bug serupa sering muncul berulang.
+3. Terjadi hambatan kerja (*bottleneck*) ketika seorang PIC berhalangan hadir dan rekan tim kesulitan mengambil alih tugas tanpa riwayat yang jelas.
+4. Dokumentasi rilis versi server dan evaluasi pasca-rilis tidak terintegrasi dengan daftar tugas backlog berikutnya.
 
-#### 📌 5 Pilar Desain Utama:
-1. **Navigasi Sidebar Tunggal (Anti-Slop):** Menghindari navigasi bertingkat yang rumit. Semua menu utama dapat diakses langsung dari sidebar kiri.
-2. **Hierarki 3 Tingkat Terstruktur:** `Project (Aplikasi)` ➔ `Modul / Menu / Form` ➔ `Task & Bug`.
-3. **Papan Kanban Visual Interaktif:** 4 kolom status alur kerja (*To Do*, *In Progress*, *Review & Test*, *Done*) dengan dukungan *Drag & Drop* native dan tombol navigasi cepat.
-4. **Fitur Ambil Alih 1-Klik (*Take Over / Claim*):** Memungkinkan pengalihan tugas antar-developer secara instan dengan pencatatan riwayat serah terima otomatis (*audit trail handover logs*).
-5. **Analisis Masalah Mendalam (Root Cause & Solution):** Pencatatan bug tidak hanya status buka/tutup, melainkan mencakup *Keterangan Kendala*, *Akar Masalah (Root Cause)*, dan *Solusi Teknis*.
+### B. Filosofi Aplikasi
+Aplikasi mengusung moto dan filosofi kerja:
+> **"Input Task Bebas Kapan Saja, Pelaporan Fleksibel Multi-Periode, dan Kolaborasi Tanpa Sekat."**
 
----
-
-### 2. STRUKTUR HIERARKI & MODEL AKSES
-#### A. Struktur Hierarki Sistem
-Setiap pekerjaan tidak ditaruh sembarangan, melainkan dikelompokkan secara teratur:
-* **Level 1 - Project / Aplikasi:** Sistem atau aplikasi induk (contoh: `INTRA` - Portal Intranet, `HRIS` - Sistem Kepegawaian, `ASSET` - Inventaris IT).
-* **Level 2 - Modul / Form / Menu:** Fitur spesifik di dalam project tersebut (contoh: *Modul Autentikasi & SSO*, *Modul Keuangan*, *Modul Cetak Laporan*).
-* **Level 3 - Task & Bug:** Pekerjaan konkret atau error yang terjadi pada modul terkait (contoh: *Task: Optimasi query kasir*, *Bug: Error 500 Out of Memory saat cetak mutasi*).
-
-#### B. Model Akses Pengguna (*Flat Access Collaboration*)
-* **Akses Setara & Transparan:** Semua developer inti memiliki hak yang sama untuk menginput tugas, memperbarui status Kanban, mencatat bug, dan mengklaim tugas.
-* **Personalisasi "Task Saya":** Ketika developer login, sistem memprioritaskan daftar pekerjaan yang menjadi tanggung jawabnya (*Task Saya*), namun tetap menyediakan filter *Semua Tim* untuk transparansi kerja tim.
-
-#### C. Mekanisme Pelaporan Dinamis
-Laporan dapat difilter secara fleksibel berdasarkan kebutuhan audit atau rapat:
-* **Harian:** Aktivitas harian masuk dan selesai.
-* **Mingguan:** Progres 7 hari kalender berjalan.
-* **Bulanan:** Rekapitulasi target dan pencapaian bulanan.
-* **Custom Rentang Tanggal:** Bebas menentukan *Start Date* dan *End Date*.
+### C. 5 Pilar Desain Utama (*Core Principles*)
+1. **Navigasi Sidebar Tunggal (*Anti-Slop UI*):**
+   * Menghilangkan navigasi *dropdown* bertingkat atau *tab horizontal* bersarang yang membingungkan pengguna.
+   * Seluruh 11 area kerja aplikasi dapat diakses langsung dengan satu kali klik melalui bilah sisi (*sidebar*) kiri.
+2. **Hierarki 3 Tingkat Terstruktur (*Strict 3-Tier Hierarchy*):**
+   * Mengatur data secara rapi dari skala makro hingga mikro: `Project (Aplikasi Induk)` ➔ `Modul / Menu / Form` ➔ `Task & Bug`.
+3. **Papan Kanban Visual 4 Kolom Interaktif:**
+   * Alur transparan: `To Do` ➔ `In Progress` ➔ `Review & Test` ➔ `Done`.
+   * Dilengkapi fitur *Drag & Drop* berbasis HTML5 native serta tombol geser cepat (*quick action nudge*).
+4. **Fitur Ambil Alih 1-Klik (*Instant Takeover & Audit Trail*):**
+   * Mengizinkan developer lain mengalihkan penanggung jawab tugas secara instan ketika ada kendala pembagian beban kerja.
+   * Setiap aksi dicatat secara otomatis ke dalam audit trail riwayat serah terima (*handover logs*).
+5. **Analisis Masalah Mendalam (*Root Cause & Solution Separation*):**
+   * Form bug membedakan secara tegas antara kronologi gejala (*symptom*), analisis akar masalah (*root cause*), dan tindakan perbaikan teknis (*solution notes*).
 
 ---
 
-### 3. KEBUTUHAN FUNGSIONAL UTAMA (10 FITUR INTI / FR)
+## 2. ARSITEKTUR HIERARKI DATA & MODEL AKSES PENGGUNA
 
-| Kode FR | Nama Fitur | Deskripsi Singkat & Kegunaan |
-| :--- | :--- | :--- |
-| **FR-01** | **Master Data Project** | Mengelola daftar aplikasi (nama, kode unik seperti `INTRA`, URL Git repositori, deskripsi, warna tema, status aplikasi). |
-| **FR-02** | **Master Data Modul / Menu** | Mengelola modul-modul fungsional di bawah setiap project untuk memetakan histori error per komponen. |
-| **FR-03** | **Master Data Developer (Akun)** | Manajemen akun developer, inisial avatar, spesialisasi (*role title*), dan status aktif/nonaktif akun. |
-| **FR-04** | **Pencatatan Task Manajemen** | Form pencatatan tugas baru secara bebas (*ad-hoc*) lengkap dengan tipe task, target tanggal (*due date*), spesifikasi, dan catatan kendala (*blocker*). |
-| **FR-05** | **Papan Alur Kerja Kanban Board** | Papan kerja visual 4 kolom (*To Do*, *In Progress*, *Review & Test*, *Done*) dengan fitur *Drag & Drop*, tombol geser cepat, dan filter per Project & Developer. |
-| **FR-06** | **Monitoring Task Outstanding & Overdue** | Filter otomatis mendeteksi tugas yang melewati batas tanggal (*overdue*) dengan penanda warna visual dan catatan kendala. |
-| **FR-07** | **Bug Tracker & History per Modul** | Pencatatan kendala/error lengkap dengan tingkat keparahan (*Severity: Critical, High, Medium, Low*), pelapor, kronologi kendala, **Akar Masalah (Root Cause)**, dan **Solusi Teknis**. |
-| **FR-08** | **Log Riwayat Repository & Release** | Dokumentasi rilis kode ke server (*tag* versi seperti `v1.4.2`, *branch*, *commit hash*, dan ringkasan *changelog*). |
-| **FR-09** | **Evaluasi Aplikasi & Tindak Lanjut** | Dokumentasi review operasional aplikasi (isu server, keluhan user) serta fitur **1-Klik Konversi** rekomendasi menjadi Task baru. |
-| **FR-10** | **Fitur Ambil Alih (*Take Over / Claim*)** | Tombol 1-klik bagi developer lain untuk mengambil alih tugas/bug yang ditinggalkan rekan setimnya dengan pencatatan *handover logs*. |
+### A. Struktur Hierarki 3 Tingkat
+Setiap aktivitas kerja dan kendala dalam aplikasi wajib menginduk pada struktur yang teratur:
+* **Level 1 — Project / Aplikasi Induk:**
+  * Mewakili produk atau sistem aplikasi mandiri yang dikembangkan oleh organisasi.
+  * *Contoh:* `INTRA` (Portal Intranet Karyawan), `HRIS` (Sistem Informasi Kepegawaian), `ASSET` (Sistem Inventaris Aset IT).
+* **Level 2 — Modul / Menu / Form Fitur:**
+  * Mewakili komponen logika fitur spesifik di dalam project terkait.
+  * *Contoh:* Modul Autentikasi & SSO, Modul Mutasi Aset, Form Rekapitulasi Cuti Karyawan.
+* **Level 3 — Eksekusi Tugas (*Task*) & Insiden (*Bug*):**
+  * Butir teknis nyata yang dikerjakan oleh developer atau dilaporkan oleh penguji pada modul tertentu.
+  * *Contoh Task:* "Optimasi query pencarian data aset agar response time < 0.5 detik".
+  * *Contoh Bug:* "Error 500 Out of Memory saat ekspor rekapitulasi mutasi aset ke PDF".
+
+```
+┌────────────────────────────────────────────────────────┐
+│ LEVEL 1: PROJECT / APLIKASI (contoh: ASSET / INTRA)    │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ LEVEL 2: MODUL / FORM / FITUR (contoh: Mutasi Aset)    │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+            ┌──────────────┴──────────────┐
+            ▼                             ▼
+┌───────────────────────┐     ┌──────────────────────────┐
+│ LEVEL 3A: TASK        │     │ LEVEL 3B: BUG TRACKER    │
+│ Pekerjaan & Fitur     │     │ Kendala, Error & Analisis│
+└───────────────────────┘     └──────────────────────────┘
+```
+
+### B. Model Akses Kolaboratif (*Flat Access Collaboration*)
+Sistem mengutamakan transparansi dan kecepatan kolaborasi tanpa sekat birokrasi:
+* **Kesetaraan Operasional:** Seluruh developer inti memiliki hak penuh untuk membuat proyek, menambah modul, membuat tugas baru, menggeser papan Kanban, melaporkan bug, dan mengklaim tugas rekan tim.
+* **Personalisasi Ruang Kerja ("Task Saya"):** Sistem secara cerdas membedakan tampilan antara tugas yang menjadi tanggung jawab pribadi pengguna saat login (*Tab Task Saya*) dan tugas keseluruhan tim (*Tab Semua Tim*).
+* **Mekanisme Pelaporan Multi-Periode Dinamis:**
+  * **Preset Harian:** Menampilkan ringkasan tugas dan bug yang diselesaikan pada hari kalender aktif.
+  * **Preset Mingguan:** Menampilkan rekapitulasi progres 7 hari terakhir untuk rapat evaluasi mingguan (*weekly sprint review*).
+  * **Preset Bulanan:** Menampilkan agregasi metrik performa bulanan untuk pelaporan manajemen.
+  * **Rentang Kustom (*Custom Date Range*):** Mengizinkan pemilihan bebas tanggal awal (*Start Date*) dan tanggal akhir (*End Date*).
+
+### C. Matriks Hak Akses Peran Pengguna (*Role-Based Permissions*)
+
+| Modul / Kemampuan Sistem | Administrator (Atasan / Project Manager) | Developer (Tim Pengembang) |
+| :--- | :---: | :---: |
+| **Kelola Master Akun Pengguna (`/admin/accounts`)** | **Penuh (Tambah, Edit, Hapus, Role)** | **Dilarang (403 Forbidden)** |
+| **Ubah Status Akun Aktif / Nonaktif** | **Ya (Kecuali Akun Milik Sendiri)** | **Tidak** |
+| **Kelola Master Data Proyek (`/projects`)** | **Ya** | **Ya** |
+| **Kelola Master Data Modul (`/modules`)** | **Ya** | **Ya** |
+| **Kelola Papan Kanban (`/kanban`)** | **Ya** | **Ya** |
+| **Kelola Daftar Tugas (`/tasks`)** | **Ya** | **Ya** |
+| **Kelola Pelacak Bug (`/bugs`)** | **Ya** | **Ya** |
+| **Ambil Alih Tugas / Bug Rekan Tim (*Takeover*)** | **Ya** | **Ya** |
+| **Dokumentasi Riwayat Rilis Git (`/releases`)** | **Ya** | **Ya** |
+| **Dokumentasi Evaluasi Pasca Rilis (`/evaluations`)** | **Ya** | **Ya** |
+| **Konversi Action Item Evaluasi ke Task Kanban** | **Ya** | **Ya** |
+| **Kelola Profil Pribadi & Password (`/account`)** | **Ya** | **Ya** |
+| **Akses Tombol Keluar Sesi (*Logout*)** | **Di Halaman Akun Saya** | **Di Halaman Akun Saya** |
+
+> **Catatan Keamanan Logout:** Tombol *Logout* sengaja tidak ditempatkan di bilah sisi (*sidebar*) global guna mencegah pengguna keluar sesi secara tidak disengaja. Tombol keluar sesi ditempatkan secara aman di dalam kartu identitas pada halaman **Akun Saya** (`/account`).
 
 ---
 
-### 4. DETAIL FITUR KHUSUS
+## 3. RINCIAN 10 KEBUTUHAN FUNGSIONAL UTAMA (FR-01 s/d FR-10)
 
-#### 1. Mekanisme Ambil Alih (*Take Over / Claim*)
-* Tombol **[ ✋ Ambil Alih ]** muncul pada kartu Kanban atau tabel tugas bila PIC tugas tersebut bukan akun yang sedang login.
-* Ketika diklik, dialog konfirmasi muncul untuk mencegah ketidaksengajaan.
-* Setelah konfirmasi:
-  1. Kolom `assigned_to` otomatis berganti ke user yang mengklaim.
-  2. Riwayat transfer dicatat ke kolom JSON `handover_logs` (mencatat siapa PIC lama, siapa PIC baru, waktu serah terima, dan catatan).
-  3. Tugas otomatis masuk ke tab *Task Saya* milik pengembang baru.
+```
+┌────────┬────────────────────────────────┬────────────────────────────────────────────────────────┐
+│ KODE   │ NAMA KEBUTUHAN FUNGSIONAL      │ ATURAN BISNIS, FORM INPUT & KELUARAN SISTEM            │
+├────────┼────────────────────────────────┼────────────────────────────────────────────────────────┤
+│ FR-01  │ Master Data Proyek             │ Kode unik (misal: INTRA), URL Git, Badge warna, Status │
+│ FR-02  │ Master Data Modul / Menu       │ Pemetaan per Project ID, filter berantai, deskripsi    │
+│ FR-03  │ Master Data Akun & Tim Dev     │ Role (Admin/Dev), role title spesialisasi, is_active   │
+│ FR-04  │ Pencatatan Tugas (Task Form)   │ Judul, tipe, due date, blocker notes, free-input adhoc │
+│ FR-05  │ Papan Kanban Interaktif        │ 4 kolom status, Drag & Drop, tombol geser, filter PIC  │
+│ FR-06  │ Monitoring Overdue & Blocker   │ Deteksi otomatis lewat due_date, badge merah menyala   │
+│ FR-07  │ Bug Tracker per Modul          │ Severity (4 level), kronologi, Root Cause, Solusi      │
+│ FR-08  │ Log Riwayat Rilis & Git        │ Versi tag, commit hash 7 digit, catatan changelog      │
+│ FR-09  │ Evaluasi Pasca-Rilis           │ Review server/user, Action Items, 1-klik konversi task │
+│ FR-10  │ Ambil Alih Tugas (Takeover)    │ Pop-up konfirmasi, transfer PIC, pencatatan log audit  │
+└────────┴────────────────────────────────┴────────────────────────────────────────────────────────┘
+```
 
-#### 2. Siklus Penanganan Bug (Akar Masalah & Solusi)
-* Form Bug menyediakan area khusus:
-  * **Akar Masalah (*Root Cause*):** Analisa teknis kenapa error bisa terjadi (misal: kebocoran memori, query tanpa pagination, validasi frontend kurang). Dapat diisi kapan saja tanpa menunggu bug berstatus selesai.
-  * **Solusi Teknis / Rencana Tindakan:** Solusi konkret yang diterapkan untuk memperbaiki bug.
-* Status penanganan: `Open` ➔ `In Progress` ➔ `Resolved`.
+### Penjelasan Rinci Tiap Kebutuhan Fungsional:
+
+#### FR-01: Master Data Proyek
+* **Tujuan:** Mendata seluruh aplikasi induk yang sedang aktif atau dikelola oleh tim pengembang.
+* **Input Form:** Nama Proyek, Kode Unik Proyek (contoh: `INTRA`, `ASSET`), URL Repositori Git (GitHub/GitLab), Deskripsi Aplikasi, Pilihan Warna Badge (6 pilihan warna), Status Aplikasi (`active`, `maintenance`, `archived`).
+* **Aturan Bisnis:** Kode proyek bersifat `unique`. Jika pengguna memasukkan kode yang sudah terdaftar, sistem secara otomatis menolak dengan memunculkan **modal pop-up notifikasi peringatan** yang informatif (Skenario Uji 9.2).
+
+#### FR-02: Master Data Modul / Menu
+* **Tujuan:** Memetakan komponen modul fungsional di bawah setiap proyek.
+* **Input Form:** Pilihan Proyek Induk (`project_id`), Nama Modul / Menu / Form, Deskripsi Modul.
+* **Aturan Bisnis:** Modul berelasi langsung dengan tabel `projects`. Pada form pembuatan task dan bug, pemilihan modul bersifat berantai (*dependent dropdown*) sesuai proyek yang sedang dipilih, sehingga modul dari proyek lain tidak akan bercampur.
+
+#### FR-03: Master Data Akun Pengguna (Khusus Administrator)
+* **Tujuan:** Manajemen kredensial, peran, dan hak akses pengguna aplikasi.
+* **Input Form:** Nama Lengkap, Alamat Email, Kata Sandi, Pilihan Peran (`admin` atau `developer`), Spesialisasi Teknis / *Role Title* (misal: *Lead Fullstack, Backend Developer, QA Engineer, UI/UX Designer*), Warna Avatar, Status Aktif (`is_active`).
+* **Aturan Bisnis:** 
+  * Administrator tidak dapat menonaktifkan atau menghapus akun miliknya sendiri guna mencegah *lock-out* sistem.
+  * Pengguna yang dinonaktifkan (`is_active = false`) akan otomatis diputus sesinya dan ditolak saat mencoba login kembali.
+
+#### FR-04: Pencatatan Tugas Kerja (*Task Management*)
+* **Tujuan:** Memberikan kemudahan bagi developer untuk mencatat tugas harian secara bebas tanpa birokrasi kaku (*ad-hoc input*).
+* **Input Form:** Pilihan Proyek, Pilihan Modul, Judul Tugas, Tipe Tugas (`feature`, `improvement`, `maintenance`, `bugfix`), Tingkat Prioritas, Target Tanggal Selesai (*Due Date*), Deskripsi Spesifikasi, dan Catatan Kendala Awal (*Blocker Notes*).
+* **Aturan Bisnis:** Tugas yang baru dibuat secara default akan masuk ke kolom pertama alur kerja (`To Do`) dan di-assign kepada pembuatnya (atau dapat dipilihkan developer lain).
+
+#### FR-05: Papan Kanban Visual Interaktif
+* **Tujuan:** Memvisualisasikan perkembangan seluruh pekerjaan tim secara *real-time*.
+* **Struktur Alur Kerja (4 Kolom):**
+  1. `To Do`: Tugas baru terdaftar yang siap dikerjakan.
+  2. `In Progress`: Tugas yang sedang dalam proses pengkodean aktif oleh PIC.
+  3. `Review & Test`: Fitur yang selesai dikoding dan sedang diuji oleh rekan sejawat (*Peer Review*) atau tim QA.
+  4. `Done`: Tugas yang telah tuntas terverifikasi dan siap dirilis.
+* **Interaktivitas:** Kartu tugas dapat dipindahkan antar-kolom dengan cara ditarik (*Drag & Drop*) atau menekan tombol navigasi cepat. Status di basis data langsung terbarui via panggilan AJAX asinkron tanpa *reload* halaman penuh.
+
+#### FR-06: Monitoring Tugas Terlambat (*Overdue*) & Kendala (*Blocker*)
+* **Tujuan:** Memastikan tidak ada pekerjaan yang terbengkalai tanpa diketahui oleh tim.
+* **Logika Sistem:** Sistem secara otomatis membandingkan tanggal hari ini (`today`) dengan batas waktu pekerjaan (`due_date`):
+  * Jika `today > due_date` dan status tugas belum bernilai `Done`, kartu tugas akan otomatis ditandai dengan **Badge Merah Menyala (*Overdue*)** dan menghitung durasi keterlambatan.
+  * Kartu menampilkan ikon peringatan khusus jika kolom `blocker_notes` terisi.
+
+#### FR-07: Pelacak Bug & Riwayat Kendala per Modul
+* **Tujuan:** Mencatat, melacak, dan mengarsipkan insiden error sistem secara komprehensif.
+* **Input Form:** Proyek Induk, Modul Terkait, Judul Bug, Tingkat Keparahan (*Severity*), Pelapor Bug, Kronologi Gejala (*Symptom*), **Akar Masalah Teknis (*Root Cause*)**, dan **Solusi Perbaikan (*Technical Solution*)**.
+* **Klasifikasi Severity (Standar Warna UI):**
+  * `Low`: Abu-abu (*minor glitch*, typo teks, ketidaksesuaian margin).
+  * `Medium`: Kuning (*isu fungsional parsial yang masih memiliki alternatif cara kerja*).
+  * `High`: Merah (*kegagalan fungsi utama pada satu modul*).
+  * `Critical`: Merah Marun (*kegagalan fatal sistem, kebocoran data, atau crash server*).
+
+#### FR-08: Log Riwayat Rilis & Repositori Git
+* **Tujuan:** Mendokumentasikan setiap pembaruan kode produksi yang diunggah ke server.
+* **Input Form:** Proyek Induk, Tanggal Rilis, Versi Rilis (*Release Tag* seperti `v1.2.0`), Nama Branch Git (`main`, `master`, `production`), Commit Hash unik (7 digit hexadecimal seperti `8c56905`), dan Rangkuman Perubahan (*Changelog*).
+* **Aturan Bisnis (Immutability):** Catatan riwayat rilis bersifat permanen (*read-heavy / immutable*) demi menjaga kepatuhan audit trail rekayasa perangkat lunak.
+
+#### FR-09: Evaluasi Aplikasi Pasca-Rilis & Rencana Tindak Lanjut
+* **Tujuan:** Melakukan tinjauan periodik terhadap kinerja aplikasi di lingkungan *live/production*.
+* **Input Form:** Proyek Induk, Periode Evaluasi (misal: `Q4 2026`), Tanggal Evaluasi, Kendala Operasional Pasca-Rilis (isu server, penggunaan memori), Umpan Balik Klien/Pengguna.
+* **Fitur Rencana Tindak Lanjut (*Action Items*):**
+  * Setiap evaluasi dapat memiliki banyak butir rencana tindak lanjut (*Action Items*).
+  * Dilengkapi fitur unggulan **Konversi ke Task 1-Klik**: Menekan tombol `[ Konversi ke Task ]` akan otomatis membuat tugas baru di Papan Kanban dengan membawa judul, PIC, dan target tanggal dari evaluasi tersebut.
+
+#### FR-10: Fitur Ambil Alih Tugas (*Take Over / Claim*)
+* **Tujuan:** Memotong birokrasi delegasi tugas ketika seorang developer memerlukan bantuan atau menggantikan rekan tim.
+* **Mekanisme:** Tombol `[ ✋ Ambil Alih ]` otomatis muncul pada kartu tugas atau baris bug jika pemilik tugas bukan pengguna yang sedang login. Menekan tombol akan memunculkan modal pop-up konfirmasi, mengalihkan PIC aktif ke pengguna yang sedang login, dan mencatat riwayat ke log audit.
 
 ---
 
-### 5. STRUKTUR DATA (DATABASE SCHEMA - 8 TABEL INTI)
+## 4. BEDAH ALUR LOGIKA KHUSUS & SKEMA DATA DETAIL
 
-Dokumen mendefinisikan 8 tabel relasional yang saling terhubung:
-1. **`users`**: Menyimpan akun pengguna, email, role/spesialisasi (*Fullstack Lead, Backend, Frontend*), inisial avatar, warna avatar, dan status `is_active`.
-2. **`projects`**: Menyimpan data aplikasi induk, kode unik (`code`), tautan repositori Git (`repo_url`), status (`active`, `maintenance`, `archived`), dan warna badge.
-3. **`modules`**: Terhubung ke `projects.id`. Menyimpan modul fungsional, nama menu/form, dan deskripsinya.
-4. **`tasks`**: Terhubung ke `projects`, `modules`, `created_by` (pembuat awal), dan `assigned_to` (PIC aktif). Memuat judul, deskripsi, tipe task, status 4 alur, target tanggal, tanggal tuntas riil (`completed_at`), `blocker_notes`, dan JSON `handover_logs`.
-5. **`bugs`**: Terhubung ke `projects`, `modules`, `created_by`, dan `assigned_to`. Memuat judul error, kronologi kendala, pelapor, tanggal lapor, `severity`, `status`, `root_cause`, `solution_notes`, `resolved_at`, dan JSON `handover_logs`.
-6. **`repo_histories`**: Terhubung ke `projects`. Memuat tanggal rilis, `release_tag` (versi), `branch_name`, `commit_hash`, dan rangkuman perubahan (`summary_changes`).
-7. **`app_evaluations`**: Terhubung ke `projects`. Memuat tanggal evaluasi, periode review, kendala operasional server/traffic, masukan user, dan kesimpulan review.
-8. **`action_items`**: Terhubung ke `app_evaluations`. Berisi butir-butir rencana tindak lanjut perbaikan, PIC, target tanggal, status, dan `converted_task_id` (ID task bila telah dikonversi ke tabel tasks).
+### A. Alur Kerja Fitur Ambil Alih (*Take Over Workflow*)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor DevB as Developer Pengambil Alih
+    participant UI as Kartu Kanban / Tabel Tugas
+    participant Modal as Modal Konfirmasi Takeover
+    participant Backend as TaskController / BugController
+    participant DB as Basis Data (SQLite / MySQL)
+
+    DevB->>UI: Menemukan tugas milik Developer A
+    UI-->>DevB: Tombol "[✋ Ambil Alih]" otomatis aktif
+    DevB->>UI: Klik tombol "[✋ Ambil Alih]"
+    UI->>Modal: Buka Modal Konfirmasi (Tampilkan PIC Lama & Form Alasan)
+    DevB->>Modal: Input catatan serah terima & Klik Konfirmasi
+    Modal->>Backend: POST /tasks/{id}/takeover (Catatan Serah Terima)
+    Backend->>DB: UPDATE tasks SET assigned_to = DevB.id
+    Backend->>DB: APPEND riwayat ke kolom JSON handover_logs
+    DB-->>Backend: Berhasil Disimpan
+    Backend-->>UI: Response JSON 200 (Success)
+    UI->>UI: Tampilkan notifikasi pop-up & Pindahkan kartu ke "Task Saya"
+```
+
+* **Struktur Penyimpanan Audit Trail JSON `handover_logs`:**
+  ```json
+  [
+    {
+      "from_user_id": 1,
+      "from_user_name": "Rakalendra Wildan",
+      "to_user_id": 2,
+      "to_user_name": "Budi Santoso",
+      "timestamp": "2026-11-24 10:15:00",
+      "action": "takeover",
+      "notes": "Menggantikan pengerjaan modul karena PIC lama sedang bertugas di luar kota"
+    }
+  ]
+  ```
 
 ---
 
-### 6. KEBUTUHAN NON-FUNGSIONAL (NFR)
-1. **Kecepatan & Performa:** Penyaringan data tanggal dan modul ditargetkan **< 0.8 detik** dengan bantuan pengindeksan database pada foreign keys dan kolom tanggal.
-2. **Responsivitas Antarmuka:** Desain rapi berbasis Tailwind CSS, navigasi sidebar tetap di sebelah kiri, ramah layar tablet dan desktop.
-3. **Interaktivitas:** Perpindahan status kartu Kanban berlangsung instan tanpa reload halaman penuh (*Drag & Drop native*).
-4. **Audit Trail & Keandalan:** Tidak ada tugas yang berpindah tanpa tercatat siapa yang memindahkan dan kapan dipindahkan.
-5. **Kemudahan Cetak / Ekspor:** Cetak PDF rapi dengan aturan `@media print` yang otomatis menyembunyikan sidebar dan tombol-tombol aksi.
+### B. Siklus Hidup Penanganan Bug (*3-Tier Bug Analysis*)
+Aplikasi membedakan data bug menjadi 3 aspek penting yang tidak dapat dicampuradukkan:
+1. **Gejala Kendala (*Symptom / Description*):** Dampak visual atau fungsional yang dilaporkan oleh user/QA (contoh: *"Data aset tidak tersimpan setelah proses klik edit"*).
+2. **Akar Masalah Teknis (*Root Cause*):** Hasil investigasi teknis pada kode sumber atau database (contoh: *"Validasi controller mewajibkan field code yang unik, tetapi query pengecekan unique menyertakan ID record sendiri sehingga query update menolak input"*). Kolom ini dapat diisi dan diperbarui kapan saja selama proses penanganan bug.
+3. **Solusi Teknis (*Technical Solution*):** Baris kode, migrasi, atau konfigurasi yang diterapkan untuk menyelesaikan error (contoh: *"Menambahkan Rule::unique('projects')->ignore($project->id) pada request validation"*).
 
 ---
 
-### 7. RENCANA TAHAPAN PENGEMBANGAN (SPRINT ROADMAP)
-* **Sprint 1:** Finalisasi Master Data (*Project*, *Modul*, *Developer*) dan skema database relasional 8 tabel.
-* **Sprint 2:** Implementasi Papan Kanban Drag & Drop interaktif dan fitur Ambil Alih (*Take Over*).
-* **Sprint 3:** Bug Tracker per modul dengan dokumentasi *Root Cause* dan modul evaluasi aplikasi.
-* **Sprint 4:** Mesin pelaporan multi-periode dinamis, ekspor PDF/Excel, dan *User Acceptance Testing (UAT)*.
+### C. Alur Konversi Action Item Menjadi Task Kanban
+1. Evaluasi pasca-rilis mencatat temuan peningkatan sistem pada daftar *Action Items*.
+2. Butir *Action Item* memiliki status awal `Direncanakan` dengan tombol `[ Konversi ke Task ]`.
+3. Saat diklik, sistem memunculkan **Modal Pop-up Konversi** berdesain elegan dengan layering z-index terproteksi (`z-index: 99999`) di atas modal evaluasi (`z-index: 9000`).
+4. Setelah disetujui:
+   * Record baru tercipta pada tabel `tasks` dengan tipe `maintenance`/`improvement` dan status awal `todo`.
+   * Kolom `converted_task_id` pada tabel `action_items` otomatis terisi ID task baru tersebut.
+   * Status action item otomatis berubah menjadi `Selesai` (*badge hijau*), dan tombol konversi otomatis hilang untuk mencegah duplikasi.
+
+---
+
+## 5. STRUKTUR BASIS DATA RELASIONAL (SKEMA 8 TABEL INTI)
+
+Aplikasi dibangun di atas 8 tabel basis data relasional yang saling terhubung secara terstruktur (*referential integrity*):
+
+```mermaid
+erDiagram
+    users ||--o{ tasks : "assigned_to / created_by"
+    users ||--o{ bugs : "assigned_to / created_by"
+    projects ||--o{ modules : "has many"
+    projects ||--o{ tasks : "has many"
+    projects ||--o{ bugs : "has many"
+    projects ||--o{ repo_histories : "has many"
+    projects ||--o{ app_evaluations : "has many"
+    modules ||--o{ tasks : "categorizes"
+    modules ||--o{ bugs : "categorizes"
+    app_evaluations ||--o{ action_items : "contains"
+    action_items ||--o| tasks : "converts to (converted_task_id)"
+
+    users {
+        bigint id PK
+        string name "Nama Pengguna"
+        string email UK "Email Login"
+        string password "Bcrypt Hash"
+        string role "admin / developer"
+        string role_title "Spesialisasi Teknis"
+        string avatar_color "Warna Avatar"
+        boolean is_active "Status Akun Aktif"
+        timestamp created_at
+    }
+
+    projects {
+        bigint id PK
+        string name "Nama Proyek"
+        string code UK "Kode Unik (contoh: INTRA)"
+        string repo_url "Tautan Git"
+        string color_badge "Warna Tema"
+        string status "active / maintenance / archived"
+        timestamp created_at
+    }
+
+    modules {
+        bigint id PK
+        bigint project_id FK "Relasi ke projects.id"
+        string name "Nama Modul"
+        text description "Deskripsi Modul"
+        timestamp created_at
+    }
+
+    tasks {
+        bigint id PK
+        bigint project_id FK "Relasi ke projects.id"
+        bigint module_id FK "Relasi ke modules.id"
+        bigint created_by FK "Relasi ke users.id"
+        bigint assigned_to FK "Relasi ke users.id"
+        string title "Judul Tugas"
+        text description "Rincian Tugas"
+        string type "feature / improvement / maintenance / bugfix"
+        string status "todo / in_progress / review / done"
+        date due_date "Batas Waktu"
+        timestamp completed_at "Waktu Selesai Riil"
+        text blocker_notes "Catatan Kendala"
+        json handover_logs "Audit Trail Serah Terima"
+    }
+
+    bugs {
+        bigint id PK
+        bigint project_id FK "Relasi ke projects.id"
+        bigint module_id FK "Relasi ke modules.id"
+        bigint created_by FK "Relasi ke users.id"
+        bigint assigned_to FK "Relasi ke users.id"
+        string title "Judul Bug"
+        string severity "low / medium / high / critical"
+        string status "open / in_progress / resolved / closed"
+        text symptom_notes "Gejala Masalah"
+        text root_cause "Akar Masalah Teknis"
+        text solution_notes "Solusi Perbaikan"
+        timestamp resolved_at "Waktu Tuntas"
+        json handover_logs "Audit Trail Serah Terima"
+    }
+
+    repo_histories {
+        bigint id PK
+        bigint project_id FK "Relasi ke projects.id"
+        date release_date "Tanggal Rilis"
+        string release_tag "Tag Versi (v1.0.0)"
+        string branch_name "Branch Git"
+        string commit_hash "Commit Hash 7 Digit"
+        text summary_changes "Ringkasan Rilis"
+    }
+
+    app_evaluations {
+        bigint id PK
+        bigint project_id FK "Relasi ke projects.id"
+        date evaluation_date "Tanggal Evaluasi"
+        string review_period "Periode (Q1/Q2/Bulanan)"
+        text operational_issues "Kendala Server & Traffic"
+        text user_feedback "Masukan Pengguna"
+    }
+
+    action_items {
+        bigint id PK
+        bigint app_evaluation_id FK "Relasi ke app_evaluations.id"
+        bigint assigned_to FK "Relasi ke users.id"
+        bigint converted_task_id FK "Relasi ke tasks.id (Nullable)"
+        string title "Rencana Tindak Lanjut"
+        date target_date "Target Selesai"
+        string status "planned / completed"
+    }
+```
+
+---
+
+## 6. KEBUTUHAN NON-FUNGSIONAL (NFR), PERFORMA & KEAMANAN
+
+1. **Performa & Kecepatan Respon (< 0.8 Detik):**
+   * Penambahan indeks komposit pada kolom-kolom pencarian krusial (`project_id`, `module_id`, `assigned_to`, `status`, `due_date`).
+   * Penerapan *Speculation Rules API* dan *Instant Prefetching* pada tautan navigasi bilah sisi, memungkinkan halaman berikutnya siap dirender sebelum pengguna selesai mengklik.
+2. **Stabilitas Ekstrem & Zero Flaky Test (100 Iterasi Otomatis):**
+   * Seluruh fungsionalitas diuji melalui *Stress & Regression Test* otomatis sebanyak **100 iterasi berturut-turut** (4.000 skenario eksekusi dan 18.400 asersi basis data) dengan hasil **100% PASS** tanpa kegagalan satupun.
+3. **Keamanan Data Berlapis (*Defense in Depth*):**
+   * **Anti-XSS:** Seluruh data yang dimasukkan pengguna di-escape secara otomatis oleh template engine Blade Laravel `{{ $var }}`.
+   * **Proteksi CSRF:** Setiap interaksi form dan AJAX dilindungi oleh token *Cross-Site Request Forgery*.
+   * **Otorisasi Role Middleware:** Rute sensitif pengelolaan akun pengguna dilindungi middleware `role:admin`, memastikan developer biasa tidak dapat memanipulasi akun lain.
+4. **Desain Antarmuka Responsif & Layering Modal Elegan:**
+   * Dibangun dengan utilitas Tailwind CSS yang bersih, modern, dan adaptif untuk ukuran layar monitor desktop maupun tablet.
+   * Menggunakan pengaturan *inline z-index* eksplisit (`z-index: 9000` untuk modal detail dan `z-index: 99999` untuk modal konfirmasi/notifikasi) agar terhindar dari permasalahan tumpukan CSS pada Tailwind v4.
+5. **Standar Cetak Laporan Resmi (@media print):**
+   * Antarmuka pelaporan (`/reports`) telah dikonfigurasi dengan aturan cetak khusus. Saat pengguna mencetak halaman atau menekan `Ctrl + P`, sistem secara otomatis menyembunyikan bilah sisi navigasi kiri, tombol aksi, dan kontrol filter, sehingga menghasilkan cetakan dokumen fisik/PDF yang bersih, formal, dan rapi.
+
+---
+
+## 7. RENCANA TAHAPAN PENGEMBANGAN (SPRINT ROADMAP)
+
+* **Sprint 1 (Inisialisasi Fondasi & Master Data):**
+  * Desain skema relasional 8 tabel database, penyusunan migrasi & model Eloquent.
+  * Implementasi master data proyek, master modul fitur, dan master akun pengguna.
+* **Sprint 2 (Alur Kerja Inti & Kolaborasi Tim):**
+  * Pembangunan papan visual Kanban 4 kolom dengan manipulasi status Drag & Drop native.
+  * Implementasi fitur Ambil Alih (*Take Over*) 1-klik dan struktur log audit `handover_logs`.
+* **Sprint 3 (Pelacakan Kendala & Evaluasi Pasca-Rilis):**
+  * Pembangunan modul Bug Tracker dengan klasifikasi keparahan serta pemisahan kolom *Root Cause* dan *Solusi*.
+  * Modul riwayat rilis repositori Git (*immutable release history*).
+  * Modul evaluasi aplikasi berkala serta fitur konversi otomatis rencana tindak lanjut ke task Kanban.
+* **Sprint 4 (Mesin Pelaporan, Stress Test & Uji Kelaikan UAT):**
+  * Mesin pelaporan multi-periode dinamis (harian, mingguan, bulanan, custom).
+  * Cetak laporan ramah printer (@media print).
+  * Verifikasi 40 butir skenario pengujian fungsional dan stress test 100 iterasi.
+  * Penyusunan dokumen finalisasi untuk sidang presentasi Praktik Kerja Lapangan (PKL).
