@@ -126,8 +126,8 @@
 | :-: | :--- | :--- | :--- | :-: | :--- |
 | 9.1 | Tambah Master Proyek | 1. Buka `/projects`<br>2. Tambah proyek baru dengan kode unik (`DEMO1`) | Proyek baru tersimpan dan tersedia pada seluruh dropdown proyek. | PASS|
 | 9.2 | Validasi Duplikat Kode Proyek | 1. Coba tambah proyek lain dengan kode yang sama (`DEMO1`) | Ditolak oleh sistem dengan notifikasi pop-up bahwa kode proyek sudah digunakan. | PASS | Notifikasi pop-up dialog elegan muncul di layar saat terdeteksi duplikasi kode unik proyek. |
-| 9.3 | Tambah Master Modul | 1. Buka `/modules`<br>2. Tambah modul baru di bawah Proyek tertentu | Modul baru tersimpan dan terhubung dengan relasi project_id yang benar. | [ ] PASS<br>[ ] FAIL | |
-| 9.4 | Kelola Master Akun Pengguna | 1. Buka `/admin/accounts`<br>2. Tambah akun developer baru atau aktifkan/nonaktifkan akun | Status akun diperbarui, akun yang dinonaktifkan tidak dapat login. | [ ] PASS<br>[ ] FAIL | |
+| 9.3 | Tambah Master Modul | 1. Buka `/modules`<br>2. Tambah modul baru di bawah Proyek tertentu | Modul baru tersimpan dan terhubung dengan relasi project_id yang benar. |PASS|
+| 9.4 | Kelola Master Akun Pengguna | 1. Buka `/admin/accounts`<br>2. Tambah akun developer baru atau aktifkan/nonaktifkan akun | Status akun diperbarui, akun yang dinonaktifkan tidak dapat login. |PASS|
 
 ---
 
@@ -135,24 +135,24 @@
 
 | No | Skenario Uji | Parameter Uji | Standar Target | Hasil Pengujian | Status |
 | :-: | :--- | :--- | :-: | :--- | :-: |
-| 10.1 | Kecepatan Navigasi Halaman | Pindah antar menu (Dashboard ➔ Kanban ➔ Tasks ➔ Bugs) | < 0.8 detik | Prefetch & Speculation Rules aktif | [ ] PASS<br>[ ] FAIL |
-| 10.2 | Tampilan Tablet (Responsif) | Buka pada mode tablet / perkecil ukuran window browser | Tampilan adaptif | Sidebar rapi, kartu Kanban tetap mudah digeser | [ ] PASS<br>[ ] FAIL |
-| 10.3 | Keamanan Input (Anti-XSS) | Masukkan karakter `<script>alert(1)</script>` pada nama task | Teks diescape | Tidak memicu pop-up script eksternal | [ ] PASS<br>[ ] FAIL |
-| 10.4 | Konsistensi Browser Console | Cek Console F12 di seluruh 11 halaman utama | 0 Error Merah | Bebas dari Uncaught TypeError / SyntaxError | [ ] PASS<br>[ ] FAIL |
+| 10.1 | Kecepatan Navigasi Halaman | Pindah antar menu (Dashboard ➔ Kanban ➔ Tasks ➔ Bugs) | < 0.8 detik | Prefetch & Speculation Rules aktif |PASS|
+| 10.2 | Tampilan Tablet (Responsif) | Buka pada mode tablet / perkecil ukuran window browser | Tampilan adaptif | Sidebar rapi, kartu Kanban tetap mudah digeser |PASS|
+| 10.3 | Keamanan Input (Anti-XSS) | Masukkan karakter `<script>alert(1)</script>` pada nama task | Teks diescape | Tidak memicu pop-up script eksternal |PASS|
+| 10.4 | Konsistensi Browser Console | Cek Console F12 di seluruh 11 halaman utama | 0 Error Merah | Bebas dari Uncaught TypeError / SyntaxError |PASS|
 
 ---
 
 ### 📊 REKAPITULASI HASIL AKHIR PENGUJIAN
 
 * **Total Skenario Uji:** 40 Butir Uji
-* **Jumlah Berhasil (PASS):** _____ Butir
-* **Jumlah Gagal (FAIL):** _____ Butir
-* **Persentase Keberhasilan:** _____%
+* **Jumlah Berhasil (PASS):** 40 Butir
+* **Jumlah Gagal (FAIL):** 0 Butir
+* **Persentase Keberhasilan:** 100%
 
 **Kesimpulan Penguji:**
-[ ] Aplikasi **LAYAK (READY)** untuk deployment / presentasi sidang PKL.  
+[x] Aplikasi **LAYAK (READY)** untuk deployment / presentasi sidang PKL.  
 [ ] Aplikasi **MEMERLUKAN PERBAIKAN** pada butir catatan di atas.
 
 **Tanda Tangan Penguji:**
 
-( ________________________________ )
+( Rakalendra Wildan / Developer PKL )
