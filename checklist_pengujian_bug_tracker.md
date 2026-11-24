@@ -1,4 +1,4 @@
-﻿# DOKUMEN CHECKLIST PENGUJIAN APLIKASI (QA TEST PLAN & REPORT)
+# DOKUMEN CHECKLIST PENGUJIAN APLIKASI (QA TEST PLAN & REPORT)
 ## APLIKASI MONITORING & MANAJEMEN IT DEVELOPER (BUG TRACKER)
 
 ---
@@ -80,7 +80,7 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 5.1 | Lapor Bug Baru | 1. Buka menu Pelacak Bug (`/bugs`)<br>2. Klik Laporkan Bug<br>3. Pilih Proyek, Modul, Severity, Judul, Kronologi Kendala<br>4. Klik Simpan | Bug baru tercatat dengan status awal `Open` dan severity sesuai pilihan. | [ ] PASS<br>[ ] FAIL | |
+| 5.1 | Lapor Bug Baru | 1. Buka menu Pelacak Bug (`/bugs`)<br>2. Klik Laporkan Bug<br>3. Pilih Proyek, Modul, Severity, Judul, Kronologi Kendala<br>4. Klik Simpan | Bug baru tercatat dengan status awal `Open` dan severity sesuai pilihan. |PASS|
 | 5.2 | Dropdown Modul Dinamis | 1. Pilih Proyek A ➔ periksa isi dropdown Modul<br>2. Ganti pilihan ke Proyek B | Pilihan dropdown Modul otomatis menyesuaikan hanya modul milik Proyek B. | [ ] PASS<br>[ ] FAIL | |
 | 5.3 | Input Severity Berbeda | 1. Coba opsi: Critical, High, Medium, Low | Badge severity tampil dengan warna yang sesuai (Merah, Oranye, Biru, Hijau). | [ ] PASS<br>[ ] FAIL | |
 | 5.4 | Pengisian Akar Masalah (Root Cause) | 1. Buka modal edit/detail bug<br>2. Isi kolom teks **Akar Masalah (Root Cause)**<br>3. Klik Simpan Solusi | Analisis teknis tersimpan permanen dan dapat ditinjau kembali kapan saja. | [ ] PASS<br>[ ] FAIL | |

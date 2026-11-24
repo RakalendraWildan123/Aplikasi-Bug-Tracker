@@ -1313,22 +1313,75 @@
             btnClose?.addEventListener('click', () => toggleSidebar(false));
             backdrop?.addEventListener('click', () => toggleSidebar(false));
 
+            // Filter Modul Dinamis Berdasarkan Proyek
+            const filterModulesByProject = (projectSelect, moduleSelect, targetModuleId = null) => {
+                if (!projectSelect || !moduleSelect) return;
+                const selectedProjectId = projectSelect.value ? String(projectSelect.value) : '';
+                let matchFound = false;
+
+                Array.from(moduleSelect.options).forEach((opt, idx) => {
+                    if (idx === 0) {
+                        // Opsi 'Tanpa Modul / Umum' selalu tersedia
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        opt.style.display = '';
+                        return;
+                    }
+
+                    const optProjectId = opt.getAttribute('data-project-id');
+                    if (selectedProjectId && optProjectId === selectedProjectId) {
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        opt.style.display = '';
+                        if (targetModuleId && String(opt.value) === String(targetModuleId)) {
+                            matchFound = true;
+                        } else if (!targetModuleId && String(opt.value) === String(moduleSelect.value)) {
+                            matchFound = true;
+                        }
+                    } else {
+                        opt.hidden = true;
+                        opt.disabled = true;
+                        opt.style.display = 'none';
+                    }
+                });
+
+                if (targetModuleId && matchFound) {
+                    moduleSelect.value = targetModuleId;
+                } else if (!matchFound) {
+                    moduleSelect.value = '';
+                }
+            };
+
             // Kontrol Modal Tambah Bug
             const modalCreate = document.getElementById('modal-create-bug');
             const btnOpenCreate = document.getElementById('btn-open-create-bug');
+            const createBugProject = document.getElementById('create-bug-project');
+            const createBugModule = document.getElementById('create-bug-module');
+
+            createBugProject?.addEventListener('change', () => {
+                filterModulesByProject(createBugProject, createBugModule);
+            });
+
             btnOpenCreate?.addEventListener('click', () => {
+                filterModulesByProject(createBugProject, createBugModule);
                 modalCreate.classList.remove('hidden');
             });
 
             // 1. KONTROL MODAL DETAIL BUG (Lihat & Edit Detail)
             const modalDetail = document.getElementById('modal-detail-bug');
             const formDetail = document.getElementById('form-detail-bug');
+            const detailEditProject = document.getElementById('detail-edit-project');
+            const detailEditModule = document.getElementById('detail-edit-module');
+
+            detailEditProject?.addEventListener('change', () => {
+                filterModulesByProject(detailEditProject, detailEditModule);
+            });
 
             const openDetailModal = (data) => {
                 formDetail.action = `/bugs/${data.id}`;
                 document.getElementById('detail-edit-title').value = data.title || '';
-                document.getElementById('detail-edit-project').value = data.project_id || '';
-                document.getElementById('detail-edit-module').value = data.module_id || '';
+                detailEditProject.value = data.project_id || '';
+                filterModulesByProject(detailEditProject, detailEditModule, data.module_id);
                 document.getElementById('detail-edit-severity').value = data.severity || 'medium';
                 document.getElementById('detail-edit-status').value = data.status || 'open';
                 document.getElementById('detail-edit-reported-by').value = data.reported_by && data.reported_by !== '-' ? data.reported_by : '';

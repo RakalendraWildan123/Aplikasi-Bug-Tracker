@@ -1429,6 +1429,7 @@
                 submitText.textContent = 'Tambah Tugas';
                 formAction.reset();
                 taskIdInput.value = '';
+                filterTaskModules();
                 if (displayAssignedName) {
                     displayAssignedName.textContent = isUserAdmin ? 'Belum Ditugaskan' : '{{ $user->name }} (Anda)';
                 }
@@ -1470,7 +1471,7 @@
                 taskIdInput.value = taskId;
                 titleInput.value = title;
                 projectInput.value = projId;
-                moduleInput.value = modId;
+                filterTaskModules(modId);
                 typeInput.value = type;
                 statusInput.value = status;
                 targetDateInput.value = targetDate;
@@ -1495,28 +1496,39 @@
             });
 
             // Filter modul berdasarkan proyek yang dipilih
-            projectInput?.addEventListener('change', () => {
-                const selectedProjId = projectInput.value;
-                const currentModVal = moduleInput.value;
+            const filterTaskModules = (targetModuleId = null) => {
+                const selectedProjId = projectInput?.value ? String(projectInput.value) : '';
+                const currentModVal = targetModuleId !== null ? String(targetModuleId) : (moduleInput?.value || '');
                 let hasCurrentSelected = false;
 
                 Array.from(moduleInput.options).forEach((opt, idx) => {
-                    if (idx === 0) return; // opsi 'Tanpa Modul Khusus'
-                    const modProjId = opt.getAttribute('data-project-id');
-                    if (!selectedProjId || modProjId === selectedProjId) {
+                    if (idx === 0) {
                         opt.hidden = false;
                         opt.disabled = false;
-                        if (opt.value === currentModVal) hasCurrentSelected = true;
+                        opt.style.display = '';
+                        return;
+                    }
+                    const modProjId = opt.getAttribute('data-project-id');
+                    if (selectedProjId && String(modProjId) === selectedProjId) {
+                        opt.hidden = false;
+                        opt.disabled = false;
+                        opt.style.display = '';
+                        if (String(opt.value) === currentModVal) hasCurrentSelected = true;
                     } else {
                         opt.hidden = true;
                         opt.disabled = true;
+                        opt.style.display = 'none';
                     }
                 });
 
-                if (!hasCurrentSelected) {
+                if (hasCurrentSelected && currentModVal) {
+                    moduleInput.value = currentModVal;
+                } else {
                     moduleInput.value = '';
                 }
-            });
+            };
+
+            projectInput?.addEventListener('change', () => filterTaskModules());
 
             // Submit Form Tambah / Edit Tugas
             formAction?.addEventListener('submit', async (e) => {
