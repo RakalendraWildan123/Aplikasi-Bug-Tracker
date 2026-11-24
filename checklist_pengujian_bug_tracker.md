@@ -81,8 +81,8 @@
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
 | 5.1 | Lapor Bug Baru | 1. Buka menu Pelacak Bug (`/bugs`)<br>2. Klik Laporkan Bug<br>3. Pilih Proyek, Modul, Severity, Judul, Kronologi Kendala<br>4. Klik Simpan | Bug baru tercatat dengan status awal `Open` dan severity sesuai pilihan. |PASS|
-| 5.2 | Dropdown Modul Dinamis | 1. Pilih Proyek A ➔ periksa isi dropdown Modul<br>2. Ganti pilihan ke Proyek B | Pilihan dropdown Modul otomatis menyesuaikan hanya modul milik Proyek B. | [ ] PASS<br>[ ] FAIL | |
-| 5.3 | Input Severity Berbeda | 1. Coba opsi: Critical, High, Medium, Low | Badge severity tampil dengan warna yang sesuai (Merah, Oranye, Biru, Hijau). | [ ] PASS<br>[ ] FAIL | |
+| 5.2 | Dropdown Modul Dinamis | 1. Pilih Proyek A ➔ periksa isi dropdown Modul<br>2. Ganti pilihan ke Proyek B | Pilihan dropdown Modul otomatis menyesuaikan hanya modul milik Proyek B. |PASS|
+| 5.3 | Input Severity Berbeda | 1. Coba opsi: Critical, High, Medium, Low | Badge severity tampil dengan warna yang sesuai: Kritis (Merah), Tinggi (Oranye), Sedang (Kuning), Rendah (Abu-abu). |PASS|
 | 5.4 | Pengisian Akar Masalah (Root Cause) | 1. Buka modal edit/detail bug<br>2. Isi kolom teks **Akar Masalah (Root Cause)**<br>3. Klik Simpan Solusi | Analisis teknis tersimpan permanen dan dapat ditinjau kembali kapan saja. | [ ] PASS<br>[ ] FAIL | |
 | 5.5 | Pengisian Solusi Teknis & Resolve | 1. Isi kolom **Solusi Teknis**<br>2. Ubah status menjadi `Resolved`<br>3. Klik Simpan | Status bug berubah menjadi Selesai (Resolved) dan stempel `resolved_at` terisi. | [ ] PASS<br>[ ] FAIL | |
 | 5.6 | Filter Bug per Severity & Status | 1. Filter status `Open`<br>2. Filter severity `Critical` | Hanya bug yang memenuhi kriteria filter yang tampil pada tabel. | [ ] PASS<br>[ ] FAIL | |
