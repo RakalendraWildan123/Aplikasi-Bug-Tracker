@@ -83,9 +83,9 @@
 | 5.1 | Lapor Bug Baru | 1. Buka menu Pelacak Bug (`/bugs`)<br>2. Klik Laporkan Bug<br>3. Pilih Proyek, Modul, Severity, Judul, Kronologi Kendala<br>4. Klik Simpan | Bug baru tercatat dengan status awal `Open` dan severity sesuai pilihan. |PASS|
 | 5.2 | Dropdown Modul Dinamis | 1. Pilih Proyek A ➔ periksa isi dropdown Modul<br>2. Ganti pilihan ke Proyek B | Pilihan dropdown Modul otomatis menyesuaikan hanya modul milik Proyek B. |PASS|
 | 5.3 | Input Severity Berbeda | 1. Coba opsi: Critical, High, Medium, Low | Badge severity tampil dengan warna yang sesuai: Kritis (Merah), Tinggi (Oranye), Sedang (Kuning), Rendah (Abu-abu). |PASS|
-| 5.4 | Pengisian Akar Masalah (Root Cause) | 1. Buka modal edit/detail bug<br>2. Isi kolom teks **Akar Masalah (Root Cause)**<br>3. Klik Simpan Solusi | Analisis teknis tersimpan permanen dan dapat ditinjau kembali kapan saja. | [ ] PASS<br>[ ] FAIL | |
-| 5.5 | Pengisian Solusi Teknis & Resolve | 1. Isi kolom **Solusi Teknis**<br>2. Ubah status menjadi `Resolved`<br>3. Klik Simpan | Status bug berubah menjadi Selesai (Resolved) dan stempel `resolved_at` terisi. | [ ] PASS<br>[ ] FAIL | |
-| 5.6 | Filter Bug per Severity & Status | 1. Filter status `Open`<br>2. Filter severity `Critical` | Hanya bug yang memenuhi kriteria filter yang tampil pada tabel. | [ ] PASS<br>[ ] FAIL | |
+| 5.4 | Pengisian Akar Masalah (Root Cause) | 1. Buka modal edit/detail bug<br>2. Isi kolom teks **Akar Masalah (Root Cause)**<br>3. Klik Simpan Solusi | Analisis teknis tersimpan permanen dan dapat ditinjau kembali kapan saja. | PASS|
+| 5.5 | Pengisian Solusi Teknis & Resolve | 1. Isi kolom **Solusi Teknis**<br>2. Ubah status menjadi `Resolved`<br>3. Klik Simpan | Status bug berubah menjadi Selesai (Resolved) dan stempel `resolved_at` terisi. |PASS|
+| 5.6 | Filter Bug per Severity & Status | 1. Filter status `Open`<br>2. Filter severity `Critical` | Hanya bug yang memenuhi kriteria filter yang tampil pada tabel. |PASS|
 
 ---
 
@@ -93,8 +93,8 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 6.1 | Tampilan Daftar Evaluasi | 1. Buka menu Evaluasi Aplikasi (`/evaluations`) | Tabel menampilkan daftar evaluasi sistem berkala per proyek. Layout rapi. | [ ] PASS<br>[ ] FAIL | |
-| 6.2 | Tambah Evaluasi Baru | 1. Klik Tambah Evaluasi<br>2. Isi Proyek, Periode, Kendala Operasional, Feedback Pengguna<br>3. Tambahkan Action Item rencana tindakan<br>4. Simpan | Data evaluasi dan action items tersimpan dengan benar. | [ ] PASS<br>[ ] FAIL | |
+| 6.1 | Tampilan Daftar Evaluasi | 1. Buka menu Evaluasi Aplikasi (`/evaluations`) | Tabel menampilkan daftar evaluasi sistem berkala per proyek. Layout rapi. |PASS|
+| 6.2 | Tambah Action Item (Rencana Tindak Lanjut) | 1. Klik tombol **Tindak Lanjut / Detail** pada salah satu baris evaluasi proyek<br>2. Pada form Tambah Tindak Lanjut, isi Judul Rencana, PIC, dan Target Selesai<br>3. Klik **Tambahkan Action Item** | Evaluasi ter-generate otomatis oleh sistem per proyek, dan Action Item baru berhasil ditambahkan ke daftar rencana tindak lanjut. | [ ] PASS<br>[ ] FAIL | |
 | 6.3 | Konversi 1-Klik Action Item ke Task | 1. Pada baris Action Item, klik tombol **Konversi ke Task** | Action item langsung berubah menjadi Task baru di daftar tugas dan Kanban. | [ ] PASS<br>[ ] FAIL | |
 
 ---
