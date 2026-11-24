@@ -290,4 +290,61 @@ class TaskController extends Controller
 
         return redirect()->back()->with('success_message', $message);
     }
+
+    public function transfer(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'target_developer_id' => ['required', 'exists:users,id'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ], [
+            'target_developer_id.required' => 'Pilih rekan tim penerima tugas.',
+            'target_developer_id.exists' => 'Rekan tim yang dipilih tidak terdaftar.',
+            'note.max' => 'Catatan pengalihan maksimal 500 karakter.',
+        ]);
+
+        $currentUser = $request->user();
+        $targetUser = \App\Models\User::findOrFail($validated['target_developer_id']);
+        $previousAssignee = $task->assignee;
+        $note = !empty($validated['note']) 
+            ? $validated['note'] 
+            : "Dialihkan oleh {$currentUser->name} kepada {$targetUser->name}";
+
+        $logs = $task->handover_logs ?? [];
+        $logs[] = [
+            'from_developer_id' => $previousAssignee?->id ?? $currentUser->id,
+            'from_developer_name' => $previousAssignee?->name ?? $currentUser->name,
+            'to_developer_id' => $targetUser->id,
+            'to_developer_name' => $targetUser->name,
+            'project_name' => $task->project?->name,
+            'project_code' => $task->project?->code,
+            'note' => $note,
+            'action' => 'transfer',
+            'handed_over_at' => now()->toIso8601String(),
+        ];
+
+        $task->update([
+            'assigned_to' => $targetUser->id,
+            'handover_logs' => $logs,
+        ]);
+
+        $freshTask = $task->fresh(['project', 'module', 'assignee']);
+        $message = "Tugas '{$freshTask->title}' berhasil dialihkan kepada {$targetUser->name}.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $freshTask,
+                'target_user' => [
+                    'id' => $targetUser->id,
+                    'name' => $targetUser->name,
+                    'avatar' => $targetUser->avatar ?? 'AK',
+                    'avatar_bg' => $targetUser->avatar_bg ?? '#1E293B',
+                    'foto_profil_url' => $targetUser->foto_profil_url,
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success_message', $message);
+    }
 }

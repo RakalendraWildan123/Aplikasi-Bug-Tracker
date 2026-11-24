@@ -494,4 +494,66 @@ class TaskUiTest extends TestCase
         $this->assertSame('Developer C', $freshTask->assignee->name);
         $this->assertNotEmpty($freshTask->handover_logs);
     }
+
+    public function test_user_can_transfer_own_task_to_another_teammate(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer A']);
+        $devB = User::factory()->create(['name' => 'Developer B']);
+        $project = Project::factory()->create();
+
+        // 1. Developer A membuat tugas -> tugas milik Developer A
+        $task = Task::factory()->create([
+            'project_id' => $project->id,
+            'created_by' => $devA->id,
+            'assigned_to' => $devA->id,
+            'title' => 'Tugas Fitur Checkout Pembayaran',
+            'status' => 'in_progress',
+        ]);
+
+        $this->assertSame($devA->id, $task->assigned_to);
+
+        // 2. Developer A mengalihkan tugasnya kepada Developer B
+        $response = $this->actingAs($devA)->postJson("/tasks/{$task->id}/transfer", [
+            'target_developer_id' => $devB->id,
+            'note' => 'Mendelegasikan tugas ke rekan setim karena fokus pada modul inventory',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        $freshTask = $task->fresh(['assignee']);
+        $this->assertSame($devB->id, $freshTask->assigned_to);
+        $this->assertSame('Developer B', $freshTask->assignee->name);
+
+        // Verifikasi audit trail handover_logs
+        $logs = $freshTask->handover_logs;
+        $this->assertNotEmpty($logs);
+        $lastLog = end($logs);
+        $this->assertSame($devA->id, $lastLog['from_developer_id']);
+        $this->assertSame('Developer A', $lastLog['from_developer_name']);
+        $this->assertSame($devB->id, $lastLog['to_developer_id']);
+        $this->assertSame('Developer B', $lastLog['to_developer_name']);
+        $this->assertSame('transfer', $lastLog['action']);
+    }
+
+    public function test_transfer_task_validates_required_target_developer(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer A']);
+        $project = Project::factory()->create();
+
+        $task = Task::factory()->create([
+            'project_id' => $project->id,
+            'created_by' => $devA->id,
+            'assigned_to' => $devA->id,
+        ]);
+
+        $response = $this->actingAs($devA)->postJson("/tasks/{$task->id}/transfer", [
+            'target_developer_id' => '',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['target_developer_id']);
+    }
 }

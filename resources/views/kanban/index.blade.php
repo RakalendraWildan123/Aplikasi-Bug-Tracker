@@ -618,10 +618,30 @@
                                                     </svg>
                                                     <span>Ambil Alih Tugas</span>
                                                 </button>
-                                            @elseif ($task->assigned_to && (int)$task->assigned_to === (int)$user->id)
-                                                <div class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-1 px-2">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                    <span>Tugas Anda</span>
+                                            @elseif ($task->assigned_to && ((int)$task->assigned_to === (int)$user->id || $user->isAdmin()))
+                                                <div class="space-y-1.5 w-full">
+                                                    @if ((int)$task->assigned_to === (int)$user->id)
+                                                        <div class="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg py-1 px-2">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                            <span>Tugas Anda</span>
+                                                        </div>
+                                                    @endif
+                                                    <button
+                                                        type="button"
+                                                        class="btn-transfer-task w-full justify-center text-[11px] font-semibold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg px-2.5 py-1.5 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                                        data-task-id="{{ $task->id }}"
+                                                        data-task-title="{{ $task->title }}"
+                                                        data-project-name="{{ $task->project?->name }}"
+                                                        data-project-code="{{ $task->project?->code }}"
+                                                        data-current-assignee-id="{{ $task->assigned_to }}"
+                                                        data-current-assignee-name="{{ $task->assignee?->name ?? 'Anda' }}"
+                                                        title="Alihkan Tugas ke Rekan Tim"
+                                                    >
+                                                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                                                        </svg>
+                                                        <span>Alihkan ke Rekan</span>
+                                                    </button>
                                                 </div>
                                             @else
                                                 <button
@@ -949,6 +969,110 @@
                         </svg>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL POP-UP ALIKAN TUGAS KE REKAN TIM --}}
+    <div
+        id="modal-transfer-task"
+        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden"
+        aria-labelledby="modal-transfer-title"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transition-all transform duration-200">
+            {{-- Header Modal --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-indigo-50/70">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="modal-transfer-title" class="text-base font-bold text-slate-900 leading-tight">Alihkan Tugas ke Rekan Tim</h3>
+                        <p class="text-xs text-indigo-800 font-medium">Serahkan pengerjaan tugas kepada rekan setim</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    id="btn-close-transfer-modal"
+                    class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
+                    aria-label="Tutup"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Form Isi --}}
+            <div class="p-6 space-y-4">
+                {{-- Info Tugas --}}
+                <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-2">
+                    <div>
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-indigo-900">Judul Tugas</span>
+                        <div id="transfer-task-title" class="text-sm font-semibold text-slate-900 mt-0.5">
+                            Judul Tugas
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-indigo-100/80 flex items-center justify-between text-xs text-slate-600">
+                        <span id="transfer-project-name" class="font-medium text-slate-700">[PRJ] Proyek</span>
+                        <span>PIC Saat Ini: <b id="transfer-current-assignee" class="text-slate-900 font-semibold">Anda</b></span>
+                    </div>
+                </div>
+
+                {{-- Pilih Rekan Tim Penerima --}}
+                <div>
+                    <label for="transfer-target-developer" class="block text-xs font-semibold text-slate-800 mb-1.5">
+                        Pilih Rekan Tim Penerima Tugas <span class="text-rose-500">*</span>
+                    </label>
+                    <select
+                        id="transfer-target-developer"
+                        class="w-full text-sm rounded-lg border border-slate-300 px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 cursor-pointer"
+                    >
+                        <option value="">-- Pilih Rekan Tim --</option>
+                        @foreach ($developers as $dev)
+                            <option value="{{ $dev->id }}">{{ $dev->name }} ({{ $dev->role_title ?? $dev->role ?? 'Developer' }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Catatan Pengalihan --}}
+                <div>
+                    <label for="transfer-note" class="block text-xs font-semibold text-slate-800 mb-1.5">
+                        Catatan Serah Terima / Alasan Pengalihan (Opsional)
+                    </label>
+                    <textarea
+                        id="transfer-note"
+                        rows="2"
+                        class="w-full text-xs rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 placeholder:text-slate-400"
+                        placeholder="Contoh: Mengalihkan tugas modul ini kepada rekan karena fokus pada task prioritas..."
+                    ></textarea>
+                </div>
+            </div>
+
+            {{-- Footer Modal --}}
+            <div class="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
+                <button
+                    type="button"
+                    id="btn-cancel-transfer"
+                    class="px-4 py-2.5 rounded-lg border border-slate-300 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                >
+                    Batal
+                </button>
+                <button
+                    type="button"
+                    id="btn-confirm-transfer"
+                    class="px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-2 cursor-pointer shadow-xs"
+                >
+                    <svg id="confirm-transfer-spinner" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white hidden" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="confirm-transfer-text">Konfirmasi Alihkan Tugas</span>
+                </button>
             </div>
         </div>
     </div>
@@ -1828,6 +1952,124 @@
                     btnConfirmTakeover.disabled = false;
                     takeoverText.textContent = 'Ya, Ambil Alih Tugas';
                     takeoverSpinner?.classList.add('hidden');
+                }
+            });
+
+            // MODAL ALIKAN TUGAS KE REKAN TIM
+            const modalTransfer = document.getElementById('modal-transfer-task');
+            const btnCloseTransfer = document.getElementById('btn-close-transfer-modal');
+            const btnCancelTransfer = document.getElementById('btn-cancel-transfer');
+            const btnConfirmTransfer = document.getElementById('btn-confirm-transfer');
+            const transferText = document.getElementById('confirm-transfer-text');
+            const transferSpinner = document.getElementById('confirm-transfer-spinner');
+
+            const transferTaskTitle = document.getElementById('transfer-task-title');
+            const transferProjectName = document.getElementById('transfer-project-name');
+            const transferCurrentAssignee = document.getElementById('transfer-current-assignee');
+            const transferTargetDev = document.getElementById('transfer-target-developer');
+            const transferNote = document.getElementById('transfer-note');
+
+            let activeTransferTaskId = null;
+
+            const closeTransferModal = () => {
+                modalTransfer?.classList.add('hidden');
+                activeTransferTaskId = null;
+                if (transferTargetDev) transferTargetDev.value = '';
+                if (transferNote) transferNote.value = '';
+            };
+
+            btnCloseTransfer?.addEventListener('click', closeTransferModal);
+            btnCancelTransfer?.addEventListener('click', closeTransferModal);
+            modalTransfer?.addEventListener('click', (e) => {
+                if (e.target === modalTransfer) closeTransferModal();
+            });
+
+            // Klik tombol Alihkan Tugas pada kartu
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-transfer-task');
+                if (!btn) return;
+
+                activeTransferTaskId = btn.getAttribute('data-task-id');
+                const title = btn.getAttribute('data-task-title') || '';
+                const projName = btn.getAttribute('data-project-name') || '';
+                const projCode = btn.getAttribute('data-project-code') || '';
+                const assigneeName = btn.getAttribute('data-current-assignee-name') || 'Anda';
+                const assigneeId = btn.getAttribute('data-current-assignee-id');
+
+                if (transferTaskTitle) transferTaskTitle.textContent = title;
+                if (transferProjectName) transferProjectName.textContent = projCode ? `[${projCode}] ${projName}` : projName;
+                if (transferCurrentAssignee) transferCurrentAssignee.textContent = assigneeName;
+
+                // Disable opsi developer yang sama dengan assignee saat ini
+                if (transferTargetDev) {
+                    Array.from(transferTargetDev.options).forEach(opt => {
+                        if (opt.value && opt.value === String(assigneeId)) {
+                            opt.disabled = true;
+                            opt.textContent = opt.textContent.replace(' (PIC Saat Ini)', '') + ' (PIC Saat Ini)';
+                        } else {
+                            opt.disabled = false;
+                            opt.textContent = opt.textContent.replace(' (PIC Saat Ini)', '');
+                        }
+                    });
+                    transferTargetDev.value = '';
+                }
+
+                modalTransfer?.classList.remove('hidden');
+            });
+
+            // Konfirmasi Alihkan Tugas via AJAX
+            btnConfirmTransfer?.addEventListener('click', async () => {
+                if (!activeTransferTaskId) return;
+
+                const targetDevId = transferTargetDev ? transferTargetDev.value : null;
+                if (!targetDevId) {
+                    alert('Silakan pilih rekan tim penerima tugas terlebih dahulu.');
+                    transferTargetDev?.focus();
+                    return;
+                }
+
+                btnConfirmTransfer.disabled = true;
+                if (transferText) transferText.textContent = 'Memproses...';
+                transferSpinner?.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(`/tasks/${activeTransferTaskId}/transfer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            target_developer_id: targetDevId,
+                            note: transferNote ? transferNote.value.trim() : null
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        closeTransferModal();
+                        showToast(data.message || 'Tugas berhasil dialihkan.');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        showToast(data.message || 'Gagal mengalihkan tugas.', true);
+                    }
+                } catch (err) {
+                    showToast('Terjadi kesalahan koneksi saat mengalihkan tugas.', true);
+                } finally {
+                    btnConfirmTransfer.disabled = false;
+                    if (transferText) transferText.textContent = 'Konfirmasi Alihkan Tugas';
+                    transferSpinner?.classList.add('hidden');
+                }
+            });
+
+            // Escape key handler
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (modalTransfer && !modalTransfer.classList.contains('hidden')) {
+                        closeTransferModal();
+                    }
                 }
             });
         });

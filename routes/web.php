@@ -31,7 +31,9 @@ Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     Route::put('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('tasks.takeover');
+    Route::post('/tasks/{task}/transfer', [\App\Http\Controllers\TaskController::class, 'transfer'])->name('tasks.transfer');
     Route::post('/kanban/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('kanban.tasks.takeover');
+    Route::post('/kanban/tasks/{task}/transfer', [\App\Http\Controllers\TaskController::class, 'transfer'])->name('kanban.tasks.transfer');
 
     Route::get('/bugs', [\App\Http\Controllers\BugController::class, 'index'])->name('bugs.index');
     Route::post('/bugs', [\App\Http\Controllers\BugController::class, 'store'])->name('bugs.store');
