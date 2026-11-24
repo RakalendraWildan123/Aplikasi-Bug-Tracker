@@ -558,7 +558,7 @@
         </div>
 
         {{-- Form Tambah Proyek --}}
-        <form method="POST" action="{{ route('projects.store') }}" class="p-6 space-y-4">
+        <form id="form-create-project" method="POST" action="{{ route('projects.store') }}" class="p-6 space-y-4">
             @csrf
 
             {{-- Nama Proyek --}}
@@ -653,9 +653,16 @@
                 </button>
                 <button
                     type="submit"
-                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold transition shadow-xs cursor-pointer focus:ring-2 focus:ring-indigo-500"
+                    id="btn-submit-create-project"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold transition shadow-xs cursor-pointer focus:ring-2 focus:ring-indigo-500"
                 >
-                    Simpan Proyek
+                    <span id="create-project-spinner" class="hidden">
+                        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </span>
+                    <span id="create-project-btn-text">Simpan Proyek</span>
                 </button>
             </div>
         </form>
@@ -830,6 +837,44 @@
     </div>
 </div>
 
+{{-- ========================================================================= --}}
+{{-- 4. POP-UP NOTIFIKASI DIALOG (Untuk Validasi Gagal / Duplikat Kode / Berhasil) --}}
+{{-- ========================================================================= --}}
+<div
+    id="modal-project-popup-notification"
+    class="fixed inset-0 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs hidden"
+    style="z-index: 99999;"
+    aria-modal="true"
+    role="dialog"
+>
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150 p-6 text-center">
+        {{-- Ikon Pop-Up --}}
+        <div id="project-popup-icon-container" class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-amber-100 text-amber-600">
+            <svg id="project-popup-icon-success" class="w-7 h-7 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+            </svg>
+            <svg id="project-popup-icon-warning" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+        </div>
+
+        <h3 id="project-popup-title" class="text-base font-bold text-slate-900">Validasi Kode Proyek</h3>
+        <p id="project-popup-message" class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+            Kode proyek sudah digunakan. Silakan gunakan kode unik yang berbeda.
+        </p>
+
+        <div class="mt-6 flex items-center justify-center">
+            <button
+                type="button"
+                id="project-popup-btn-close"
+                class="w-full px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-slate-900 hover:bg-slate-800 active:scale-95 transition shadow-sm cursor-pointer"
+            >
+                OK, Mengerti
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- Script Interaktivitas Modal & Sidebar --}}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -853,15 +898,113 @@
         btnClose?.addEventListener('click', closeSidebar);
         backdrop?.addEventListener('click', closeSidebar);
 
-        // 2. KONTROL MODAL TAMBAH PROYEK
+        // 2. KONTROL MODAL POP-UP NOTIFIKASI
+        const popupModal = document.getElementById('modal-project-popup-notification');
+        const popupIconContainer = document.getElementById('project-popup-icon-container');
+        const popupIconSuccess = document.getElementById('project-popup-icon-success');
+        const popupIconWarning = document.getElementById('project-popup-icon-warning');
+        const popupTitle = document.getElementById('project-popup-title');
+        const popupMessage = document.getElementById('project-popup-message');
+        const popupBtnClose = document.getElementById('project-popup-btn-close');
+        let popupConfirmCallback = null;
+
+        function showProjectPopup(title, message, type = 'warning', onConfirm = null) {
+            if (popupTitle) popupTitle.textContent = title;
+            if (popupMessage) popupMessage.textContent = message;
+            popupConfirmCallback = onConfirm;
+
+            if (popupIconSuccess) popupIconSuccess.classList.add('hidden');
+            if (popupIconWarning) popupIconWarning.classList.add('hidden');
+
+            if (type === 'success') {
+                if (popupIconContainer) popupIconContainer.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-emerald-100 text-emerald-600';
+                if (popupIconSuccess) popupIconSuccess.classList.remove('hidden');
+            } else {
+                if (popupIconContainer) popupIconContainer.className = 'w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm bg-amber-100 text-amber-600';
+                if (popupIconWarning) popupIconWarning.classList.remove('hidden');
+            }
+
+            if (popupModal) popupModal.classList.remove('hidden');
+        }
+
+        popupBtnClose?.addEventListener('click', () => {
+            if (popupModal) popupModal.classList.add('hidden');
+            if (typeof popupConfirmCallback === 'function') {
+                popupConfirmCallback();
+            }
+        });
+
+        // 3. KONTROL MODAL TAMBAH PROYEK (AJAX Form dengan Validasi Pop-up)
         const modalCreate = document.getElementById('modal-create-project');
         const btnOpenCreate = document.getElementById('btn-open-create-project');
+        const formCreate = document.getElementById('form-create-project');
+        const btnSubmitCreate = document.getElementById('btn-submit-create-project');
+        const spinnerCreate = document.getElementById('create-project-spinner');
+        const btnTextCreate = document.getElementById('create-project-btn-text');
 
         btnOpenCreate?.addEventListener('click', () => {
             modalCreate?.classList.remove('hidden');
         });
 
-        // 3. KONTROL MODAL EDIT PROYEK
+        formCreate?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            btnSubmitCreate.disabled = true;
+            if (spinnerCreate) spinnerCreate.classList.remove('hidden');
+            if (btnTextCreate) btnTextCreate.textContent = 'Menyimpan...';
+
+            const formData = new FormData(formCreate);
+            const payload = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch(formCreate.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.status === 201 || (res.ok && data.project)) {
+                    if (modalCreate) modalCreate.classList.add('hidden');
+                    showProjectPopup(
+                        'Berhasil!',
+                        data.message || 'Proyek baru berhasil didaftarkan.',
+                        'success',
+                        () => window.location.reload()
+                    );
+                } else if (res.status === 422) {
+                    const errorMsg = data.errors?.code?.[0] || data.message || 'Kode proyek sudah digunakan. Silakan gunakan kode unik yang berbeda.';
+                    showProjectPopup(
+                        'Validasi Kode Proyek',
+                        errorMsg,
+                        'warning'
+                    );
+                } else {
+                    showProjectPopup(
+                        'Gagal Menyimpan Proyek',
+                        data.message || 'Terjadi kesalahan saat memproses data proyek.',
+                        'warning'
+                    );
+                }
+            } catch (err) {
+                showProjectPopup(
+                    'Kendala Jaringan',
+                    'Terjadi kesalahan koneksi saat memproses data proyek.',
+                    'warning'
+                );
+            } finally {
+                btnSubmitCreate.disabled = false;
+                if (spinnerCreate) spinnerCreate.classList.add('hidden');
+                if (btnTextCreate) btnTextCreate.textContent = 'Simpan Proyek';
+            }
+        });
+
+        // 4. KONTROL MODAL EDIT PROYEK
         const modalEdit = document.getElementById('modal-edit-project');
         const formEdit = document.getElementById('form-edit-project');
 
@@ -881,7 +1024,7 @@
             });
         });
 
-        // 4. KONTROL MODAL HAPUS PROYEK
+        // 5. KONTROL MODAL HAPUS PROYEK
         const modalDelete = document.getElementById('modal-delete-project');
         const formDelete = document.getElementById('form-delete-project');
         const deleteName = document.getElementById('delete-project-name');
@@ -900,23 +1043,39 @@
             });
         });
 
-        // 5. TUTUP SEMUA MODAL
+        // 6. TUTUP SEMUA MODAL
         document.querySelectorAll('.btn-close-modal').forEach(btn => {
             btn.addEventListener('click', () => {
                 modalCreate?.classList.add('hidden');
                 modalEdit?.classList.add('hidden');
                 modalDelete?.classList.add('hidden');
+                popupModal?.classList.add('hidden');
             });
         });
 
         // Tutup modal jika klik di luar box modal
-        [modalCreate, modalEdit, modalDelete].forEach(modal => {
+        [modalCreate, modalEdit, modalDelete, popupModal].forEach(modal => {
             modal?.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.classList.add('hidden');
                 }
             });
         });
+
+        // 7. Trigger Otomatis dari Flash Session (Fallback)
+        @if ($errors->has('code') || $errors->any())
+            showProjectPopup(
+                'Validasi Kode Proyek',
+                @json($errors->first('code') ?? $errors->first()),
+                'warning'
+            );
+        @elseif (session('status'))
+            showProjectPopup(
+                'Berhasil!',
+                @json(session('status')),
+                'success'
+            );
+        @endif
     });
 </script>
 

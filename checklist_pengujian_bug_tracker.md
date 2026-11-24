@@ -103,8 +103,8 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 7.1 | Catat Rilis Versi Baru | 1. Buka menu Riwayat Rilis (`/releases`)<br>2. Klik Catat Rilis<br>3. Isi Tag Versi (misal: `v1.5.0`), Branch (`main`), Commit Hash, Changelog<br>4. Simpan | Data rilis baru tampil pada timeline riwayat deployment sistem. | [ ] PASS<br>[ ] FAIL | |
-| 7.2 | Filter Rilis per Proyek | 1. Pilih filter proyek tertentu | Riwayat rilis tersaring khusus untuk aplikasi yang dipilih. | [ ] PASS<br>[ ] FAIL | |
+| 7.1 | Catat Rilis Versi Baru | 1. Buka menu Riwayat Rilis (`/releases`)<br>2. Klik Catat Rilis<br>3. Isi Tag Versi (misal: `v1.5.0`), Branch (`main`), Commit Hash, Changelog<br>4. Simpan | Data rilis baru tampil pada timeline riwayat deployment sistem. |PASS|
+| 7.2 | Filter Rilis per Proyek | 1. Pilih filter proyek tertentu | Riwayat rilis tersaring khusus untuk aplikasi yang dipilih. |PASS|
 
 ---
 
@@ -112,11 +112,11 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 8.1 | Filter Preset Harian | 1. Buka menu Laporan Periodik (`/reports`)<br>2. Pilih Preset: **Harian** | Sistem menampilkan ringkasan data aktivitas hari ini. | [ ] PASS<br>[ ] FAIL | |
-| 8.2 | Filter Preset Mingguan | 1. Pilih Preset: **Mingguan** | Data merangkum progress 7 hari berjalan. | [ ] PASS<br>[ ] FAIL | |
-| 8.3 | Filter Preset Bulanan | 1. Pilih Preset: **Bulanan** | Data merangkum metrik capaian bulan ini. | [ ] PASS<br>[ ] FAIL | |
-| 8.4 | Filter Custom Rentang Tanggal | 1. Masukkan Start Date dan End Date khusus<br>2. Klik Terapkan | Sistem menampilkan agregasi data sesuai rentang tanggal yang dipilih. | [ ] PASS<br>[ ] FAIL | |
-| 8.5 | Uji Mode Cetak PDF / Print | 1. Klik tombol **Cetak / PDF** atau tekan `Ctrl + P` | Preview cetak rapi, **sidebar kiri dan tombol aksi otomatis hilang** (@media print). | [ ] PASS<br>[ ] FAIL | |
+| 8.1 | Filter Preset Harian | 1. Buka menu Laporan Periodik (`/reports`)<br>2. Pilih Preset: **Harian** | Sistem menampilkan ringkasan data aktivitas hari ini. |PASS|
+| 8.2 | Filter Preset Mingguan | 1. Pilih Preset: **Mingguan** | Data merangkum progress 7 hari berjalan. |PASS|
+| 8.3 | Filter Preset Bulanan | 1. Pilih Preset: **Bulanan** | Data merangkum metrik capaian bulan ini. |PASS|
+| 8.4 | Filter Custom Rentang Tanggal | 1. Masukkan Start Date dan End Date khusus<br>2. Klik Terapkan | Sistem menampilkan agregasi data sesuai rentang tanggal yang dipilih. |PASS|
+| 8.5 | Uji Mode Cetak PDF / Print | 1. Klik tombol **Cetak / PDF** atau tekan `Ctrl + P` | Preview cetak rapi, **sidebar kiri dan tombol aksi otomatis hilang** (@media print). |PASS|
 
 ---
 
@@ -124,8 +124,8 @@
 
 | No | Skenario Uji | Langkah Pengujian | Hasil yang Diharapkan | Status | Catatan / Temuan |
 | :-: | :--- | :--- | :--- | :-: | :--- |
-| 9.1 | Tambah Master Proyek | 1. Buka `/projects`<br>2. Tambah proyek baru dengan kode unik (`DEMO1`) | Proyek baru tersimpan dan tersedia pada seluruh dropdown proyek. | [ ] PASS<br>[ ] FAIL | |
-| 9.2 | Validasi Duplikat Kode Proyek | 1. Coba tambah proyek lain dengan kode yang sama (`DEMO1`) | Ditolak oleh sistem dengan pesan error bahwa kode proyek sudah digunakan. | [ ] PASS<br>[ ] FAIL | |
+| 9.1 | Tambah Master Proyek | 1. Buka `/projects`<br>2. Tambah proyek baru dengan kode unik (`DEMO1`) | Proyek baru tersimpan dan tersedia pada seluruh dropdown proyek. | PASS|
+| 9.2 | Validasi Duplikat Kode Proyek | 1. Coba tambah proyek lain dengan kode yang sama (`DEMO1`) | Ditolak oleh sistem dengan notifikasi pop-up bahwa kode proyek sudah digunakan. | PASS | Notifikasi pop-up dialog elegan muncul di layar saat terdeteksi duplikasi kode unik proyek. |
 | 9.3 | Tambah Master Modul | 1. Buka `/modules`<br>2. Tambah modul baru di bawah Proyek tertentu | Modul baru tersimpan dan terhubung dengan relasi project_id yang benar. | [ ] PASS<br>[ ] FAIL | |
 | 9.4 | Kelola Master Akun Pengguna | 1. Buka `/admin/accounts`<br>2. Tambah akun developer baru atau aktifkan/nonaktifkan akun | Status akun diperbarui, akun yang dinonaktifkan tidak dapat login. | [ ] PASS<br>[ ] FAIL | |
 

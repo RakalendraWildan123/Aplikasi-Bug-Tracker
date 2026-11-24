@@ -280,6 +280,7 @@ class ProjectUiTest extends TestCase
         $response->assertSee('id="modal-create-project"', false);
         $response->assertSee('id="modal-edit-project"', false);
         $response->assertSee('id="modal-delete-project"', false);
+        $response->assertSee('id="modal-project-popup-notification"', false);
         $response->assertSee('Tambah Proyek Baru');
         $response->assertSee('Edit Data Proyek');
         $response->assertSee('Hapus Proyek?');
