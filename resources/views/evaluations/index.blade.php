@@ -1072,7 +1072,8 @@
 {{-- MODAL 5: KONFIRMASI KONVERSI ACTION ITEM KE TASK (Pop-up Dialog Konfirmasi Elegan) --}}
 <div
     id="modal-confirm-convert-task"
-    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden"
+    class="fixed inset-0 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs hidden"
+    style="z-index: 9000;"
     aria-modal="true"
     role="dialog"
 >
@@ -1135,7 +1136,8 @@
 {{-- POP-UP TOAST NOTIFIKASI SUKSES (Floating Alert Melayang) --}}
 <div
     id="eval-toast-notification"
-    class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-xl border border-emerald-200 bg-white p-4 text-slate-900 shadow-2xl backdrop-blur-xs transition-all animate-in slide-in-from-top-2 duration-200"
+    class="fixed top-5 right-5 hidden max-w-sm rounded-xl border border-emerald-200 bg-white p-4 text-slate-900 shadow-2xl backdrop-blur-xs transition-all animate-in slide-in-from-top-2 duration-200"
+    style="z-index: 9999;"
 >
     <div class="flex items-start gap-3">
         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shrink-0 mt-0.5 shadow-xs">
@@ -1158,7 +1160,8 @@
 {{-- MODAL 6: POP-UP NOTIFIKASI DIALOG ELEGAN (Pengganti alert bawaan & penampil notifikasi status) --}}
 <div
     id="modal-eval-popup-notification"
-    class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden"
+    class="fixed inset-0 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs hidden"
+    style="z-index: 99999;"
     aria-modal="true"
     role="dialog"
 >
@@ -1312,6 +1315,7 @@
 
         btnCancelConvert?.addEventListener('click', () => {
             if (convertModal) convertModal.classList.add('hidden');
+            if (detailModal) detailModal.classList.remove('hidden');
         });
 
         document.addEventListener('keydown', function (e) {
@@ -1476,6 +1480,7 @@
             if (convertConfirmPic) convertConfirmPic.textContent = pic;
             if (convertConfirmTarget) convertConfirmTarget.textContent = targetDate;
 
+            if (detailModal) detailModal.classList.add('hidden');
             openModal(convertModal);
         });
 
