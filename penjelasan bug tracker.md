@@ -1,4 +1,4 @@
-﻿# PENJELASAN LENGKAP & RINCI DOKUMEN SRS
+# PENJELASAN LENGKAP & RINCI DOKUMEN SRS
 ## APLIKASI MONITORING & MANAJEMEN IT DEVELOPER (BUG TRACKER)
 
 Dokumen ini merupakan penjelasan mendalam, komprehensif, dan rinci dari dokumen **Software Requirements Specification (SRS)** resmi bernomor `SRS-ITDEV-2026-001-REV07` (Versi 2.0, Terbit 16 November 2026), yang menjadi acuan utama pengembangan sistem, arsitektur basis data, alur antarmuka pengguna, serta pengujian sistem.
