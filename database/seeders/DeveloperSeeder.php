@@ -12,15 +12,15 @@ class DeveloperSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Akun Atasan / Admin IT
+        // 1. Akun Atasan / Admin IT (Rakalendra Wildan)
         User::updateOrCreate(
             ['email' => 'admin@bugtracker.test'],
             [
-                'name' => 'Kepala Divisi IT',
+                'name' => 'Rakalendra Wildan',
                 'password' => 'password',
                 'role' => 'admin',
                 'role_title' => null,
-                'avatar' => 'KD',
+                'avatar' => 'RW',
                 'avatar_bg' => '#1E293B',
                 'is_active' => true,
                 'email_verified_at' => now(),
