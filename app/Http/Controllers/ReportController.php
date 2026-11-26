@@ -141,10 +141,25 @@ class ReportController extends Controller
             ];
         });
 
+        $bugsByProject = $projects
+            ->map(function ($project) use ($bugs) {
+                $pBugs = $bugs->where('project_id', $project->id)->values();
+                return [
+                    'project' => $project,
+                    'total' => $pBugs->count(),
+                    'resolved' => $pBugs->whereIn('status', ['resolved', 'closed'])->count(),
+                    'open' => $pBugs->whereIn('status', ['open', 'reopened', 'in_progress'])->count(),
+                    'bugs' => $pBugs,
+                ];
+            })
+            ->filter(fn ($group) => $group['total'] > 0)
+            ->values();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'metrics' => $metrics,
                 'project_breakdown' => $projectBreakdown,
+                'bugs_by_project' => $bugsByProject,
                 'preset' => $preset,
                 'start_date' => $startDate ? $startDate->format('Y-m-d') : null,
                 'end_date' => $endDate ? $endDate->format('Y-m-d') : null,
@@ -162,6 +177,7 @@ class ReportController extends Controller
             'developers' => $developers,
             'metrics' => $metrics,
             'projectBreakdown' => $projectBreakdown,
+            'bugsByProject' => $bugsByProject,
             'tasks' => $tasks,
             'bugs' => $bugs,
             'releases' => $releases,
@@ -289,6 +305,238 @@ class ReportController extends Controller
             fclose($handle);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function exportExcel(Request $request): StreamedResponse
+    {
+        $preset = $request->string('preset', 'all')->toString();
+        $projectId = $request->string('project_id')->toString();
+        $developerId = $request->string('developer_id')->toString();
+
+        [$startDate, $endDate] = $this->resolveDateRange(
+            $preset,
+            $request->input('start_date'),
+            $request->input('end_date')
+        );
+
+        $projects = Project::query()->orderBy('name')->get();
+
+        $tasksQuery = Task::query()->with(['project', 'assignee']);
+        $bugsQuery = Bug::query()->with(['project', 'assignee', 'module']);
+
+        if ($preset !== 'all' && $startDate && $endDate) {
+            $startDay = $startDate->copy()->startOfDay();
+            $endDay = $endDate->copy()->endOfDay();
+            $startDateStr = $startDate->format('Y-m-d');
+            $endDateStr = $endDate->format('Y-m-d');
+
+            $tasksQuery->where(function ($q) use ($startDay, $endDay, $startDateStr, $endDateStr) {
+                $q->whereBetween('created_at', [$startDay, $endDay])
+                    ->orWhereBetween('start_date', [$startDateStr, $endDateStr]);
+            });
+
+            $bugsQuery->where(function ($q) use ($startDay, $endDay, $startDateStr, $endDateStr) {
+                $q->whereBetween('created_at', [$startDay, $endDay])
+                    ->orWhereBetween('reported_date', [$startDateStr, $endDateStr]);
+            });
+        }
+
+        if ($projectId !== '') {
+            $tasksQuery->where('project_id', $projectId);
+            $bugsQuery->where('project_id', $projectId);
+        }
+
+        if ($developerId !== '') {
+            $tasksQuery->where('assigned_to', $developerId);
+            $bugsQuery->where('assigned_to', $developerId);
+        }
+
+        $tasks = $tasksQuery->orderByDesc('id')->get();
+        $bugs = $bugsQuery->orderByDesc('id')->get();
+
+        $dateSuffix = $startDate && $endDate
+            ? $startDate->format('Ymd') . '-' . $endDate->format('Ymd')
+            : 'semua-periode';
+        $periodLabel = $startDate && $endDate
+            ? $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y')
+            : 'Semua Data Terdaftar';
+
+        $filename = 'laporan-periodik-' . $dateSuffix . '.xls';
+
+        $esc = fn (?string $val): string => htmlspecialchars((string) ($val ?? ''), ENT_XML1 | ENT_COMPAT, 'UTF-8');
+        $cell = fn (?string $val, string $style = 'DefaultCell', string $type = 'String', ?int $mergeAcross = null): string => sprintf(
+            '<Cell ss:StyleID="%s"%s><Data ss:Type="%s">%s</Data></Cell>',
+            $style,
+            $mergeAcross !== null ? ' ss:MergeAcross="' . $mergeAcross . '"' : '',
+            $type,
+            $esc($val)
+        );
+
+        return response()->streamDownload(function () use ($projects, $tasks, $bugs, $periodLabel, $cell) {
+            $printedAt = now('Asia/Jakarta')->isoFormat('D MMMM Y, HH:mm') . ' WIB';
+
+            $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
+            $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"' . "\n";
+            $xml .= ' xmlns:o="urn:schemas-microsoft-com:office:office"' . "\n";
+            $xml .= ' xmlns:x="urn:schemas-microsoft-com:office:excel"' . "\n";
+            $xml .= ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' . "\n";
+
+            // Styles
+            $xml .= '<Styles>';
+            $xml .= '<Style ss:ID="DefaultCell"><Alignment ss:Vertical="Top" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/></Borders><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#0F172A"/></Style>';
+            $xml .= '<Style ss:ID="Title"><Font ss:FontName="Calibri" ss:Size="13" ss:Bold="1" ss:Color="#0F172A"/></Style>';
+            $xml .= '<Style ss:ID="SubTitle"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#475569"/></Style>';
+            $xml .= '<Style ss:ID="Header"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1E293B"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1E293B"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1E293B"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#1E293B"/></Borders><Font ss:FontName="Calibri" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F172A" ss:Pattern="Solid"/></Style>';
+            $xml .= '<Style ss:ID="GroupHeader"><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#94A3B8"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#94A3B8"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#94A3B8"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#94A3B8"/></Borders><Font ss:FontName="Calibri" ss:Size="10" ss:Bold="1" ss:Color="#1E293B"/><Interior ss:Color="#E2E8F0" ss:Pattern="Solid"/></Style>';
+            $xml .= '<Style ss:ID="NumberCell"><Alignment ss:Horizontal="Right" ss:Vertical="Top"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/></Borders><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#0F172A"/></Style>';
+            $xml .= '</Styles>' . "\n";
+
+            // =========================================================================
+            // SHEET 1: RINGKASAN PROYEK (TERMASUK JUMLAH BUG PER PROYEK)
+            // =========================================================================
+            $xml .= '<Worksheet ss:Name="Ringkasan Proyek"><Table>';
+            foreach ([85, 220, 90, 80, 90, 85, 80, 80, 85, 85] as $w) {
+                $xml .= '<Column ss:Width="' . $w . '"/>';
+            }
+            $xml .= '<Row>' . $cell('LAPORAN PERIODIK MONITORING & BUG TRACKER IT DEVELOPER', 'Title', 'String', 9) . '</Row>';
+            $xml .= '<Row>' . $cell('Periode: ' . $periodLabel . ' | Dicetak: ' . $printedAt, 'SubTitle', 'String', 9) . '</Row>';
+            $xml .= '<Row></Row>';
+            $xml .= '<Row>'
+                . $cell('Kode Proyek', 'Header')
+                . $cell('Nama Proyek', 'Header')
+                . $cell('Status', 'Header')
+                . $cell('Total Tugas', 'Header')
+                . $cell('Tugas Selesai', 'Header')
+                . $cell('% Tugas', 'Header')
+                . $cell('Total Bug', 'Header')
+                . $cell('Bug Open', 'Header')
+                . $cell('Bug Resolved', 'Header')
+                . $cell('% Resolusi Bug', 'Header')
+                . '</Row>';
+
+            foreach ($projects as $proj) {
+                $pTasks = $tasks->where('project_id', $proj->id);
+                $pDone = $pTasks->where('status', 'done')->count();
+                $pBugs = $bugs->where('project_id', $proj->id);
+                $pOpen = $pBugs->whereIn('status', ['open', 'reopened', 'in_progress'])->count();
+                $pResolved = $pBugs->whereIn('status', ['resolved', 'closed'])->count();
+
+                $xml .= '<Row>'
+                    . $cell($proj->code)
+                    . $cell($proj->name)
+                    . $cell(strtoupper($proj->status))
+                    . $cell((string) $pTasks->count(), 'NumberCell', 'Number')
+                    . $cell((string) $pDone, 'NumberCell', 'Number')
+                    . $cell($pTasks->count() > 0 ? round(($pDone / $pTasks->count()) * 100) . '%' : '0%', 'NumberCell')
+                    . $cell((string) $pBugs->count(), 'NumberCell', 'Number')
+                    . $cell((string) $pOpen, 'NumberCell', 'Number')
+                    . $cell((string) $pResolved, 'NumberCell', 'Number')
+                    . $cell($pBugs->count() > 0 ? round(($pResolved / $pBugs->count()) * 100) . '%' : '0%', 'NumberCell')
+                    . '</Row>';
+            }
+            $xml .= '</Table></Worksheet>' . "\n";
+
+            // =========================================================================
+            // SHEET 2: BUG DIKELOMPOKKAN PER PROYEK + ROOT CAUSE & SOLUSI
+            // =========================================================================
+            $xml .= '<Worksheet ss:Name="Bug per Proyek &amp; Solusi"><Table>';
+            foreach ([40, 210, 120, 85, 85, 130, 260, 260] as $w) {
+                $xml .= '<Column ss:Width="' . $w . '"/>';
+            }
+            $xml .= '<Row>' . $cell('RINCIAN TEMUAN BUG DIKELOMPOKKAN PER PROYEK (BESERTA ROOT CAUSE & SOLUSI)', 'Title', 'String', 7) . '</Row>';
+            $xml .= '<Row>' . $cell('Periode: ' . $periodLabel . ' | Total Bug: ' . $bugs->count(), 'SubTitle', 'String', 7) . '</Row>';
+            $xml .= '<Row></Row>';
+            $xml .= '<Row>'
+                . $cell('No', 'Header')
+                . $cell('Judul Bug', 'Header')
+                . $cell('Modul', 'Header')
+                . $cell('Keparahan', 'Header')
+                . $cell('Status', 'Header')
+                . $cell('PIC Penanganan', 'Header')
+                . $cell('Root Cause (Akar Masalah)', 'Header')
+                . $cell('Solusi Perbaikan', 'Header')
+                . '</Row>';
+
+            $hasGroupedBugs = false;
+            foreach ($projects as $proj) {
+                $pBugs = $bugs->where('project_id', $proj->id)->values();
+                if ($pBugs->isEmpty()) {
+                    continue;
+                }
+                $hasGroupedBugs = true;
+                $pOpen = $pBugs->whereIn('status', ['open', 'reopened', 'in_progress'])->count();
+                $pResolved = $pBugs->whereIn('status', ['resolved', 'closed'])->count();
+
+                $groupTitle = sprintf(
+                    '[%s] %s — Jumlah Bug: %d (Resolved: %d, Open/Proses: %d)',
+                    $proj->code,
+                    $proj->name,
+                    $pBugs->count(),
+                    $pResolved,
+                    $pOpen
+                );
+                $xml .= '<Row>' . $cell($groupTitle, 'GroupHeader', 'String', 7) . '</Row>';
+
+                foreach ($pBugs as $idx => $b) {
+                    $xml .= '<Row>'
+                        . $cell((string) ($idx + 1), 'NumberCell', 'Number')
+                        . $cell($b->title)
+                        . $cell($b->module ? $b->module->name : '-')
+                        . $cell(strtoupper($b->severity))
+                        . $cell(strtoupper(str_replace('_', ' ', $b->status)))
+                        . $cell($b->assignee ? $b->assignee->name : 'Belum Ditugaskan')
+                        . $cell($b->root_cause ?: 'Belum diidentifikasi')
+                        . $cell($b->solution_notes ?: 'Belum ada solusi')
+                        . '</Row>';
+                }
+            }
+
+            if (! $hasGroupedBugs) {
+                $xml .= '<Row>' . $cell('Tidak ada data temuan bug pada periode ini.', 'DefaultCell', 'String', 7) . '</Row>';
+            }
+
+            $xml .= '</Table></Worksheet>' . "\n";
+
+            // =========================================================================
+            // SHEET 3: RINCIAN TUGAS PENGEMBANGAN
+            // =========================================================================
+            $xml .= '<Worksheet ss:Name="Rincian Tugas"><Table>';
+            foreach ([45, 190, 230, 95, 130, 90, 100] as $w) {
+                $xml .= '<Column ss:Width="' . $w . '"/>';
+            }
+            $xml .= '<Row>' . $cell('RINCIAN TUGAS PENGEMBANGAN', 'Title', 'String', 6) . '</Row>';
+            $xml .= '<Row>' . $cell('Periode: ' . $periodLabel . ' | Total Tugas: ' . $tasks->count(), 'SubTitle', 'String', 6) . '</Row>';
+            $xml .= '<Row></Row>';
+            $xml .= '<Row>'
+                . $cell('ID', 'Header')
+                . $cell('Proyek', 'Header')
+                . $cell('Judul Tugas', 'Header')
+                . $cell('Tipe', 'Header')
+                . $cell('PIC Pengembang', 'Header')
+                . $cell('Status', 'Header')
+                . $cell('Target Selesai', 'Header')
+                . '</Row>';
+
+            foreach ($tasks as $t) {
+                $xml .= '<Row>'
+                    . $cell((string) $t->id, 'NumberCell', 'Number')
+                    . $cell($t->project ? '[' . $t->project->code . '] ' . $t->project->name : '-')
+                    . $cell($t->title)
+                    . $cell(strtoupper($t->task_type))
+                    . $cell($t->assignee ? $t->assignee->name : 'Belum Ditugaskan')
+                    . $cell(strtoupper(str_replace('_', ' ', $t->status)))
+                    . $cell($t->target_date ? $t->target_date->format('Y-m-d') : '-')
+                    . '</Row>';
+            }
+
+            $xml .= '</Table></Worksheet>' . "\n";
+            $xml .= '</Workbook>';
+
+            echo $xml;
+        }, $filename, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
         ]);
     }
 

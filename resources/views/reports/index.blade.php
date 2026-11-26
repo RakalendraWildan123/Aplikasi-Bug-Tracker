@@ -349,6 +349,20 @@
                             </div>
                         </a>
 
+                        {{-- Tombol Export Excel --}}
+                        <a
+                            href="{{ route('reports.export.excel', request()->query()) }}"
+                            id="btn-export-excel"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition shadow-xs cursor-pointer"
+                            title="Unduh laporan dalam format Microsoft Excel (.xls)"
+                        >
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span class="hidden sm:inline">Export Excel</span>
+                            <span class="sm:hidden">Excel</span>
+                        </a>
+
                         {{-- Tombol Cetak / PDF --}}
                         <button
                             type="button"
@@ -785,117 +799,142 @@
                 </div>
             </div>
 
-            {{-- 5. Bagian 3: Rincian Temuan Masalah & Bug dalam Periode --}}
+            {{-- 5. Bagian 3: Rincian Temuan Masalah & Bug Dikelompokkan per Proyek (Root Cause & Solusi) --}}
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs card-report">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
                     <div>
-                        <h2 class="text-sm sm:text-base font-bold text-slate-900">Rincian Temuan Masalah & Bug ({{ $bugs->count() }})</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Daftar temuan bug yang dilaporkan dan status penanganannya.</p>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900">Rincian Temuan Masalah & Bug per Proyek ({{ $bugs->count() }} Bug)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Daftar temuan bug dikelompokkan berdasarkan proyek beserta akar masalah (root cause) dan solusinya.</p>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                                <th scope="col" class="py-3.5 pl-5 pr-3">Proyek</th>
-                                <th scope="col" class="py-3.5 px-3">Judul Temuan Bug</th>
-                                <th scope="col" class="py-3.5 px-3">Tingkat Bahaya</th>
-                                <th scope="col" class="py-3.5 px-3">PIC Penanganan</th>
-                                <th scope="col" class="py-3.5 px-3">Status Bug</th>
-                                <th scope="col" class="py-3.5 pl-3 pr-5 text-right">Status Solusi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 text-sm">
-                            @forelse ($bugs as $bug)
-                                <tr class="hover:bg-slate-50/80 transition-colors">
-                                    {{-- Proyek --}}
-                                    <td class="py-3 pl-5 pr-3 whitespace-nowrap">
-                                        @if ($bug->project)
-                                            <span
-                                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-2xs"
-                                                style="background-color: {{ $bug->project->color ?? '#4F46E5' }};"
-                                            >
-                                                [{{ $bug->project->code }}]
-                                            </span>
-                                        @else
-                                            <span class="text-xs text-slate-400 italic">-</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- Judul Bug --}}
-                                    <td class="py-3 px-3 max-w-sm">
-                                        <p class="font-semibold text-slate-900 text-xs line-clamp-1" title="{{ $bug->title }}">
-                                            {{ $bug->title }}
-                                        </p>
-                                    </td>
-
-                                    {{-- Keparahan --}}
-                                    <td class="py-3 px-3 whitespace-nowrap">
-                                        @php
-                                            $sevBadges = [
-                                                'low' => 'bg-slate-100 text-slate-700 border-slate-200',
-                                                'medium' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                                'high' => 'bg-orange-50 text-orange-700 border-orange-200',
-                                                'critical' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border {{ $sevBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700' }}">
-                                            {{ $bug->severity }}
+                @if ($bugsByProject->isNotEmpty())
+                    <div class="divide-y divide-slate-200">
+                        @foreach ($bugsByProject as $group)
+                            @php $proj = $group['project']; @endphp
+                            <div>
+                                {{-- Header Grup Proyek & Jumlah Bug --}}
+                                <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold text-white shadow-2xs"
+                                            style="background-color: {{ $proj->color ?? '#4F46E5' }};"
+                                        >
+                                            [{{ $proj->code }}]
                                         </span>
-                                    </td>
-
-                                    {{-- PIC --}}
-                                    <td class="py-3 px-3 whitespace-nowrap text-xs text-slate-600">
-                                        {{ $bug->assignee ? $bug->assignee->name : 'Belum Ditugaskan' }}
-                                    </td>
-
-                                    {{-- Status Bug --}}
-                                    <td class="py-3 px-3 whitespace-nowrap">
-                                        @php
-                                            $bugStatusColors = [
-                                                'open' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                                'in_progress' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                                'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                                'closed' => 'bg-slate-100 text-slate-600 border-slate-200',
-                                                'reopened' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                            ];
-                                            $bugStatusLabels = [
-                                                'open' => 'Open',
-                                                'in_progress' => 'In Progress',
-                                                'resolved' => 'Resolved',
-                                                'closed' => 'Closed',
-                                                'reopened' => 'Reopened',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border {{ $bugStatusColors[$bug->status] ?? 'bg-slate-100 text-slate-700' }}">
-                                            {{ $bugStatusLabels[$bug->status] ?? $bug->status }}
+                                        <span class="text-xs sm:text-sm font-bold text-slate-900">{{ $proj->name }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[11px] font-semibold">
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-800">
+                                            Total: {{ $group['total'] }} Bug
                                         </span>
-                                    </td>
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Resolved: {{ $group['resolved'] }}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                                            Open/Proses: {{ $group['open'] }}
+                                        </span>
+                                    </div>
+                                </div>
 
-                                    {{-- Status Solusi --}}
-                                    <td class="py-3 pl-3 pr-5 text-right whitespace-nowrap">
-                                        @if ($bug->solution_notes)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                Sudah Ada Solusi
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-500 border border-slate-200">
-                                                Belum Ada Solusi
-                                            </span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="py-8 text-center text-xs text-slate-400 italic">
-                                        Tidak ada data temuan bug pada periode ini.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-slate-200 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                                <th scope="col" class="py-3 pl-5 pr-3">Judul Temuan Bug</th>
+                                                <th scope="col" class="py-3 px-3">Keparahan</th>
+                                                <th scope="col" class="py-3 px-3">PIC</th>
+                                                <th scope="col" class="py-3 px-3">Status</th>
+                                                <th scope="col" class="py-3 px-3">Root Cause (Akar Masalah)</th>
+                                                <th scope="col" class="py-3 pl-3 pr-5">Solusi Perbaikan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-200 text-sm">
+                                            @foreach ($group['bugs'] as $bug)
+                                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                                    {{-- Judul Bug --}}
+                                                    <td class="py-3 pl-5 pr-3 max-w-xs align-top">
+                                                        <p class="font-semibold text-slate-900 text-xs" title="{{ $bug->title }}">
+                                                            {{ $bug->title }}
+                                                        </p>
+                                                        @if ($bug->module)
+                                                            <span class="text-[10px] text-slate-500">Modul: {{ $bug->module->name }}</span>
+                                                        @endif
+                                                    </td>
+
+                                                    {{-- Keparahan --}}
+                                                    <td class="py-3 px-3 whitespace-nowrap align-top">
+                                                        @php
+                                                            $sevBadges = [
+                                                                'low' => 'bg-slate-100 text-slate-700 border-slate-200',
+                                                                'medium' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                                'high' => 'bg-orange-50 text-orange-700 border-orange-200',
+                                                                'critical' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                                            ];
+                                                        @endphp
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border {{ $sevBadges[$bug->severity] ?? 'bg-slate-100 text-slate-700' }}">
+                                                            {{ $bug->severity }}
+                                                        </span>
+                                                    </td>
+
+                                                    {{-- PIC --}}
+                                                    <td class="py-3 px-3 whitespace-nowrap text-xs text-slate-600 align-top">
+                                                        {{ $bug->assignee ? $bug->assignee->name : 'Belum Ditugaskan' }}
+                                                    </td>
+
+                                                    {{-- Status Bug --}}
+                                                    <td class="py-3 px-3 whitespace-nowrap align-top">
+                                                        @php
+                                                            $bugStatusColors = [
+                                                                'open' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                                                'in_progress' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                                'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                                'closed' => 'bg-slate-100 text-slate-600 border-slate-200',
+                                                                'reopened' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                            ];
+                                                            $bugStatusLabels = [
+                                                                'open' => 'Open',
+                                                                'in_progress' => 'In Progress',
+                                                                'resolved' => 'Resolved',
+                                                                'closed' => 'Closed',
+                                                                'reopened' => 'Reopened',
+                                                            ];
+                                                        @endphp
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border {{ $bugStatusColors[$bug->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                                            {{ $bugStatusLabels[$bug->status] ?? $bug->status }}
+                                                        </span>
+                                                    </td>
+
+                                                    {{-- Root Cause --}}
+                                                    <td class="py-3 px-3 max-w-xs text-xs text-slate-700 align-top">
+                                                        @if ($bug->root_cause)
+                                                            <p class="whitespace-normal leading-relaxed">{{ $bug->root_cause }}</p>
+                                                        @else
+                                                            <span class="text-slate-400 italic">Belum diidentifikasi</span>
+                                                        @endif
+                                                    </td>
+
+                                                    {{-- Solusi --}}
+                                                    <td class="py-3 pl-3 pr-5 max-w-xs text-xs text-slate-700 align-top">
+                                                        @if ($bug->solution_notes)
+                                                            <p class="whitespace-normal leading-relaxed">{{ $bug->solution_notes }}</p>
+                                                        @else
+                                                            <span class="text-slate-400 italic">Belum ada solusi</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-8 text-center text-xs text-slate-400 italic">
+                        Tidak ada data temuan bug pada periode ini.
+                    </div>
+                @endif
             </div>
 
         </main>

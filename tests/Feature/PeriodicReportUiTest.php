@@ -292,4 +292,72 @@ class PeriodicReportUiTest extends TestCase
         $this->assertStringNotContainsString(route('logout'), $sidebarHtml);
         $this->assertStringNotContainsString('>Logout<', $sidebarHtml);
     }
+
+    public function test_reports_page_displays_grouped_bugs_with_count_root_cause_and_solution(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'name' => 'Portal Layanan',
+            'code' => 'PORTAL',
+        ]);
+
+        Bug::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Bug Session Timeout',
+            'status' => 'resolved',
+            'root_cause' => 'Konfigurasi session lifetime terlalu singkat di .env',
+            'solution_notes' => 'Perpanjang SESSION_LIFETIME menjadi 120 menit',
+        ]);
+
+        Bug::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Bug Tombol Simpan',
+            'status' => 'open',
+            'root_cause' => 'Event listener klik terpasang dua kali',
+            'solution_notes' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get('/reports');
+
+        $response->assertOk();
+        $response->assertSee('id="btn-export-excel"', false);
+        $response->assertSee('Export Excel');
+        $response->assertSee('Portal Layanan');
+        $response->assertSee('Total: 2 Bug');
+        $response->assertSee('Bug Session Timeout');
+        $response->assertSee('Konfigurasi session lifetime terlalu singkat di .env');
+        $response->assertSee('Perpanjang SESSION_LIFETIME menjadi 120 menit');
+        $response->assertSee('Event listener klik terpasang dua kali');
+    }
+
+    public function test_reports_export_excel_downloads_grouped_bugs_with_root_cause_and_solution(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'name' => 'Sistem Inventori',
+            'code' => 'INV',
+        ]);
+
+        Bug::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Stok Barang Minus',
+            'status' => 'resolved',
+            'root_cause' => 'Race condition saat checkout bersamaan',
+            'solution_notes' => 'Tambahkan lockForUpdate pada query stok',
+        ]);
+
+        $response = $this->actingAs($user)->get('/reports/export/excel');
+
+        $response->assertOk();
+        $this->assertTrue(str_contains($response->headers->get('content-type'), 'application/vnd.ms-excel'));
+        $this->assertTrue(str_contains($response->headers->get('content-disposition'), '.xls'));
+
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('<Workbook', $content);
+        $this->assertStringContainsString('[INV] Sistem Inventori', $content);
+        $this->assertStringContainsString('Jumlah Bug: 1', $content);
+        $this->assertStringContainsString('Stok Barang Minus', $content);
+        $this->assertStringContainsString('Race condition saat checkout bersamaan', $content);
+        $this->assertStringContainsString('Tambahkan lockForUpdate pada query stok', $content);
+    }
 }

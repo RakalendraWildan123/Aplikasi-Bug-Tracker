@@ -72,6 +72,7 @@ Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     // Laporan Periodik
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export/csv', [\App\Http\Controllers\ReportController::class, 'exportCsv'])->name('reports.export.csv');
+    Route::get('/reports/export/excel', [\App\Http\Controllers\ReportController::class, 'exportExcel'])->name('reports.export.excel');
 
     // Fitur Master Data (Proyek & Modul dapat diakses oleh Developer dan Admin)
     // Master Proyek / CRUD Proyek
