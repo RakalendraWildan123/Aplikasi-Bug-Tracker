@@ -508,7 +508,7 @@
                                             <span class="card-target-date font-medium {{ $isOverdue ? 'text-rose-600 font-bold' : ($isDueToday ? 'text-amber-700 font-semibold' : 'text-slate-600') }} text-[11px]">
                                                 {{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}
                                             </span>
-                                            <span class="card-overdue-badge inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200' : ($isDueToday ? 'bg-amber-50 text-amber-700 border-amber-200' : 'hidden bg-rose-50 text-rose-700 border-rose-200') }}">
+                                            <span class="card-overdue-badge {{ ($isOverdue || $isDueToday) ? 'inline-flex' : 'hidden' }} items-center px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200' : ($isDueToday ? 'bg-amber-50 text-amber-700 border-amber-200' : '') }}">
                                                 {{ $isOverdue ? 'Terlambat' : ($isDueToday ? 'Deadline Hari Ini' : '') }}
                                             </span>
                                         </div>
@@ -1532,7 +1532,7 @@
 
                 if (overdueBadge) {
                     overdueBadge.classList.remove(
-                        'hidden',
+                        'hidden', 'inline-flex',
                         'bg-rose-50', 'text-rose-700', 'border-rose-200',
                         'bg-amber-50', 'text-amber-700', 'border-amber-200'
                     );
@@ -1547,14 +1547,14 @@
 
                     if (isOverdue) {
                         overdueBadge.textContent = 'Terlambat';
-                        overdueBadge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200');
+                        overdueBadge.classList.add('inline-flex', 'bg-rose-50', 'text-rose-700', 'border-rose-200');
                         cardElement.classList.remove('border-slate-200');
                         cardElement.classList.add('border-rose-300', 'ring-1', 'ring-rose-200');
                         if (targetDateEl) targetDateEl.classList.add('text-rose-600', 'font-bold');
                         if (deadlineIconEl) deadlineIconEl.classList.add('text-rose-500');
                     } else if (isDueToday) {
                         overdueBadge.textContent = 'Deadline Hari Ini';
-                        overdueBadge.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
+                        overdueBadge.classList.add('inline-flex', 'bg-amber-50', 'text-amber-700', 'border-amber-200');
                         if (targetDateEl) targetDateEl.classList.add('text-amber-700', 'font-semibold');
                         if (deadlineIconEl) deadlineIconEl.classList.add('text-amber-500');
                     } else {
