@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
@@ -63,6 +64,11 @@ class TaskController extends Controller
         $projects = Project::query()->orderBy('name')->get(['id', 'name', 'code', 'color']);
         $modules = Module::query()->orderBy('name')->get(['id', 'name', 'project_id']);
         $developers = Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
+        $availableBugs = Bug::query()
+            ->with(['project:id,code,name'])
+            ->whereNull('converted_task_id')
+            ->orderByDesc('id')
+            ->get(['id', 'project_id', 'module_id', 'title', 'description', 'root_cause', 'severity']);
 
         $pendingApprovals = Task::query()
             ->with(['project', 'assignee'])
@@ -90,6 +96,7 @@ class TaskController extends Controller
             'projects' => $projects,
             'modules' => $modules,
             'developers' => $developers,
+            'availableBugs' => $availableBugs,
             'pendingApprovals' => $pendingApprovals,
             'taskTypes' => Task::TYPES,
             'taskStatuses' => Task::STATUSES,
@@ -121,6 +128,7 @@ class TaskController extends Controller
             'start_date' => ['nullable', 'date'],
             'target_date' => ['nullable', 'date'],
             'blocker_notes' => ['nullable', 'string'],
+            'source_bug_id' => ['nullable', 'exists:bugs,id'],
         ], [
             'title.required' => 'Judul tugas wajib diisi.',
             'title.max' => 'Judul tugas tidak boleh melebihi 255 karakter.',
@@ -156,7 +164,17 @@ class TaskController extends Controller
             $validated['completed_at'] = now();
         }
 
+        $sourceBugId = $validated['source_bug_id'] ?? null;
+        unset($validated['source_bug_id']);
+
         $task = Task::create($validated);
+
+        if (! empty($sourceBugId)) {
+            Bug::query()
+                ->where('id', $sourceBugId)
+                ->whereNull('converted_task_id')
+                ->update(['converted_task_id' => $task->id]);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -186,6 +204,7 @@ class TaskController extends Controller
             'start_date' => ['nullable', 'date'],
             'target_date' => ['nullable', 'date'],
             'blocker_notes' => ['nullable', 'string'],
+            'source_bug_id' => ['nullable', 'exists:bugs,id'],
         ], [
             'title.required' => 'Judul tugas wajib diisi.',
             'title.max' => 'Judul tugas tidak boleh melebihi 255 karakter.',

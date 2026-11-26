@@ -606,4 +606,36 @@ class TaskUiTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['target_developer_id']);
     }
+
+    public function test_tasks_page_renders_source_bug_dropdown_and_links_converted_task_on_store(): void
+    {
+        $dev = User::factory()->create(['name' => 'Developer A']);
+        $project = Project::factory()->create(['code' => 'BUGP']);
+
+        $bug = Bug::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Bug Dropdown Konversi',
+            'severity' => 'high',
+        ]);
+
+        // Dropdown tampil pada halaman /tasks
+        $this->actingAs($dev)->get('/tasks')
+            ->assertOk()
+            ->assertSee('id="input-source-bug"', false)
+            ->assertSee('Bug Dropdown Konversi');
+
+        // Membuat task dengan memilih source_bug_id
+        $response = $this->actingAs($dev)->postJson('/tasks', [
+            'title' => '[Bug Fix] Bug Dropdown Konversi',
+            'project_id' => $project->id,
+            'task_type' => 'maintenance',
+            'status' => 'todo',
+            'source_bug_id' => $bug->id,
+        ]);
+
+        $response->assertCreated();
+        $createdTaskId = $response->json('task.id');
+
+        $this->assertSame($createdTaskId, $bug->fresh()->converted_task_id);
+    }
 }

@@ -1124,6 +1124,38 @@
                     <span id="task-form-error-text">Terjadi kesalahan validasi.</span>
                 </div>
 
+                {{-- 0. Pilih dari Laporan Bug (Opsional, khusus saat Tambah Tugas) --}}
+                <div id="source-bug-container" class="rounded-lg border border-indigo-200/80 bg-indigo-50/40 p-3">
+                    <label for="input-source-bug" class="block text-xs font-semibold text-indigo-950 mb-1">
+                        Ambil dari Laporan Bug (Opsional)
+                    </label>
+                    <select
+                        id="input-source-bug"
+                        name="source_bug_id"
+                        class="block w-full rounded-lg border border-indigo-200 bg-white py-2 pl-3 pr-8 text-xs sm:text-sm text-slate-900 transition focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+                    >
+                        <option value="">-- Buat Tugas Manual (Tidak dari Bug) --</option>
+                        @foreach (($availableBugs ?? collect()) as $availBug)
+                            @php
+                                $bugDesc = "Tindak lanjut perbaikan bug (#{$availBug->id} - Keparahan: " . strtoupper($availBug->severity) . ").\n\nDeskripsi Bug: " . ($availBug->description ?: '-');
+                                if (! empty($availBug->root_cause)) {
+                                    $bugDesc .= "\n\nRoot Cause: " . $availBug->root_cause;
+                                }
+                            @endphp
+                            <option
+                                value="{{ $availBug->id }}"
+                                data-project-id="{{ $availBug->project_id }}"
+                                data-module-id="{{ $availBug->module_id ?? '' }}"
+                                data-title="[Bug Fix] {{ $availBug->title }}"
+                                data-description="{{ $bugDesc }}"
+                            >
+                                [{{ $availBug->project?->code ?? 'BUG' }}] {{ $availBug->title }} ({{ strtoupper($availBug->severity) }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-indigo-700">Memilih bug akan mengisi otomatis Judul, Proyek, Modul, Tipe (Maintenance), dan Deskripsi.</p>
+                </div>
+
                 {{-- 1. Judul Tugas --}}
                 <div>
                     <label for="input-task-title" class="block text-xs font-semibold text-slate-800 mb-1">
@@ -1625,6 +1657,8 @@
             const formAction = document.getElementById('form-task-action');
 
             const taskIdInput = document.getElementById('task-id');
+            const sourceBugContainer = document.getElementById('source-bug-container');
+            const sourceBugInput = document.getElementById('input-source-bug');
             const titleInput = document.getElementById('input-task-title');
             const projectInput = document.getElementById('input-task-project');
             const moduleInput = document.getElementById('input-task-module');
@@ -1655,6 +1689,8 @@
                 submitText.textContent = 'Tambah Tugas';
                 formAction.reset();
                 taskIdInput.value = '';
+                if (sourceBugContainer) sourceBugContainer.classList.remove('hidden');
+                if (sourceBugInput) sourceBugInput.value = '';
                 filterTaskModules();
                 if (displayAssignedName) {
                     displayAssignedName.textContent = isUserAdmin ? 'Belum Ditugaskan' : '{{ $user->name }} (Anda)';
@@ -1695,6 +1731,8 @@
                 const hasAssignee = Boolean(assignedTo);
 
                 taskIdInput.value = taskId;
+                if (sourceBugContainer) sourceBugContainer.classList.add('hidden');
+                if (sourceBugInput) sourceBugInput.value = '';
                 titleInput.value = title;
                 projectInput.value = projId;
                 filterTaskModules(modId);
@@ -1756,6 +1794,26 @@
 
             projectInput?.addEventListener('change', () => filterTaskModules());
 
+            // Auto-fill form tugas ketika memilih Bug dari dropdown
+            sourceBugInput?.addEventListener('change', () => {
+                const selectedOpt = sourceBugInput.options[sourceBugInput.selectedIndex];
+                if (!selectedOpt || !sourceBugInput.value) {
+                    return;
+                }
+                const bugTitle = selectedOpt.getAttribute('data-title') || '';
+                const bugProjId = selectedOpt.getAttribute('data-project-id') || '';
+                const bugModId = selectedOpt.getAttribute('data-module-id') || '';
+                const bugDesc = selectedOpt.getAttribute('data-description') || '';
+
+                if (bugTitle) titleInput.value = bugTitle;
+                if (bugProjId) {
+                    projectInput.value = bugProjId;
+                    filterTaskModules(bugModId);
+                }
+                if (typeInput) typeInput.value = 'maintenance';
+                if (descriptionInput) descriptionInput.value = bugDesc;
+            });
+
             // Submit Form Tambah / Edit Tugas
             formAction?.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -1773,6 +1831,7 @@
                     status: statusInput.value,
                     target_date: targetDateInput.value || null,
                     blocker_notes: blockerInput.value.trim() || null,
+                    source_bug_id: (!isEditing && sourceBugInput?.value) ? sourceBugInput.value : null,
                     description: descriptionInput.value.trim() || null,
                 };
 
