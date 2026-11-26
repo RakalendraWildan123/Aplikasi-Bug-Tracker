@@ -42,7 +42,7 @@ class TaskController extends Controller
 
         // 3. Query Koleksi Tasks (Pencatatan bug tidak otomatis menambahkan task baru)
         $tasksQuery = Task::query()
-            ->with(['project', 'module', 'creator', 'assignee'])
+            ->with(['project', 'module', 'creator', 'assignee', 'repoHistories'])
             ->when($activeTab === 'my_tasks', function ($q) use ($currentUser) {
                 $q->where('assigned_to', $currentUser->id);
             })

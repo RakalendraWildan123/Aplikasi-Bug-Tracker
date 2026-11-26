@@ -772,6 +772,22 @@
             modalCreate?.classList.remove('hidden');
         });
 
+        // Auto-buka modal catat rilis jika datang dari tombol "Buat Rilis" pada tugas yang sudah selesai
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('create') === '1' && modalCreate) {
+            const qProjectId = urlParams.get('project_id') || '';
+            const qTaskId = urlParams.get('task_id') || '';
+            if (createProjectSelect && qProjectId) {
+                createProjectSelect.value = qProjectId;
+            }
+            filterCompletedTasksByProject();
+            if (createTaskSelect && qTaskId) {
+                createTaskSelect.value = qTaskId;
+                createTaskSelect.dispatchEvent(new Event('change'));
+            }
+            modalCreate.classList.remove('hidden');
+        }
+
         // 3. TUTUP MODAL
         document.querySelectorAll('.btn-close-modal').forEach(btn => {
             btn.addEventListener('click', () => {

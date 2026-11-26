@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use InvalidArgumentException;
 
@@ -150,6 +151,16 @@ class Task extends Model
     public function sourceActionItem(): HasOne
     {
         return $this->hasOne(ActionItem::class, 'converted_task_id');
+    }
+
+    /**
+     * Get the releases referencing this completed task.
+     *
+     * @return HasMany<RepoHistory, $this>
+     */
+    public function repoHistories(): HasMany
+    {
+        return $this->hasMany(RepoHistory::class, 'task_id');
     }
 
 

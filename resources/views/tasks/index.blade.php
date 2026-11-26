@@ -734,6 +734,31 @@
                                     @endif
                                 </div>
 
+                                {{-- Tombol Buat Rilis (Hanya muncul jika Task sudah berstatus Done / Selesai) --}}
+                                @if ($task->status === 'done')
+                                    @if ($task->repoHistories->isNotEmpty())
+                                        <a
+                                            href="{{ route('releases.index', ['search' => $task->title]) }}"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
+                                            title="Lihat riwayat rilis tugas ini"
+                                        >
+                                            <span>✓ Dirilis</span>
+                                        </a>
+                                    @else
+                                        <a
+                                            href="{{ route('releases.index', ['create' => 1, 'project_id' => $task->project_id, 'task_id' => $task->id]) }}"
+                                            class="btn-create-release-from-task inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition shadow-2xs"
+                                            title="Catat rilis untuk tugas yang sudah selesai ini"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.386a10.96 10.96 0 003.882-3.882c.486-.827.313-1.908-.386-2.607L9.762 3.659A2.25 2.25 0 009.568 3z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+                                            </svg>
+                                            <span>Buat Rilis</span>
+                                        </a>
+                                    @endif
+                                @endif
+
                                 {{-- Tombol Edit --}}
                                 <button
                                     type="button"
@@ -1010,7 +1035,32 @@
                                                 @endif
                                             </div>
 
-                                            {{-- Tombol Edit --}}
+                                            {{-- Tombol Buat Rilis (Hanya muncul jika Task sudah berstatus Done / Selesai) --}}
+                                @if ($task->status === 'done')
+                                    @if ($task->repoHistories->isNotEmpty())
+                                        <a
+                                            href="{{ route('releases.index', ['search' => $task->title]) }}"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition"
+                                            title="Lihat riwayat rilis tugas ini"
+                                        >
+                                            <span>✓ Dirilis</span>
+                                        </a>
+                                    @else
+                                        <a
+                                            href="{{ route('releases.index', ['create' => 1, 'project_id' => $task->project_id, 'task_id' => $task->id]) }}"
+                                            class="btn-create-release-from-task inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition shadow-2xs"
+                                            title="Catat rilis untuk tugas yang sudah selesai ini"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.386a10.96 10.96 0 003.882-3.882c.486-.827.313-1.908-.386-2.607L9.762 3.659A2.25 2.25 0 009.568 3z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/>
+                                            </svg>
+                                            <span>Buat Rilis</span>
+                                        </a>
+                                    @endif
+                                @endif
+
+                                {{-- Tombol Edit --}}
                                             <button
                                                 type="button"
                                                 class="btn-edit-task p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"

@@ -640,4 +640,40 @@ class TaskUiTest extends TestCase
 
         $this->assertSame($createdTaskId, $bug->fresh()->converted_task_id);
     }
+
+    public function test_create_release_button_only_appears_on_done_tasks(): void
+    {
+        $dev = User::factory()->create(['name' => 'Developer A']);
+        $project = Project::factory()->create();
+
+        $doneTask = Task::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $dev->id,
+            'title' => 'Tugas Selesai Untuk Rilis',
+            'status' => 'done',
+        ]);
+
+        $todoTask = Task::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $dev->id,
+            'title' => 'Tugas Belum Selesai',
+            'status' => 'in_progress',
+        ]);
+
+        $res = $this->actingAs($dev)->get('/tasks');
+        $res->assertOk();
+        $res->assertSee('Buat Rilis');
+        $res->assertSee("task_id={$doneTask->id}", false);
+        $res->assertDontSee("task_id={$todoTask->id}", false);
+
+        // Jika sudah ada rilis yang merujuk ke task selesai tersebut -> tampil badge Dirilis
+        \App\Models\RepoHistory::factory()->create([
+            'project_id' => $project->id,
+            'task_id' => $doneTask->id,
+        ]);
+
+        $this->actingAs($dev)->get('/tasks')
+            ->assertOk()
+            ->assertSee('Dirilis');
+    }
 }
