@@ -8,26 +8,97 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.speed-meta')
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            html, body {
+                height: auto !important;
+                min-height: 0 !important;
+                background: white !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block !important;
+                font-size: 11px !important;
+            }
+            body > div,
+            body > div > div,
+            main {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+            }
             #app-sidebar,
             #sidebar-backdrop,
             header,
             .no-print {
                 display: none !important;
             }
-            body, main {
-                background: white !important;
-                color: #0f172a !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
             .print-header {
                 display: block !important;
+                padding: 0 0 12px 0 !important;
+                margin-bottom: 14px !important;
+            }
+            .metrics-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 10px !important;
+                margin-bottom: 14px !important;
+                break-inside: avoid !important;
             }
             .card-report {
-                break-inside: avoid;
+                break-inside: auto !important;
                 box-shadow: none !important;
                 border: 1px solid #cbd5e1 !important;
+                overflow: visible !important;
+                margin-bottom: 14px !important;
+            }
+            .card-report-metric {
+                break-inside: avoid !important;
+                padding: 10px !important;
+            }
+            .card-report .overflow-x-auto {
+                overflow: visible !important;
+            }
+            .card-report table {
+                width: 100% !important;
+                table-layout: auto !important;
+                border-collapse: collapse !important;
+            }
+            .card-report thead {
+                display: table-header-group !important;
+            }
+            .card-report tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .card-report th,
+            .card-report td {
+                padding: 6px 8px !important;
+                font-size: 10px !important;
+                white-space: normal !important;
+                word-break: break-word !important;
+            }
+            .card-report .line-clamp-1 {
+                display: block !important;
+                -webkit-line-clamp: unset !important;
+                -webkit-box-orient: unset !important;
+                overflow: visible !important;
+                white-space: normal !important;
+            }
+            .card-report .print-progress-bar {
+                width: 56px !important;
             }
         }
     </style>
@@ -302,7 +373,7 @@
             <h1 class="text-2xl font-bold text-slate-900">{{ config('app.name', 'Aplikasi Bug Tracker') }}</h1>
             <h2 class="text-base font-semibold text-slate-700 mt-1">Laporan Periodik Monitoring & Kinerja IT Developer</h2>
             <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
-                <span>Dicetak pada: {{ now()->isoFormat('D MMMM Y, HH:mm') }} WIB</span>
+                <span>Dicetak pada: {{ now('Asia/Jakarta')->isoFormat('D MMMM Y, HH:mm') }} WIB</span>
                 <span>
                     Rentang Periode:
                     @if ($startDate && $endDate)
@@ -449,9 +520,9 @@
             </div>
 
             {{-- 2. Kartu Metrik Ringkasan Kinerja (Bersih, Tegas, 4 Kolom) --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="metrics-grid grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {{-- Metrik 1: Progres Tugas --}}
-                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report card-report-metric">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tugas Selesai</span>
                         <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600">
@@ -471,7 +542,7 @@
                 </div>
 
                 {{-- Metrik 2: Resolusi Bug --}}
-                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report card-report-metric">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bug Tertangani</span>
                         <div class="p-2 rounded-lg bg-rose-50 text-rose-600">
@@ -490,7 +561,7 @@
                 </div>
 
                 {{-- Metrik 3: Rilis & Deployment --}}
-                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report card-report-metric">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rilis Repositori</span>
                         <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600">
@@ -508,7 +579,7 @@
                 </div>
 
                 {{-- Metrik 4: Tindak Lanjut Evaluasi --}}
-                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs card-report card-report-metric">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tindak Lanjut Evaluasi</span>
                         <div class="p-2 rounded-lg bg-blue-50 text-blue-600">
@@ -581,7 +652,7 @@
                                     {{-- Progres Tugas Selesai --}}
                                     <td class="py-3.5 px-3 whitespace-nowrap">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-24 sm:w-32 bg-slate-100 rounded-full h-2 overflow-hidden shrink-0">
+                                            <div class="print-progress-bar w-24 sm:w-32 bg-slate-100 rounded-full h-2 overflow-hidden shrink-0">
                                                 <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ $pb['tasks_rate'] }}%"></div>
                                             </div>
                                             <span class="text-xs font-semibold text-slate-700">
@@ -593,7 +664,7 @@
                                     {{-- Resolusi Bug --}}
                                     <td class="py-3.5 px-3 whitespace-nowrap">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-24 sm:w-32 bg-slate-100 rounded-full h-2 overflow-hidden shrink-0">
+                                            <div class="print-progress-bar w-24 sm:w-32 bg-slate-100 rounded-full h-2 overflow-hidden shrink-0">
                                                 <div class="bg-rose-500 h-2 rounded-full" style="width: {{ $pb['bugs_rate'] }}%"></div>
                                             </div>
                                             <span class="text-xs font-semibold text-slate-700">
