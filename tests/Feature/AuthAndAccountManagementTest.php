@@ -434,4 +434,38 @@ class AuthAndAccountManagementTest extends TestCase
         $this->assertDatabaseCount('app_evaluations', 6);
         $this->assertDatabaseCount('action_items', 4);
     }
+
+    public function test_user_with_default_password_sees_notification_and_disappears_after_password_change(): void
+    {
+        $dev = User::factory()->create([
+            'role' => 'developer',
+            'password' => 'password',
+        ]);
+
+        // Masih menggunakan password default -> muncul notifikasi di dashboard & account
+        $this->actingAs($dev)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('id="default-password-alert"', false)
+            ->assertSee('Segera Ganti Password Default Anda');
+
+        $this->actingAs($dev)
+            ->get('/account')
+            ->assertOk()
+            ->assertSee('id="default-password-alert"', false);
+
+        // Setelah mengganti password -> notifikasi otomatis hilang
+        $this->actingAs($dev)
+            ->put('/account/password', [
+                'current_password' => 'password',
+                'password' => 'password-baru-aman-123',
+                'password_confirmation' => 'password-baru-aman-123',
+            ])
+            ->assertRedirect(route('account.edit'));
+
+        $this->actingAs($dev->fresh())
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('id="default-password-alert"', false);
+    }
 }

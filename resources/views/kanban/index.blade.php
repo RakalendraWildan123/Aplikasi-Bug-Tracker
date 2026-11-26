@@ -305,6 +305,9 @@
                 </div>
             </div>
 
+            {{-- Notifikasi Peringatan Password Default --}}
+            @include('partials.default-password-alert')
+
             {{-- Notifikasi Permintaan Persetujuan Serah Terima Tugas --}}
             <div class="mb-4">
                 @include('partials.pending-handovers', ['routePrefix' => 'kanban.tasks'])

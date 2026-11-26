@@ -179,4 +179,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(ActionItem::class, 'assigned_to');
     }
+
+    /**
+     * Periksa apakah pengguna masih menggunakan password default ("password").
+     */
+    public function usesDefaultPassword(): bool
+    {
+        return ! empty($this->password) && \Illuminate\Support\Facades\Hash::check('password', $this->password);
+    }
 }

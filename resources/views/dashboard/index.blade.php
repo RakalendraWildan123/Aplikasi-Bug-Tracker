@@ -272,6 +272,9 @@
                 </div>
             </div>
 
+            {{-- Notifikasi Peringatan Password Default --}}
+            @include('partials.default-password-alert')
+
             {{-- Ringkasan 4 Metrik Cepat Utama (Bersih & Tegas, Ramah Desktop & Tablet) --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {{-- 1. Proyek Aktif --}}

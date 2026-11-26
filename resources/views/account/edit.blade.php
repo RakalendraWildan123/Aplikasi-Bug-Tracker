@@ -237,6 +237,9 @@
                 <p class="mt-1.5 text-sm text-slate-600">Rincian informasi akun dan profil Anda.</p>
             </div>
 
+            {{-- Notifikasi Peringatan Password Default --}}
+            @include('partials.default-password-alert')
+
             {{-- Status Notifikasi Berhasil --}}
             @if (session('profile_status'))
                 <div role="status" class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2.5">
