@@ -426,7 +426,11 @@
                             @forelse ($column['tasks'] as $task)
                                 @php
                                     $isAssignee = (int)$task->assigned_to === (int)$user->id;
-                                    $isOverdue = $task->target_date && \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
+                                    $todayWib = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+                                    $targetDay = $task->target_date ? \Carbon\Carbon::parse($task->target_date)->startOfDay() : null;
+                                    $isActiveDeadline = $targetDay && $task->status !== 'done';
+                                    $isOverdue = $isActiveDeadline && $targetDay->lt($todayWib);
+                                    $isDueToday = $isActiveDeadline && $targetDay->equalTo($todayWib);
                                 @endphp
                                 <div
                                     class="kanban-card bg-white border {{ $isOverdue ? 'border-rose-300 ring-1 ring-rose-200' : 'border-slate-200' }} border-l-4 {{ $statusBorderClasses[$task->status] ?? 'border-l-slate-400' }} rounded-xl p-4 shadow-2xs hover:shadow-sm hover:border-y-slate-300 hover:border-r-slate-300 transition-all select-none {{ $isAssignee ? 'cursor-grab active:cursor-grabbing' : 'cursor-default' }} relative"
@@ -498,14 +502,14 @@
                                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                         {{-- Target Selesai --}}
                                         <div class="flex items-center gap-1.5 flex-wrap">
-                                            <svg class="w-3.5 h-3.5 {{ $isOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <svg class="card-deadline-icon w-3.5 h-3.5 {{ $isOverdue ? 'text-rose-500' : ($isDueToday ? 'text-amber-500' : 'text-slate-400') }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                             </svg>
-                                            <span class="card-target-date font-medium {{ $isOverdue ? 'text-rose-600 font-bold' : 'text-slate-600' }} text-[11px]">
+                                            <span class="card-target-date font-medium {{ $isOverdue ? 'text-rose-600 font-bold' : ($isDueToday ? 'text-amber-700 font-semibold' : 'text-slate-600') }} text-[11px]">
                                                 {{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}
                                             </span>
-                                            <span class="card-overdue-badge inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 {{ $isOverdue ? '' : 'hidden' }}">
-                                                Terlambat
+                                            <span class="card-overdue-badge inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold border {{ $isOverdue ? 'bg-rose-50 text-rose-700 border-rose-200' : ($isDueToday ? 'bg-amber-50 text-amber-700 border-amber-200' : 'hidden bg-rose-50 text-rose-700 border-rose-200') }}">
+                                                {{ $isOverdue ? 'Terlambat' : ($isDueToday ? 'Deadline Hari Ini' : '') }}
                                             </span>
                                         </div>
 
@@ -1419,10 +1423,19 @@
                                 }
                             }
 
-                            // Update Target Date
+                            // Update Target Date & atribut kartu agar sinkron dengan kalkulasi deadline
+                            card.setAttribute('data-target-date', payload.target_date || '');
                             const targetDateEl = card.querySelector('.card-target-date');
                             if (targetDateEl) {
-                                targetDateEl.textContent = payload.target_date || 'Tanpa batas';
+                                if (payload.target_date) {
+                                    const [y, m, d] = payload.target_date.split('-').map(Number);
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                                    targetDateEl.textContent = (y && m && d)
+                                        ? `${String(d).padStart(2, '0')} ${months[m - 1] || ''} ${y}`
+                                        : payload.target_date;
+                                } else {
+                                    targetDateEl.textContent = 'Tanpa batas';
+                                }
                             }
 
                             // Update Data Attributes pada tombol edit
@@ -1496,35 +1509,59 @@
                     cardElement.classList.add(statusBorderClasses[newStatus]);
                 }
 
-                // Sinkronisasi status Overdue (Terlambat)
+                // Sinkronisasi status Deadline (Terlambat / Deadline Hari Ini / Masih Lama)
                 const overdueBadge = cardElement.querySelector('.card-overdue-badge');
                 const targetDateEl = cardElement.querySelector('.card-target-date');
+                const deadlineIconEl = cardElement.querySelector('.card-deadline-icon');
                 const targetDate = cardElement.getAttribute('data-target-date') || '';
 
                 let isOverdue = false;
+                let isDueToday = false;
                 if (targetDate && newStatus !== 'done') {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const deadline = new Date(targetDate);
-                    deadline.setHours(23, 59, 59, 999);
-                    isOverdue = deadline < today;
+                    const parts = targetDate.split('-').map(Number);
+                    if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const deadline = new Date(parts[0], parts[1] - 1, parts[2]);
+                        deadline.setHours(0, 0, 0, 0);
+
+                        isOverdue = deadline.getTime() < today.getTime();
+                        isDueToday = deadline.getTime() === today.getTime();
+                    }
                 }
 
                 if (overdueBadge) {
+                    overdueBadge.classList.remove(
+                        'hidden',
+                        'bg-rose-50', 'text-rose-700', 'border-rose-200',
+                        'bg-amber-50', 'text-amber-700', 'border-amber-200'
+                    );
+                    cardElement.classList.remove('border-rose-300', 'ring-1', 'ring-rose-200');
+                    cardElement.classList.add('border-slate-200');
+                    if (targetDateEl) {
+                        targetDateEl.classList.remove('text-rose-600', 'font-bold', 'text-amber-700', 'font-semibold', 'text-slate-600');
+                    }
+                    if (deadlineIconEl) {
+                        deadlineIconEl.classList.remove('text-rose-500', 'text-amber-500', 'text-slate-400');
+                    }
+
                     if (isOverdue) {
-                        overdueBadge.classList.remove('hidden');
+                        overdueBadge.textContent = 'Terlambat';
+                        overdueBadge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200');
+                        cardElement.classList.remove('border-slate-200');
                         cardElement.classList.add('border-rose-300', 'ring-1', 'ring-rose-200');
-                        if (targetDateEl) {
-                            targetDateEl.classList.add('text-rose-600', 'font-bold');
-                            targetDateEl.classList.remove('text-slate-600');
-                        }
+                        if (targetDateEl) targetDateEl.classList.add('text-rose-600', 'font-bold');
+                        if (deadlineIconEl) deadlineIconEl.classList.add('text-rose-500');
+                    } else if (isDueToday) {
+                        overdueBadge.textContent = 'Deadline Hari Ini';
+                        overdueBadge.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200');
+                        if (targetDateEl) targetDateEl.classList.add('text-amber-700', 'font-semibold');
+                        if (deadlineIconEl) deadlineIconEl.classList.add('text-amber-500');
                     } else {
+                        overdueBadge.textContent = '';
                         overdueBadge.classList.add('hidden');
-                        cardElement.classList.remove('border-rose-300', 'ring-1', 'ring-rose-200');
-                        if (targetDateEl) {
-                            targetDateEl.classList.remove('text-rose-600', 'font-bold');
-                            targetDateEl.classList.add('text-slate-600');
-                        }
+                        if (targetDateEl) targetDateEl.classList.add('text-slate-600');
+                        if (deadlineIconEl) deadlineIconEl.classList.add('text-slate-400');
                     }
                 }
 

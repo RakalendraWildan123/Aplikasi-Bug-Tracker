@@ -528,7 +528,11 @@
                 <div class="task-card-view-mobile lg:hidden divide-y divide-slate-100 bg-white">
                     @forelse ($tasks as $task)
                         @php
-                            $isTaskOverdue = $task->target_date && \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
+                            $todayWib = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+                            $targetDay = $task->target_date ? \Carbon\Carbon::parse($task->target_date)->startOfDay() : null;
+                            $isActiveDeadline = $targetDay && $task->status !== 'done';
+                            $isTaskOverdue = $isActiveDeadline && $targetDay->lt($todayWib);
+                            $isTaskDueToday = $isActiveDeadline && $targetDay->equalTo($todayWib);
                         @endphp
                         <div class="p-4 hover:bg-slate-50/60 transition-colors" id="card-task-list-{{ $task->id }}">
                             {{-- Baris 1: Judul Tugas & Badge Tipe/Status --}}
@@ -602,14 +606,18 @@
                                         <span class="text-xs text-slate-400 italic">Belum ditugaskan</span>
                                     @endif
                                 </div>
-                                <div class="text-[11px] {{ $isTaskOverdue ? 'text-rose-600 font-bold' : 'text-slate-500' }} flex items-center gap-1.5 flex-wrap">
-                                    <svg class="w-3.5 h-3.5 {{ $isTaskOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <div class="text-[11px] {{ $isTaskOverdue ? 'text-rose-600 font-bold' : ($isTaskDueToday ? 'text-amber-700 font-semibold' : 'text-slate-500') }} flex items-center gap-1.5 flex-wrap">
+                                    <svg class="w-3.5 h-3.5 {{ $isTaskOverdue ? 'text-rose-500' : ($isTaskDueToday ? 'text-amber-500' : 'text-slate-400') }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                     </svg>
                                     <span>{{ $task->target_date ? \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') : 'Tanpa batas' }}</span>
                                     @if ($isTaskOverdue)
                                         <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                                             Terlambat
+                                        </span>
+                                    @elseif ($isTaskDueToday)
+                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                            Deadline Hari Ini
                                         </span>
                                     @endif
                                 </div>
@@ -818,16 +826,24 @@
                                     <td class="py-4 px-3 whitespace-nowrap text-xs font-medium">
                                         @if ($task->target_date)
                                             @php
-                                                $isRowOverdue = \Carbon\Carbon::parse($task->target_date)->endOfDay()->isPast() && $task->status !== 'done';
+                                                $todayWibRow = \Carbon\Carbon::now('Asia/Jakarta')->startOfDay();
+                                                $targetDayRow = \Carbon\Carbon::parse($task->target_date)->startOfDay();
+                                                $isActiveRow = $task->status !== 'done';
+                                                $isRowOverdue = $isActiveRow && $targetDayRow->lt($todayWibRow);
+                                                $isRowDueToday = $isActiveRow && $targetDayRow->equalTo($todayWibRow);
                                             @endphp
-                                            <div class="flex items-center gap-1.5 flex-wrap {{ $isRowOverdue ? 'text-rose-600 font-bold' : 'text-slate-600' }}">
-                                                <svg class="w-3.5 h-3.5 {{ $isRowOverdue ? 'text-rose-500' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <div class="flex items-center gap-1.5 flex-wrap {{ $isRowOverdue ? 'text-rose-600 font-bold' : ($isRowDueToday ? 'text-amber-700 font-semibold' : 'text-slate-600') }}">
+                                                <svg class="w-3.5 h-3.5 {{ $isRowOverdue ? 'text-rose-500' : ($isRowDueToday ? 'text-amber-500' : 'text-slate-400') }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/>
                                                 </svg>
                                                 <span>{{ \Carbon\Carbon::parse($task->target_date)->translatedFormat('d M Y') }}</span>
                                                 @if ($isRowOverdue)
                                                     <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                                                         Terlambat
+                                                    </span>
+                                                @elseif ($isRowDueToday)
+                                                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                        Deadline Hari Ini
                                                     </span>
                                                 @endif
                                             </div>
