@@ -501,8 +501,19 @@
                                         @endif
                                     </td>
 
-                                    {{-- 5. Catatan Rilis / Summary Changes --}}
+                                    {{-- 5. Catatan Rilis / Summary Changes & Referensi Task Selesai --}}
                                     <td class="py-3.5 pl-3 pr-5 max-w-xs text-xs text-slate-600">
+                                        @if ($rel->task)
+                                            <div class="mb-1">
+                                                <a
+                                                    href="{{ route('tasks.index', ['search' => $rel->task->title]) }}"
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 text-[10px] font-semibold transition"
+                                                    title="Lihat tugas terkait: {{ $rel->task->title }}"
+                                                >
+                                                    <span>✓ Task: {{ Str::limit($rel->task->title, 38) }}</span>
+                                                </a>
+                                            </div>
+                                        @endif
                                         <div class="line-clamp-2">
                                             {{ $rel->summary_changes ?: '-' }}
                                         </div>
@@ -576,6 +587,30 @@
                         </option>
                     @endforeach
                 </select>
+            </div>
+
+            {{-- Referensi Tugas Selesai (Opsional) --}}
+            <div>
+                <label for="create-task-id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Referensi Tugas Selesai (Opsional)
+                </label>
+                <select
+                    id="create-task-id"
+                    name="task_id"
+                    class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm text-slate-800 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                >
+                    <option value="">-- Tidak terkait tugas spesifik --</option>
+                    @foreach (($completedTasks ?? collect()) as $doneTask)
+                        <option
+                            value="{{ $doneTask->id }}"
+                            data-project-id="{{ $doneTask->project_id }}"
+                            data-title="{{ $doneTask->title }}"
+                        >
+                            [{{ $doneTask->project?->code ?? 'TASK' }}] {{ $doneTask->title }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-[11px] text-slate-500 mt-1">Hanya menampilkan tugas yang sudah berstatus <strong>Done (Selesai)</strong>.</p>
             </div>
 
             {{-- Tanggal Rilis & Tag Versi --}}
@@ -696,8 +731,44 @@
         // 2. KONTROL MODAL TAMBAH RILIS (Append-only)
         const modalCreate = document.getElementById('modal-create-release');
         const btnOpenCreate = document.getElementById('btn-open-create-release');
+        const createProjectSelect = document.getElementById('create-project-id');
+        const createTaskSelect = document.getElementById('create-task-id');
+        const createSummaryInput = document.getElementById('create-summary-changes');
+
+        const filterCompletedTasksByProject = () => {
+            if (!createTaskSelect) return;
+            const selectedProj = createProjectSelect?.value ? String(createProjectSelect.value) : '';
+            Array.from(createTaskSelect.options).forEach((opt, idx) => {
+                if (idx === 0) return;
+                const taskProj = opt.getAttribute('data-project-id') || '';
+                const visible = !selectedProj || taskProj === selectedProj;
+                opt.hidden = !visible;
+                opt.disabled = !visible;
+                opt.style.display = visible ? '' : 'none';
+            });
+            const currentOpt = createTaskSelect.options[createTaskSelect.selectedIndex];
+            if (currentOpt && currentOpt.hidden) {
+                createTaskSelect.value = '';
+            }
+        };
+
+        createProjectSelect?.addEventListener('change', filterCompletedTasksByProject);
+        createTaskSelect?.addEventListener('change', () => {
+            const opt = createTaskSelect.options[createTaskSelect.selectedIndex];
+            if (!opt || !createTaskSelect.value) return;
+            const taskProj = opt.getAttribute('data-project-id') || '';
+            const taskTitle = opt.getAttribute('data-title') || '';
+            if (createProjectSelect && taskProj && !createProjectSelect.value) {
+                createProjectSelect.value = taskProj;
+                filterCompletedTasksByProject();
+            }
+            if (createSummaryInput && !createSummaryInput.value.trim() && taskTitle) {
+                createSummaryInput.value = `Rilis penyelesaian tugas: ${taskTitle}`;
+            }
+        });
 
         btnOpenCreate?.addEventListener('click', () => {
+            filterCompletedTasksByProject();
             modalCreate?.classList.remove('hidden');
         });
 

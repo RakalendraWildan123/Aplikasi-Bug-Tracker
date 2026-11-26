@@ -19,6 +19,7 @@ class RepoHistory extends Model
      */
     protected $fillable = [
         'project_id',
+        'task_id',
         'release_date',
         'release_tags',
         'branch_name',
@@ -42,6 +43,14 @@ class RepoHistory extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /**
+     * @return BelongsTo<Task, $this>
+     */
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
     }
 
     /**

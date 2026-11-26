@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\RepoHistory;
+use App\Models\Task;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,13 +21,16 @@ class RepoHistoryController extends Controller
         $branch = $request->string('branch')->toString();
 
         $query = RepoHistory::query()
-            ->with(['project.modules'])
+            ->with(['project.modules', 'task'])
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('release_tags', 'like', "%{$search}%")
                         ->orWhere('branch_name', 'like', "%{$search}%")
                         ->orWhere('commit_hash', 'like', "%{$search}%")
                         ->orWhere('summary_changes', 'like', "%{$search}%")
+                        ->orWhereHas('task', function ($t) use ($search) {
+                            $t->where('title', 'like', "%{$search}%");
+                        })
                         ->orWhereHas('project', function ($p) use ($search) {
                             $p->where('name', 'like', "%{$search}%")
                                 ->orWhere('code', 'like', "%{$search}%")
@@ -49,6 +53,12 @@ class RepoHistoryController extends Controller
         $releases = $query->get();
         $projects = Project::query()->with('modules')->orderBy('name')->get();
         $branches = RepoHistory::query()->select('branch_name')->distinct()->orderBy('branch_name')->pluck('branch_name');
+        $completedTasks = Task::query()
+            ->with('project:id,code,name')
+            ->where('status', 'done')
+            ->orderByDesc('completed_at')
+            ->orderByDesc('id')
+            ->get(['id', 'project_id', 'title', 'task_type']);
 
         $metrics = [
             'total' => RepoHistory::query()->count(),
@@ -71,6 +81,7 @@ class RepoHistoryController extends Controller
             'releases' => $releases,
             'projects' => $projects,
             'branches' => $branches,
+            'completedTasks' => $completedTasks,
             'metrics' => $metrics,
             'search' => $search,
             'projectIdFilter' => $projectId,
@@ -82,6 +93,11 @@ class RepoHistoryController extends Controller
     {
         $validated = $request->validate([
             'project_id' => ['required', 'integer', 'exists:projects,id'],
+            'task_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('tasks', 'id')->where('status', 'done'),
+            ],
             'release_date' => ['required', 'date'],
             'release_tags' => ['nullable', 'string', 'max:50'],
             'branch_name' => ['required', 'string', 'max:100'],
@@ -109,7 +125,7 @@ class RepoHistoryController extends Controller
         $validated['release_tags'] = $validated['release_tags'] ? trim($validated['release_tags']) : null;
 
         $release = RepoHistory::query()->create($validated);
-        $release->load('project.modules');
+        $release->load(['project.modules', 'task']);
 
         $tagLabel = $release->release_tags ? "[{$release->release_tags}] " : '';
 

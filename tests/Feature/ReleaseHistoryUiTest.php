@@ -351,4 +351,68 @@ class ReleaseHistoryUiTest extends TestCase
         $response->assertJsonPath('release.release_tags', 'v3.0.0');
         $response->assertJsonPath('release.project.name', 'Proyek Tunggal Rilis');
     }
+
+    public function test_releases_page_lists_only_completed_tasks_and_can_link_release_to_done_task(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create(['code' => 'REL']);
+
+        $doneTask = \App\Models\Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Task Selesai Siap Rilis',
+            'status' => 'done',
+        ]);
+
+        $todoTask = \App\Models\Task::factory()->create([
+            'project_id' => $project->id,
+            'title' => 'Task Belum Selesai',
+            'status' => 'todo',
+        ]);
+
+        $page = $this->actingAs($user)->get('/releases');
+        $page->assertOk();
+        $page->assertSee('id="create-task-id"', false);
+        $page->assertSee('Task Selesai Siap Rilis');
+        $page->assertDontSee('Task Belum Selesai');
+
+        $storeRes = $this->actingAs($user)->postJson('/releases', [
+            'project_id' => $project->id,
+            'task_id' => $doneTask->id,
+            'release_date' => '2026-11-26',
+            'release_tags' => 'v1.5.0',
+            'branch_name' => 'main',
+            'commit_hash' => 'abc1234def5678',
+            'summary_changes' => 'Rilis fitur siap pakai',
+        ]);
+
+        $storeRes->assertCreated();
+        $storeRes->assertJsonPath('release.task_id', $doneTask->id);
+        $storeRes->assertJsonPath('release.task.title', 'Task Selesai Siap Rilis');
+
+        $this->actingAs($user)->get('/releases')
+            ->assertOk()
+            ->assertSee('Task: Task Selesai Siap Rilis');
+    }
+
+    public function test_release_cannot_reference_uncompleted_task(): void
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $inProgressTask = \App\Models\Task::factory()->create([
+            'project_id' => $project->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/releases', [
+            'project_id' => $project->id,
+            'task_id' => $inProgressTask->id,
+            'release_date' => '2026-11-26',
+            'branch_name' => 'main',
+            'commit_hash' => 'def5678abc1234',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['task_id']);
+    }
 }
