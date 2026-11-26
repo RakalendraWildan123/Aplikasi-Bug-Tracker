@@ -643,6 +643,31 @@
                                     <span>Solusi</span>
                                 </button>
 
+                                {{-- Tombol Konversi ke Task / Badge Sudah Jadi Task --}}
+                                @if ($bug->converted_task_id && $bug->convertedTask)
+                                    <a
+                                        href="{{ route('tasks.index', ['search' => $bug->convertedTask->title]) }}"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition shrink-0"
+                                        title="Lihat tugas hasil konversi di Daftar Tugas"
+                                    >
+                                        <span>✓ Jadi Task</span>
+                                    </a>
+                                @else
+                                    <form method="POST" action="{{ route('bugs.convert-to-task', $bug) }}" class="inline">
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="btn-convert-bug-task inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition cursor-pointer shadow-2xs shrink-0"
+                                            title="Konversi bug ini menjadi tugas pengerjaan"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                                            </svg>
+                                            <span>Konversi ke Task</span>
+                                        </button>
+                                    </form>
+                                @endif
+
                                 {{-- Tombol Hapus Bug --}}
                                 <button
                                     type="button"
@@ -854,6 +879,31 @@
                                                 </svg>
                                                 <span>Solusi</span>
                                             </button>
+
+                                            {{-- 2.5. Tombol Konversi ke Task --}}
+                                            @if ($bug->converted_task_id && $bug->convertedTask)
+                                                <a
+                                                    href="{{ route('tasks.index', ['search' => $bug->convertedTask->title]) }}"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition shrink-0"
+                                                    title="Lihat tugas hasil konversi di Daftar Tugas"
+                                                >
+                                                    <span>✓ Jadi Task</span>
+                                                </a>
+                                            @else
+                                                <form method="POST" action="{{ route('bugs.convert-to-task', $bug) }}" class="inline">
+                                                    @csrf
+                                                    <button
+                                                        type="submit"
+                                                        class="btn-convert-bug-task inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold transition cursor-pointer shadow-2xs shrink-0"
+                                                        title="Konversi bug ini menjadi tugas pengerjaan"
+                                                    >
+                                                        <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                                                        </svg>
+                                                        <span>Konversi ke Task</span>
+                                                    </button>
+                                                </form>
+                                            @endif
 
                                             {{-- 3. Tombol Hapus Bug --}}
                                             <button

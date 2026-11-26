@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     Route::put('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'update'])->name('bugs.update');
     Route::delete('/bugs/{bug}', [\App\Http\Controllers\BugController::class, 'destroy'])->name('bugs.destroy');
     Route::post('/bugs/{bug}/takeover', [\App\Http\Controllers\BugController::class, 'takeover'])->name('bugs.takeover');
+    Route::post('/bugs/{bug}/convert-to-task', [\App\Http\Controllers\BugController::class, 'convertToTask'])->name('bugs.convert-to-task');
 
     // Riwayat Rilis & Repo Modul
     Route::get('/releases', [\App\Http\Controllers\RepoHistoryController::class, 'index'])->name('releases.index');

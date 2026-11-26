@@ -44,6 +44,7 @@ class Bug extends Model
         'solution_notes',
         'resolved_at',
         'handover_logs',
+        'converted_task_id',
     ];
 
     /**
@@ -74,6 +75,14 @@ class Bug extends Model
     public function module(): BelongsTo
     {
         return $this->belongsTo(Module::class);
+    }
+
+    /**
+     * @return BelongsTo<Task, $this>
+     */
+    public function convertedTask(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'converted_task_id');
     }
 
     /**

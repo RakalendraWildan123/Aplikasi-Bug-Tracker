@@ -456,4 +456,54 @@ class BugUiTest extends TestCase
         $this->assertNull($createdBug->assigned_to);
         $this->assertSame('open', $createdBug->status);
     }
+
+    public function test_user_can_convert_bug_to_task(): void
+    {
+        $dev = User::factory()->create(['name' => 'Developer Alpha']);
+        $project = Project::factory()->create();
+
+        $bug = Bug::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $dev->id,
+            'title' => 'Error Kalkulasi Diskon',
+            'severity' => 'high',
+            'root_cause' => 'Tipe data float tidak dibulatkan',
+        ]);
+
+        // Halaman bugs menampilkan tombol Konversi ke Task
+        $this->actingAs($dev)->get('/bugs')
+            ->assertOk()
+            ->assertSee('Konversi ke Task');
+
+        // Konversi ke task
+        $response = $this->actingAs($dev)->postJson("/bugs/{$bug->id}/convert-to-task");
+        $response->assertCreated();
+        $response->assertJson(['success' => true]);
+
+        $freshBug = $bug->fresh(['convertedTask']);
+        $this->assertNotNull($freshBug->converted_task_id);
+        $this->assertSame('[Bug Fix] Error Kalkulasi Diskon', $freshBug->convertedTask->title);
+        $this->assertSame('maintenance', $freshBug->convertedTask->task_type);
+        $this->assertSame($dev->id, $freshBug->convertedTask->assigned_to);
+
+        // Setelah dikonversi, halaman bugs menampilkan badge Jadi Task
+        $this->actingAs($dev)->get('/bugs')
+            ->assertOk()
+            ->assertSee('Jadi Task');
+    }
+
+    public function test_cannot_convert_already_converted_bug(): void
+    {
+        $dev = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $bug = Bug::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $dev->id,
+            'title' => 'Bug Sudah Dikonversi',
+        ]);
+
+        $this->actingAs($dev)->postJson("/bugs/{$bug->id}/convert-to-task")->assertCreated();
+        $this->actingAs($dev)->postJson("/bugs/{$bug->id}/convert-to-task")->assertStatus(422);
+    }
 }

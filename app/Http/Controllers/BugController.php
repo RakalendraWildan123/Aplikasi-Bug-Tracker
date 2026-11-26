@@ -6,6 +6,7 @@ use App\Models\Bug;
 use App\Models\Developer;
 use App\Models\Module;
 use App\Models\Project;
+use App\Models\Task;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +35,7 @@ class BugController extends Controller
         ];
 
         $bugsQuery = Bug::query()
-            ->with(['project', 'module', 'creator', 'assignee'])
+            ->with(['project', 'module', 'creator', 'assignee', 'convertedTask'])
             ->when($search, function ($q, $term) {
                 $q->where(function ($sub) use ($term) {
                     $sub->where('title', 'like', "%{$term}%")
@@ -257,5 +258,72 @@ class BugController extends Controller
         }
 
         return redirect()->back()->with('success_message', $message);
+    }
+
+    /**
+     * Konversi 1-Klik laporan Bug menjadi Task baru di Daftar Tugas / Kanban.
+     */
+    public function convertToTask(Request $request, Bug $bug): JsonResponse|RedirectResponse
+    {
+        if ($bug->converted_task_id && $bug->convertedTask) {
+            $message = 'Bug ini sudah dikonversi menjadi tugas sebelumnya.';
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->back()->with('error_message', $message);
+        }
+
+        $user = $request->user();
+        $title = '[Bug Fix] ' . $bug->title;
+        if (mb_strlen($title) > 250) {
+            $title = mb_substr($title, 0, 247) . '...';
+        }
+
+        $assignedTo = $bug->assigned_to;
+        if ($assignedTo === null && $user && ! $user->isAdmin()) {
+            $assignedTo = $user->id;
+        }
+
+        $descParts = [
+            "Tindak lanjut perbaikan bug (#{$bug->id} - Keparahan: " . strtoupper($bug->severity) . ').',
+            'Deskripsi Bug: ' . ($bug->description ?: '-'),
+        ];
+        if (! empty($bug->root_cause)) {
+            $descParts[] = 'Root Cause: ' . $bug->root_cause;
+        }
+
+        $task = Task::query()->create([
+            'project_id' => $bug->project_id,
+            'module_id' => $bug->module_id,
+            'created_by' => $user?->id,
+            'assigned_to' => $assignedTo,
+            'title' => $title,
+            'description' => implode("\n\n", $descParts),
+            'task_type' => 'maintenance',
+            'status' => 'todo',
+            'start_date' => now()->toDateString(),
+            'target_date' => now()->addDays(3)->toDateString(),
+        ]);
+
+        $bug->update([
+            'converted_task_id' => $task->id,
+        ]);
+
+        $message = "Bug '{$bug->title}' berhasil dikonversi menjadi tugas '{$task->title}'.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $task->fresh(['project', 'module', 'assignee']),
+                'bug' => $bug->fresh(['project', 'module', 'assignee', 'convertedTask']),
+            ], 201);
+        }
+
+        return redirect()->route('bugs.index')->with('success_message', $message);
     }
 }
