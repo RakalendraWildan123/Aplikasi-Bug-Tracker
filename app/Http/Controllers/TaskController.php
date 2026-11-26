@@ -64,6 +64,14 @@ class TaskController extends Controller
         $modules = Module::query()->orderBy('name')->get(['id', 'name', 'project_id']);
         $developers = Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
 
+        $pendingApprovals = Task::query()
+            ->with(['project', 'assignee'])
+            ->whereNotNull('pending_handover')
+            ->latest('id')
+            ->get()
+            ->filter(fn (Task $t) => (int) ($t->pending_handover['approver_id'] ?? 0) === (int) $currentUser->id)
+            ->values();
+
         if ($request->wantsJson()) {
             return response()->json([
                 'metrics' => $metrics,
@@ -71,6 +79,7 @@ class TaskController extends Controller
                 'active_tab' => $activeTab,
                 'all_tasks_count' => $allTasksCount,
                 'my_tasks_count' => $myTasksCount,
+                'pending_approvals' => $pendingApprovals,
             ]);
         }
 
@@ -81,6 +90,7 @@ class TaskController extends Controller
             'projects' => $projects,
             'modules' => $modules,
             'developers' => $developers,
+            'pendingApprovals' => $pendingApprovals,
             'taskTypes' => Task::TYPES,
             'taskStatuses' => Task::STATUSES,
             'selectedSearch' => $search,
@@ -250,41 +260,93 @@ class TaskController extends Controller
     public function takeover(Request $request, Task $task): JsonResponse|RedirectResponse
     {
         $currentUser = $request->user();
-        $previousAssignee = $task->assignee;
-        $note = $request->input('note', 'Diambil alih oleh ' . $currentUser->name);
 
-        $logs = $task->handover_logs ?? [];
-        $logs[] = [
-            'from_developer_id' => $previousAssignee?->id,
-            'from_developer_name' => $previousAssignee?->name ?? 'Belum Ditugaskan',
+        if (! empty($task->pending_handover)) {
+            $errMsg = 'Tugas ini sedang menunggu persetujuan serah terima.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        if ((int) $task->assigned_to === (int) $currentUser->id) {
+            $errMsg = 'Tugas ini sudah menjadi tanggung jawab Anda.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        $previousAssignee = $task->assignee;
+        $note = trim((string) $request->input('note', '')) ?: 'Diambil alih oleh ' . $currentUser->name;
+
+        // Jika tugas belum memiliki penanggung jawab (misal tugas terbuka buatan Admin), langsung diambil tanpa perlu persetujuan
+        if ($task->assigned_to === null || ! $previousAssignee) {
+            $logs = $task->handover_logs ?? [];
+            $logs[] = [
+                'from_developer_id' => null,
+                'from_developer_name' => 'Belum Ditugaskan',
+                'to_developer_id' => $currentUser->id,
+                'to_developer_name' => $currentUser->name,
+                'project_name' => $task->project?->name,
+                'project_code' => $task->project?->code,
+                'note' => $note,
+                'action' => 'takeover',
+                'handed_over_at' => now()->toIso8601String(),
+            ];
+
+            $task->update([
+                'assigned_to' => $currentUser->id,
+                'handover_logs' => $logs,
+                'pending_handover' => null,
+            ]);
+
+            $freshTask = $task->fresh(['project', 'module', 'assignee']);
+            $message = "Tugas '{$freshTask->title}' berhasil Anda ambil.";
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'pending' => false,
+                    'message' => $message,
+                    'task' => $freshTask,
+                    'user' => [
+                        'id' => $currentUser->id,
+                        'name' => $currentUser->name,
+                        'avatar' => $currentUser->avatar ?? 'AK',
+                        'avatar_bg' => $currentUser->avatar_bg ?? '#1E293B',
+                        'foto_profil_url' => $currentUser->foto_profil_url,
+                    ],
+                ]);
+            }
+
+            return redirect()->back()->with('success_message', $message);
+        }
+
+        // Jika sudah ada pemilik, kirim permintaan persetujuan ke pemilik tugas saat ini
+        $pending = [
+            'type' => 'takeover',
+            'requested_by_id' => $currentUser->id,
+            'requested_by_name' => $currentUser->name,
+            'from_developer_id' => $previousAssignee->id,
+            'from_developer_name' => $previousAssignee->name,
             'to_developer_id' => $currentUser->id,
             'to_developer_name' => $currentUser->name,
-            'project_name' => $task->project?->name,
-            'project_code' => $task->project?->code,
+            'approver_id' => $previousAssignee->id,
+            'approver_name' => $previousAssignee->name,
             'note' => $note,
-            'handed_over_at' => now()->toIso8601String(),
+            'requested_at' => now()->toIso8601String(),
         ];
 
-        $task->update([
-            'assigned_to' => $currentUser->id,
-            'handover_logs' => $logs,
-        ]);
+        $task->update(['pending_handover' => $pending]);
 
         $freshTask = $task->fresh(['project', 'module', 'assignee']);
-        $message = "Tugas '{$freshTask->title}' berhasil Anda ambil alih dari " . ($previousAssignee?->name ?? 'developer sebelumnya') . '.';
+        $message = "Permintaan ambil alih tugas '{$freshTask->title}' telah dikirim ke {$previousAssignee->name} untuk disetujui.";
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
+                'pending' => true,
                 'message' => $message,
                 'task' => $freshTask,
-                'user' => [
-                    'id' => $currentUser->id,
-                    'name' => $currentUser->name,
-                    'avatar' => $currentUser->avatar ?? 'AK',
-                    'avatar_bg' => $currentUser->avatar_bg ?? '#1E293B',
-                    'foto_profil_url' => $currentUser->foto_profil_url,
-                ],
             ]);
         }
 
@@ -293,6 +355,13 @@ class TaskController extends Controller
 
     public function transfer(Request $request, Task $task): JsonResponse|RedirectResponse
     {
+        if (! empty($task->pending_handover)) {
+            $errMsg = 'Tugas ini sedang menunggu persetujuan serah terima.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
         $validated = $request->validate([
             'target_developer_id' => ['required', 'exists:users,id'],
             'note' => ['nullable', 'string', 'max:500'],
@@ -304,44 +373,190 @@ class TaskController extends Controller
 
         $currentUser = $request->user();
         $targetUser = \App\Models\User::findOrFail($validated['target_developer_id']);
+
+        if ((int) $targetUser->id === (int) $task->assigned_to) {
+            $errMsg = 'Tugas ini sudah ditugaskan kepada rekan tim tersebut.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
         $previousAssignee = $task->assignee;
-        $note = !empty($validated['note']) 
-            ? $validated['note'] 
+        $note = ! empty($validated['note'])
+            ? $validated['note']
             : "Dialihkan oleh {$currentUser->name} kepada {$targetUser->name}";
 
-        $logs = $task->handover_logs ?? [];
-        $logs[] = [
+        // Kirim permintaan persetujuan ke calon penerima tugas
+        $pending = [
+            'type' => 'transfer',
+            'requested_by_id' => $currentUser->id,
+            'requested_by_name' => $currentUser->name,
             'from_developer_id' => $previousAssignee?->id ?? $currentUser->id,
             'from_developer_name' => $previousAssignee?->name ?? $currentUser->name,
             'to_developer_id' => $targetUser->id,
             'to_developer_name' => $targetUser->name,
+            'approver_id' => $targetUser->id,
+            'approver_name' => $targetUser->name,
+            'note' => $note,
+            'requested_at' => now()->toIso8601String(),
+        ];
+
+        $task->update(['pending_handover' => $pending]);
+
+        $freshTask = $task->fresh(['project', 'module', 'assignee']);
+        $message = "Permintaan pengalihan tugas '{$freshTask->title}' telah dikirim ke {$targetUser->name} untuk disetujui.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'pending' => true,
+                'message' => $message,
+                'task' => $freshTask,
+            ]);
+        }
+
+        return redirect()->back()->with('success_message', $message);
+    }
+
+    public function approveHandover(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $pending = $task->pending_handover;
+        $currentUser = $request->user();
+
+        if (empty($pending)) {
+            $errMsg = 'Tidak ada permintaan persetujuan yang aktif pada tugas ini.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        if ((int) ($pending['approver_id'] ?? 0) !== (int) $currentUser->id) {
+            $errMsg = 'Anda tidak berwenang menyetujui permintaan serah terima tugas ini.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 403)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        $logs = $task->handover_logs ?? [];
+        $logs[] = [
+            'from_developer_id' => $pending['from_developer_id'] ?? null,
+            'from_developer_name' => $pending['from_developer_name'] ?? 'Belum Ditugaskan',
+            'to_developer_id' => $pending['to_developer_id'],
+            'to_developer_name' => $pending['to_developer_name'],
             'project_name' => $task->project?->name,
             'project_code' => $task->project?->code,
-            'note' => $note,
-            'action' => 'transfer',
+            'note' => $pending['note'] ?? '',
+            'action' => $pending['type'] ?? 'takeover',
+            'approved_by_id' => $currentUser->id,
+            'approved_by_name' => $currentUser->name,
+            'approved_at' => now()->toIso8601String(),
             'handed_over_at' => now()->toIso8601String(),
         ];
 
         $task->update([
-            'assigned_to' => $targetUser->id,
+            'assigned_to' => $pending['to_developer_id'],
             'handover_logs' => $logs,
+            'pending_handover' => null,
         ]);
 
         $freshTask = $task->fresh(['project', 'module', 'assignee']);
-        $message = "Tugas '{$freshTask->title}' berhasil dialihkan kepada {$targetUser->name}.";
+        $message = ($pending['type'] ?? '') === 'transfer'
+            ? "Anda menyetujui penerimaan tugas '{$freshTask->title}'."
+            : "Anda menyetujui ambil alih tugas '{$freshTask->title}' oleh {$pending['to_developer_name']}.";
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => $message,
                 'task' => $freshTask,
-                'target_user' => [
-                    'id' => $targetUser->id,
-                    'name' => $targetUser->name,
-                    'avatar' => $targetUser->avatar ?? 'AK',
-                    'avatar_bg' => $targetUser->avatar_bg ?? '#1E293B',
-                    'foto_profil_url' => $targetUser->foto_profil_url,
-                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success_message', $message);
+    }
+
+    public function rejectHandover(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $pending = $task->pending_handover;
+        $currentUser = $request->user();
+
+        if (empty($pending)) {
+            $errMsg = 'Tidak ada permintaan persetujuan yang aktif pada tugas ini.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        if ((int) ($pending['approver_id'] ?? 0) !== (int) $currentUser->id) {
+            $errMsg = 'Anda tidak berwenang menolak permintaan serah terima tugas ini.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 403)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        $rejectReason = trim((string) $request->input('reason', ''));
+        $logs = $task->handover_logs ?? [];
+        $logs[] = [
+            'from_developer_id' => $pending['from_developer_id'] ?? null,
+            'from_developer_name' => $pending['from_developer_name'] ?? 'Belum Ditugaskan',
+            'to_developer_id' => $pending['to_developer_id'],
+            'to_developer_name' => $pending['to_developer_name'],
+            'project_name' => $task->project?->name,
+            'project_code' => $task->project?->code,
+            'note' => 'Ditolak oleh ' . $currentUser->name . ($rejectReason !== '' ? ": {$rejectReason}" : ''),
+            'action' => 'rejected_' . ($pending['type'] ?? 'handover'),
+            'rejected_by_id' => $currentUser->id,
+            'rejected_by_name' => $currentUser->name,
+            'handed_over_at' => now()->toIso8601String(),
+        ];
+
+        $task->update([
+            'handover_logs' => $logs,
+            'pending_handover' => null,
+        ]);
+
+        $freshTask = $task->fresh(['project', 'module', 'assignee']);
+        $message = "Permintaan serah terima tugas '{$freshTask->title}' telah ditolak.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $freshTask,
+            ]);
+        }
+
+        return redirect()->back()->with('success_message', $message);
+    }
+
+    public function cancelHandover(Request $request, Task $task): JsonResponse|RedirectResponse
+    {
+        $pending = $task->pending_handover;
+        $currentUser = $request->user();
+
+        if (empty($pending)) {
+            $errMsg = 'Tidak ada permintaan persetujuan yang aktif pada tugas ini.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 422)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        if ((int) ($pending['requested_by_id'] ?? 0) !== (int) $currentUser->id) {
+            $errMsg = 'Hanya pengaju permintaan yang dapat membatalkannya.';
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => $errMsg], 403)
+                : redirect()->back()->with('error_message', $errMsg);
+        }
+
+        $task->update(['pending_handover' => null]);
+
+        $message = "Permintaan serah terima tugas '{$task->title}' telah dibatalkan.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'task' => $task->fresh(['project', 'module', 'assignee']),
             ]);
         }
 

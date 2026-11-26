@@ -32,8 +32,14 @@ Route::middleware(['auth', 'role', 'prevent-back-history'])->group(function () {
     Route::delete('/tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('tasks.takeover');
     Route::post('/tasks/{task}/transfer', [\App\Http\Controllers\TaskController::class, 'transfer'])->name('tasks.transfer');
+    Route::post('/tasks/{task}/handover/approve', [\App\Http\Controllers\TaskController::class, 'approveHandover'])->name('tasks.handover.approve');
+    Route::post('/tasks/{task}/handover/reject', [\App\Http\Controllers\TaskController::class, 'rejectHandover'])->name('tasks.handover.reject');
+    Route::post('/tasks/{task}/handover/cancel', [\App\Http\Controllers\TaskController::class, 'cancelHandover'])->name('tasks.handover.cancel');
     Route::post('/kanban/tasks/{task}/takeover', [\App\Http\Controllers\TaskController::class, 'takeover'])->name('kanban.tasks.takeover');
     Route::post('/kanban/tasks/{task}/transfer', [\App\Http\Controllers\TaskController::class, 'transfer'])->name('kanban.tasks.transfer');
+    Route::post('/kanban/tasks/{task}/handover/approve', [\App\Http\Controllers\TaskController::class, 'approveHandover'])->name('kanban.tasks.handover.approve');
+    Route::post('/kanban/tasks/{task}/handover/reject', [\App\Http\Controllers\TaskController::class, 'rejectHandover'])->name('kanban.tasks.handover.reject');
+    Route::post('/kanban/tasks/{task}/handover/cancel', [\App\Http\Controllers\TaskController::class, 'cancelHandover'])->name('kanban.tasks.handover.cancel');
 
     Route::get('/bugs', [\App\Http\Controllers\BugController::class, 'index'])->name('bugs.index');
     Route::post('/bugs', [\App\Http\Controllers\BugController::class, 'store'])->name('bugs.store');

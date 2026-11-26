@@ -305,6 +305,11 @@
                 </div>
             </div>
 
+            {{-- Notifikasi Permintaan Persetujuan Serah Terima Tugas --}}
+            <div class="mb-4">
+                @include('partials.pending-handovers', ['routePrefix' => 'kanban.tasks'])
+            </div>
+
             {{-- TOMBOL NAVIGASI CEPAT DI PAPAN KANBAN (Lompat / Fokus Kolom) --}}
             <div class="mb-5 flex items-center justify-between gap-3 flex-wrap bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
                 <div class="flex items-center gap-2 overflow-x-auto pb-0.5 max-w-full">
@@ -599,9 +604,42 @@
                                             </button>
                                         </div>
 
-                                        {{-- Tombol Ambil Alih / Indikator Pemilik Tugas --}}
+                                        {{-- Tombol Ambil Alih / Persetujuan / Indikator Pemilik Tugas --}}
                                         <div class="card-takeover-action w-full">
-                                            @if ($task->assigned_to && (int)$task->assigned_to !== (int)$user->id)
+                                            @if (! empty($task->pending_handover))
+                                                @php $pending = $task->pending_handover; @endphp
+                                                @if ((int)($pending['approver_id'] ?? 0) === (int)$user->id)
+                                                    <div class="space-y-1.5 w-full">
+                                                        <div class="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-center">
+                                                            {{ ($pending['type'] ?? '') === 'transfer' ? 'Dari ' . ($pending['requested_by_name'] ?? 'Rekan') : 'Diminta oleh ' . ($pending['requested_by_name'] ?? 'Rekan') }}
+                                                        </div>
+                                                        <div class="grid grid-cols-2 gap-1.5">
+                                                            <form method="POST" action="{{ route('kanban.tasks.handover.approve', $task->id) }}">
+                                                                @csrf
+                                                                <button type="submit" class="w-full py-1 px-2 text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition cursor-pointer">✓ Setujui</button>
+                                                            </form>
+                                                            <form method="POST" action="{{ route('kanban.tasks.handover.reject', $task->id) }}">
+                                                                @csrf
+                                                                <button type="submit" class="w-full py-1 px-2 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition cursor-pointer">✕ Tolak</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                @elseif ((int)($pending['requested_by_id'] ?? 0) === (int)$user->id)
+                                                    <div class="flex items-center justify-between gap-1.5 w-full">
+                                                        <span class="flex-1 text-center text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg py-1 px-2 truncate">
+                                                            Menunggu {{ $pending['approver_name'] ?? 'Persetujuan' }}
+                                                        </span>
+                                                        <form method="POST" action="{{ route('kanban.tasks.handover.cancel', $task->id) }}">
+                                                            @csrf
+                                                            <button type="submit" class="px-2 py-1 text-[10px] font-semibold text-slate-600 hover:text-rose-700 bg-slate-100 hover:bg-rose-50 border border-slate-200 rounded-lg transition cursor-pointer">Batal</button>
+                                                        </form>
+                                                    </div>
+                                                @else
+                                                    <div class="w-full text-center text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg py-1 px-2">
+                                                        Menunggu Persetujuan
+                                                    </div>
+                                                @endif
+                                            @elseif ($task->assigned_to && (int)$task->assigned_to !== (int)$user->id)
                                                 <button
                                                     type="button"
                                                     class="btn-takeover-task w-full justify-center text-[11px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg px-2.5 py-1.5 transition flex items-center gap-1.5 cursor-pointer"
@@ -1926,9 +1964,14 @@
 
                     if (response.ok && data.success) {
                         closeTakeoverModal();
-                        showToast(data.message || 'Tugas berhasil diambil alih.');
+                        showToast(data.message || 'Permintaan ambil alih tugas berhasil dikirim.');
 
-                        // Update tampilan kartu di papan Kanban seketika
+                        if (data.pending) {
+                            setTimeout(() => window.location.reload(), 600);
+                            return;
+                        }
+
+                        // Update tampilan kartu di papan Kanban seketika (jika tugas terbuka langsung diambil)
                         const card = document.getElementById(`card-task-${activeTakeoverTaskId}`);
                         if (card) {
                             card.setAttribute('data-assigned-to', data.user.id);

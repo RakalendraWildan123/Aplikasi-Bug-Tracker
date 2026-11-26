@@ -316,10 +316,24 @@ class TaskUiTest extends TestCase
         $response->assertOk();
         $response->assertJson([
             'success' => true,
+            'pending' => true,
         ]);
+
+        // Sebelum disetujui devA, tugas belum berpindah & berstatus pending
+        $pendingTask = $task->fresh(['assignee']);
+        $this->assertSame($devA->id, $pendingTask->assigned_to);
+        $this->assertSame($devA->id, $pendingTask->pending_handover['approver_id']);
+
+        // Orang lain selain devA tidak bisa menyetujui
+        $this->actingAs($userB)->postJson("/tasks/{$task->id}/handover/approve")->assertStatus(403);
+
+        // Developer Alpha menyetujui permintaan ambil alih
+        $approveResponse = $this->actingAs($devA)->postJson("/tasks/{$task->id}/handover/approve");
+        $approveResponse->assertOk();
 
         $freshTask = $task->fresh(['assignee']);
         $this->assertSame($userB->id, $freshTask->assigned_to);
+        $this->assertNull($freshTask->pending_handover);
         $this->assertNotEmpty($freshTask->handover_logs);
 
         $logs = $freshTask->handover_logs;
@@ -512,7 +526,7 @@ class TaskUiTest extends TestCase
 
         $this->assertSame($devA->id, $task->assigned_to);
 
-        // 2. Developer A mengalihkan tugasnya kepada Developer B
+        // 2. Developer A mengalihkan tugasnya kepada Developer B -> masuk status menunggu persetujuan Developer B
         $response = $this->actingAs($devA)->postJson("/tasks/{$task->id}/transfer", [
             'target_developer_id' => $devB->id,
             'note' => 'Mendelegasikan tugas ke rekan setim karena fokus pada modul inventory',
@@ -521,11 +535,21 @@ class TaskUiTest extends TestCase
         $response->assertOk();
         $response->assertJson([
             'success' => true,
+            'pending' => true,
         ]);
+
+        // Tugas masih dipegang devA sampai devB menyetujui
+        $this->assertSame($devA->id, $task->fresh()->assigned_to);
+        $this->assertSame($devB->id, $task->fresh()->pending_handover['approver_id']);
+
+        // Developer B melihat notifikasi persetujuan dan menyetujui
+        $this->actingAs($devB)->get('/tasks')->assertSee('Menunggu Persetujuan Anda');
+        $this->actingAs($devB)->postJson("/tasks/{$task->id}/handover/approve")->assertOk();
 
         $freshTask = $task->fresh(['assignee']);
         $this->assertSame($devB->id, $freshTask->assigned_to);
         $this->assertSame('Developer B', $freshTask->assignee->name);
+        $this->assertNull($freshTask->pending_handover);
 
         // Verifikasi audit trail handover_logs
         $logs = $freshTask->handover_logs;
@@ -536,6 +560,32 @@ class TaskUiTest extends TestCase
         $this->assertSame($devB->id, $lastLog['to_developer_id']);
         $this->assertSame('Developer B', $lastLog['to_developer_name']);
         $this->assertSame('transfer', $lastLog['action']);
+    }
+
+    public function test_approver_can_reject_handover_request_and_keep_original_assignee(): void
+    {
+        $devA = User::factory()->create(['name' => 'Developer A']);
+        $devB = User::factory()->create(['name' => 'Developer B']);
+        $project = Project::factory()->create();
+
+        $task = Task::factory()->create([
+            'project_id' => $project->id,
+            'assigned_to' => $devA->id,
+            'title' => 'Tugas yang Ditolak Pengalihannya',
+        ]);
+
+        $this->actingAs($devA)->postJson("/tasks/{$task->id}/transfer", [
+            'target_developer_id' => $devB->id,
+            'note' => 'Tolong bantu kerjakan ya',
+        ])->assertOk();
+
+        $this->actingAs($devB)->postJson("/tasks/{$task->id}/handover/reject", [
+            'reason' => 'Sedang penuh sprint ini',
+        ])->assertOk();
+
+        $freshTask = $task->fresh();
+        $this->assertSame($devA->id, $freshTask->assigned_to);
+        $this->assertNull($freshTask->pending_handover);
     }
 
     public function test_transfer_task_validates_required_target_developer(): void

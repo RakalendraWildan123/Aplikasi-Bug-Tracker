@@ -53,6 +53,7 @@ class Task extends Model
         'completed_at',
         'blocker_notes',
         'handover_logs',
+        'pending_handover',
     ];
 
     /**
@@ -65,6 +66,7 @@ class Task extends Model
             'target_date' => 'date',
             'completed_at' => 'datetime',
             'handover_logs' => 'array',
+            'pending_handover' => 'array',
         ];
     }
 

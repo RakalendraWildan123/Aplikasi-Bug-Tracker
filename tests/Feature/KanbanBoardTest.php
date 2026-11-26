@@ -339,15 +339,23 @@ class KanbanBoardTest extends TestCase
         $response->assertSee('Ambil Alih');
         $response->assertSee('Tugas Anda');
 
-        // Test POST /kanban/tasks/{task}/takeover
+        // Test POST /kanban/tasks/{task}/takeover (membuat permintaan persetujuan terlebih dahulu)
         $takeoverResponse = $this->actingAs($user)->postJson("/kanban/tasks/{$taskOther->id}/takeover", [
             'note' => 'Takeover via Kanban',
         ]);
 
         $takeoverResponse->assertOk();
-        $takeoverResponse->assertJson(['success' => true]);
+        $takeoverResponse->assertJson(['success' => true, 'pending' => true]);
 
+        // Tugas masih tetap milik $otherDev sebelum disetujui
+        $this->assertSame($otherDev->id, $taskOther->fresh()->assigned_to);
+        $this->assertNotNull($taskOther->fresh()->pending_handover);
+
+        // Setelah $otherDev menyetujui, baru tugas berpindah ke $user
+        $approveResponse = $this->actingAs($otherDev)->postJson("/kanban/tasks/{$taskOther->id}/handover/approve");
+        $approveResponse->assertOk();
         $this->assertSame($user->id, $taskOther->fresh()->assigned_to);
+        $this->assertNull($taskOther->fresh()->pending_handover);
     }
 
     public function test_kanban_board_renders_status_colored_borders_and_arrow_navigation_buttons(): void

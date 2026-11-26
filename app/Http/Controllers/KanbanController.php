@@ -76,19 +76,30 @@ class KanbanController extends Controller
 
         $projects = Project::query()->orderBy('name')->get(['id', 'name', 'code', 'color']);
         $developers = Developer::query()->orderBy('name')->get(['id', 'name', 'avatar', 'avatar_bg']);
+        $currentUser = $request->user();
+
+        $pendingApprovals = Task::query()
+            ->with(['project', 'assignee'])
+            ->whereNotNull('pending_handover')
+            ->latest('id')
+            ->get()
+            ->filter(fn (Task $t) => (int) ($t->pending_handover['approver_id'] ?? 0) === (int) $currentUser->id)
+            ->values();
 
         if ($request->wantsJson()) {
             return response()->json([
                 'columns' => $columns,
                 'total_tasks' => $tasks->count(),
+                'pending_approvals' => $pendingApprovals,
             ]);
         }
 
         return view('kanban.index', [
-            'user' => $request->user(),
+            'user' => $currentUser,
             'columns' => $columns,
             'projects' => $projects,
             'developers' => $developers,
+            'pendingApprovals' => $pendingApprovals,
             'taskTypes' => Task::TYPES,
             'selectedProject' => $projectFilter,
             'selectedDeveloper' => $developerFilter,
