@@ -425,7 +425,7 @@ class AuthAndAccountManagementTest extends TestCase
         $this->seed();
         $this->seed();
 
-        $this->assertDatabaseCount('users', 6); // Test User + Admin + 4 Developers
+        $this->assertDatabaseCount('users', 5); // Admin + 4 Developers
         $this->assertDatabaseCount('projects', 3);
         $this->assertDatabaseCount('modules', 6);
         $this->assertDatabaseCount('tasks', 4);
