@@ -6,14 +6,12 @@
     <title>Login &mdash; {{ config('app.name', 'Aplikasi Bug Tracker') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 text-slate-900 antialiased">
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 text-slate-900 antialiased">
 
-    {{-- Kartu Utama Login --}}
     <div class="w-full max-w-sm sm:max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
         {{-- Header Form --}}
         <div class="mb-6 text-center">
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Login</h1>
-            <p class="mt-1 text-xs sm:text-sm text-slate-500 font-medium">Aplikasi Bug Tracker &bull; Monitoring &amp; Manajemen IT Developer</p>
         </div>
 
         {{-- Status Notifikasi --}}
@@ -34,7 +32,6 @@
         <form method="POST" action="{{ route('login.attempt') }}" class="space-y-4" autocomplete="off">
             @csrf
 
-            {{-- Input Email --}}
             <div>
                 <label for="email" class="block text-sm font-semibold text-slate-800">Email</label>
                 <input
@@ -45,12 +42,11 @@
                     required
                     autofocus
                     autocomplete="email"
-                    placeholder="nama@bugtracker.test"
+                    placeholder="nama@email.com"
                     class="mt-1.5 block min-h-11 w-full rounded-lg border px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition focus:outline-none sm:text-sm {{ $errors->has('email') ? 'border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500' : 'border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900' }}"
                 >
             </div>
 
-            {{-- Input Password --}}
             <div>
                 <label for="password" class="block text-sm font-semibold text-slate-800">Password</label>
                 <div class="relative mt-1.5">
@@ -80,7 +76,6 @@
                 </div>
             </div>
 
-            {{-- Ingat Saya --}}
             <div class="flex items-center pt-1">
                 <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700 select-none">
                     <input
@@ -94,7 +89,6 @@
                 </label>
             </div>
 
-            {{-- Tombol Masuk Tegas --}}
             <button
                 type="submit"
                 class="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-[0.99]"
@@ -102,53 +96,9 @@
                 Masuk
             </button>
         </form>
-
-        {{-- Opsi Bantuan Demo Akun Sidang (Bersih & Rapi) --}}
-        <div class="mt-6 pt-5 border-t border-slate-100">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Akun Demo (Sidang PKL)</span>
-                <span class="text-[11px] text-slate-400">Klik untuk isi otomatis</span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-left">
-                <button
-                    type="button"
-                    onclick="fillCredentials('admin@bugtracker.test', 'password')"
-                    class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
-                    title="Klik untuk isi akun Administrator"
-                >
-                    <div class="text-xs font-semibold text-slate-900">Administrator</div>
-                    <div class="text-[11px] text-slate-500 truncate mt-0.5">admin@bugtracker.test</div>
-                </button>
-                <button
-                    type="button"
-                    onclick="fillCredentials('raka.pratama@bugtracker.test', 'password')"
-                    class="p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition text-left cursor-pointer"
-                    title="Klik untuk isi akun Lead Developer"
-                >
-                    <div class="text-xs font-semibold text-slate-900">Lead Developer</div>
-                    <div class="text-[11px] text-slate-500 truncate mt-0.5">raka.pratama@bugtracker.test</div>
-                </button>
-            </div>
-        </div>
     </div>
 
-    {{-- Footer Info Terpusat di Bawah Kartu --}}
-    <footer class="mt-6 text-center text-xs text-slate-500 font-medium">
-        &copy; 2026 Aplikasi Bug Tracker &bull; Monitoring &amp; Manajemen IT Developer
-    </footer>
-
     <script>
-        // Fungsi klik otomatis mengisi kredensial demo
-        function fillCredentials(email, password) {
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            if (emailInput && passwordInput) {
-                emailInput.value = email;
-                passwordInput.value = password;
-                emailInput.focus();
-            }
-        }
-
         // Bersihkan sisa input saat halaman login dimuat atau dikembalikan via tombol Back browser
         window.addEventListener('pageshow', function (event) {
             const hasError = document.querySelector('[role="alert"]');
