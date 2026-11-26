@@ -432,10 +432,12 @@ class TaskUiTest extends TestCase
         // Memastikan pencatatan bug tidak otomatis menambahkan task baru
         $this->assertSame($initialTaskCount, Task::count());
 
-        // Buka halaman task: tidak ada penambahan task baru dari pencatatan bug
+        // Buka halaman task: daftar tugas tetap kosong (bug hanya muncul di dropdown pilihan sumber bug)
         $resTasks = $this->actingAs($user)->get('/tasks');
         $resTasks->assertOk();
-        $resTasks->assertDontSee('Crash saat upload avatar PNG 4K');
+        $this->actingAs($user)->getJson('/tasks')
+            ->assertOk()
+            ->assertJsonPath('metrics.total', 0);
     }
 
     public function test_developer_b_creating_task_is_assigned_to_developer_b_even_when_based_on_developer_a_bug(): void
